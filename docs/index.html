@@ -1,81 +1,84 @@
 <!doctype html><html lang=ko><head><meta charset=utf-8><meta name=viewport content='width=device-width,initial-scale=1'><title>🐷 종가배팅 대시보드</title><style>
-    *{box-sizing:border-box;margin:0} body{background:linear-gradient(#10101C,#0A0A12);color:#F2F1FF;
-      font-family:'Pretendard','Malgun Gothic',system-ui,sans-serif;padding:22px;max-width:1100px;margin:auto}
-    h1{font-size:24px;font-weight:900;margin-bottom:4px} .stamp{color:#A3A2CC;font-size:13px;margin-bottom:20px}
-    h2{font-size:19px;margin:26px 0 12px;font-weight:800} h3{font-size:14px;color:#A3A2CC;margin:18px 0 8px;font-weight:800}
-    .muted{color:#63628E;font-weight:600}
-    section{background:#1C1C3422;border:1px solid #2E2E52;border-radius:18px;padding:18px;margin-bottom:18px}
-    .cards{display:flex;gap:14px;flex-wrap:wrap}
-    .gcard{flex:1;min-width:200px;background:linear-gradient(#26264A,#181830);border:1px solid #2E2E52;
-      border-radius:20px;padding:14px;text-align:center}
-    .gtitle{color:#A3A2CC;font-weight:800;font-size:13px;margin-bottom:6px} .ring{width:140px;height:140px}
-    .gnum{font-size:15px;font-weight:900} .gsub{color:#A3A2CC;font-size:11px;margin-top:4px}
-    table{width:100%;border-collapse:collapse;font-size:13px} th,td{padding:8px 6px;text-align:center;border-bottom:1px solid #2E2E5222}
-    th{color:#63628E;font-weight:800;border-bottom:1px solid #2E2E52} td.l,th.l{text-align:left} td.muted{color:#63628E}
-    .pend{background:#FB4E7418;border:1px solid #FB4E7455;border-radius:12px;padding:10px 14px;color:#FB4E74;font-weight:800;margin:8px 0}
-    .acct{display:flex;gap:22px;flex-wrap:wrap} .acct div{display:flex;flex-direction:column;gap:2px}
-    .acct b{font-size:18px} .spark{width:100%;height:60px}
-    a{color:#8B5CF6}
-    </style></head><body><h1>🐷 종가배팅 대시보드</h1>
-    <div class="stamp">자동 갱신 · 2026-07-26 00:51 · 페이퍼 포워드테스트 데이터 (한국=실전모의 / 미국=페이퍼)</div>
-    
+*{box-sizing:border-box;margin:0} body{background:linear-gradient(#10101C,#0A0A12);color:#F2F1FF;
+ font-family:'Pretendard','Malgun Gothic',system-ui,sans-serif;padding:20px;max-width:1080px;margin:auto}
+h1{font-size:24px;font-weight:900} .stamp{color:#A3A2CC;font-size:13px;margin:4px 0 18px}
+h2{font-size:19px;margin:6px 0 12px;font-weight:800} h3{font-size:14px;color:#A3A2CC;margin:20px 0 8px;font-weight:800}
+.muted{color:#63628E;font-weight:600}
+section{background:#14142255;border:1px solid #2E2E52;border-radius:18px;padding:16px;margin-bottom:18px}
+.cards{display:flex;gap:12px;flex-wrap:wrap}
+.gcard{flex:1;min-width:200px;background:linear-gradient(#26264A,#181830);border:1px solid #2E2E52;border-radius:20px;padding:12px;text-align:center}
+.gtitle{color:#A3A2CC;font-weight:800;font-size:13px;margin-bottom:4px} .ring{width:132px;height:132px}
+.gnum{font-size:15px;font-weight:900} .gsub{color:#A3A2CC;font-size:11px;margin-top:2px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:7px 6px;text-align:center;border-bottom:1px solid #2E2E5233}
+th{color:#63628E;font-weight:800;border-bottom:1px solid #2E2E52} td.l,th.l{text-align:left} .muted{color:#63628E}
+.trades .row{cursor:pointer} .trades .row:hover{background:#ffffff0a} .exp{color:#63628E;font-size:11px}
+.detr{display:none} .detr>td{background:#0d0d18;padding:6px 14px 12px}
+table.det{width:auto;min-width:60%;margin:4px 0} table.det th{font-size:11px} table.det td{border-bottom:1px solid #2E2E5222;font-size:12px}
+.pend{background:#FB4E7418;border:1px solid #FB4E7455;border-radius:12px;padding:10px 14px;color:#FB4E74;font-weight:800;margin:10px 0}
+.acct{display:flex;gap:22px;flex-wrap:wrap} .acct div{display:flex;flex-direction:column;gap:2px} .acct b{font-size:18px}
+</style></head><body><h1>🐷 종가배팅 대시보드</h1><div class=stamp>자동 갱신 · 2026-07-26 01:14 · 개별 / 포트 / 🏦하이브리드 3전략 비교 · 한국=실전모의 / 미국=페이퍼</div>
     <section>
-      <h2>🇰🇷 한국 종가배팅 <span class="muted">· 매수가 기준 · 3일</span></h2>
+      <h2>🇰🇷 한국 종가배팅 <span class="muted">· 매수가 기준 · 3일 · 실전 모의매매</span></h2>
       <div class="cards">
     <div class="gcard">
-      <div class="gtitle">전체 · 🏦하이브</div>
+      <div class="gtitle">전체 · 개별</div>
       <svg viewBox="0 0 100 100" class="ring">
-        <defs><linearGradient id="g55835" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stop-color="#8B5CF6"/><stop offset="1" stop-color="#D946EF"/></linearGradient></defs>
+        <defs><linearGradient id="g51341" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#6366F1"/><stop offset="1" stop-color="#A855F7"/></linearGradient></defs>
         <circle cx="50" cy="50" r="42" fill="none" stroke="#26264A" stroke-width="11"/>
-        <circle cx="50" cy="50" r="42" fill="none" stroke="url(#g55835)" stroke-width="11"
+        <circle cx="50" cy="50" r="42" fill="none" stroke="url(#g51341)" stroke-width="11"
           stroke-linecap="round" stroke-dasharray="175.9 263.9" transform="rotate(-90 50 50)"/>
         <text x="50" y="55" text-anchor="middle" class="gnum" fill="#FB4E74">+3.3%</text>
       </svg>
-      <div class="gsub">승률 67% · 개별 +3.3% · 포트 +5.0%</div>
+      <div class="gsub">승률 67% · 평균 +1.10%</div>
     </div>
     <div class="gcard">
-      <div class="gtitle">신규 · 🏦하이브</div>
+      <div class="gtitle">전체 · 포트</div>
       <svg viewBox="0 0 100 100" class="ring">
-        <defs><linearGradient id="g69820" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stop-color="#3B82F6"/><stop offset="1" stop-color="#8B5CF6"/></linearGradient></defs>
+        <defs><linearGradient id="g46949" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#8B5CF6"/><stop offset="1" stop-color="#D946EF"/></linearGradient></defs>
         <circle cx="50" cy="50" r="42" fill="none" stroke="#26264A" stroke-width="11"/>
-        <circle cx="50" cy="50" r="42" fill="none" stroke="url(#g69820)" stroke-width="11"
+        <circle cx="50" cy="50" r="42" fill="none" stroke="url(#g46949)" stroke-width="11"
           stroke-linecap="round" stroke-dasharray="175.9 263.9" transform="rotate(-90 50 50)"/>
-        <text x="50" y="55" text-anchor="middle" class="gnum" fill="#FB4E74">+6.3%</text>
+        <text x="50" y="55" text-anchor="middle" class="gnum" fill="#FB4E74">+5.0%</text>
       </svg>
-      <div class="gsub">승률 67% · 개별 +6.3% · 포트 +5.0%</div>
+      <div class="gsub">승률 67% · 평균 +1.67%</div>
     </div>
     <div class="gcard">
-      <div class="gtitle">선정 · 🏦하이브</div>
+      <div class="gtitle">전체 · 🏦하이브</div>
       <svg viewBox="0 0 100 100" class="ring">
-        <defs><linearGradient id="g30807" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stop-color="#D946EF"/><stop offset="1" stop-color="#FB4E74"/></linearGradient></defs>
+        <defs><linearGradient id="g54342" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#34E5A0"/><stop offset="1" stop-color="#8CF5CE"/></linearGradient></defs>
         <circle cx="50" cy="50" r="42" fill="none" stroke="#26264A" stroke-width="11"/>
-        <circle cx="50" cy="50" r="42" fill="none" stroke="url(#g30807)" stroke-width="11"
-          stroke-linecap="round" stroke-dasharray="0.0 263.9" transform="rotate(-90 50 50)"/>
-        <text x="50" y="55" text-anchor="middle" class="gnum" fill="#FB4E74">+0.0%</text>
+        <circle cx="50" cy="50" r="42" fill="none" stroke="url(#g54342)" stroke-width="11"
+          stroke-linecap="round" stroke-dasharray="175.9 263.9" transform="rotate(-90 50 50)"/>
+        <text x="50" y="55" text-anchor="middle" class="gnum" fill="#FB4E74">+3.3%</text>
       </svg>
-      <div class="gsub">승률 0% · 개별 +0.0% · 포트 +0.0%</div>
+      <div class="gsub">승률 67% · 하이브S +3.3%</div>
     </div></div>
+      <div class="pend">⏳ 대기 종목 (2026-07-27 매매예정) · 2종목: 067290, 475150 — 다음날 개장 후 추적 시작</div>
       <h3>전략 랭킹 (개별·포트·하이브 비교)</h3>
       <table><thead><tr><th class=l>전략</th><th>거래일</th><th>승률</th><th>평균</th><th>누적</th></tr></thead>
       <tbody><tr><td class=l>🏆 신규+개별</td><td>3</td><td>67%</td><td>+2.11%</td><td style='color:#FB4E74;font-weight:800'>+6.3%</td></tr><tr><td class=l>신규+🏦하이브</td><td>3</td><td>67%</td><td>+2.11%</td><td style='color:#FB4E74;font-weight:800'>+6.3%</td></tr><tr><td class=l>신규+🏦하이브S</td><td>3</td><td>67%</td><td>+2.11%</td><td style='color:#FB4E74;font-weight:800'>+6.3%</td></tr><tr><td class=l>전체+포트</td><td>3</td><td>67%</td><td>+1.67%</td><td style='color:#FB4E74;font-weight:800'>+5.0%</td></tr><tr><td class=l>신규+포트</td><td>3</td><td>67%</td><td>+1.67%</td><td style='color:#FB4E74;font-weight:800'>+5.0%</td></tr><tr><td class=l>전체+🏦하이브</td><td>3</td><td>67%</td><td>+1.10%</td><td style='color:#FB4E74;font-weight:800'>+3.3%</td></tr><tr><td class=l>전체+🏦하이브S</td><td>3</td><td>67%</td><td>+1.10%</td><td style='color:#FB4E74;font-weight:800'>+3.3%</td></tr><tr><td class=l>전체+개별</td><td>3</td><td>67%</td><td>+1.10%</td><td style='color:#FB4E74;font-weight:800'>+3.3%</td></tr></tbody></table>
-      <h3>최근 거래내역</h3>
-      <table><thead><tr><th>테스트일</th><th class=l>종목</th><th>매수가</th><th>손익%</th><th class=l>결과</th></tr></thead>
-      <tbody><tr><td>2026-07-27</td><td class=l>JW신약(067290)</td><td>-</td><td>-</td><td class=muted>대기</td></tr><tr><td>2026-07-27</td><td class=l>SK이터닉스(475150)</td><td>-</td><td>-</td><td class=muted>대기</td></tr><tr><td>2026-07-27</td><td class=l>JW신약(067290)</td><td>-</td><td>-</td><td class=muted>대기</td></tr><tr><td>2026-07-27</td><td class=l>SK이터닉스(475150)</td><td>-</td><td>-</td><td class=muted>대기</td></tr><tr><td>2026-07-24</td><td class=l>대원전선(006340)</td><td>14,110</td><td style='color:#4C93F7'>-5.0%</td><td class=l style='color:#4C93F7'>🛑 -5% 손절</td></tr><tr><td>2026-07-24</td><td class=l>다스코(058730)</td><td>4,180</td><td style='color:#4C93F7'>-5.0%</td><td class=l style='color:#4C93F7'>🛑 -5% 손절</td></tr><tr><td>2026-07-24</td><td class=l>한울반도체(320000)</td><td>14,390</td><td style='color:#4C93F7'>-5.0%</td><td class=l style='color:#4C93F7'>🛑 -5% 손절</td></tr><tr><td>2026-07-24</td><td class=l>SK이터닉스(475150)</td><td>80,600</td><td style='color:#4C93F7'>-5.0%</td><td class=l style='color:#4C93F7'>🛑 -5% 손절</td></tr><tr><td>2026-07-23</td><td class=l>다스코(058730)</td><td>4,045</td><td style='color:#FB4E74'>+3.1%</td><td class=l style='color:#FB4E74'>종가청산</td></tr><tr><td>2026-07-23</td><td class=l>스모트로닉(066590)</td><td>3,010</td><td style='color:#4C93F7'>-5.0%</td><td class=l style='color:#4C93F7'>🛑 -5% 손절</td></tr><tr><td>2026-07-23</td><td class=l>SK이터닉스(475150)</td><td>61,900</td><td style='color:#FB4E74'>+5.0%</td><td class=l style='color:#FB4E74'>🎯 +5% 익절</td></tr><tr><td>2026-07-22</td><td class=l>스모트로닉(066590)</td><td>3,185</td><td style='color:#FB4E74'>+14.1%</td><td class=l style='color:#FB4E74'>🎯 갭 익절(개장가)</td></tr><tr><td>2026-07-22</td><td class=l>JW신약(067290)</td><td>2,145</td><td style='color:#FB4E74'>+5.0%</td><td class=l style='color:#FB4E74'>🎯 +5% 익절</td></tr><tr><td>2026-07-22</td><td class=l>데이타솔루션(263800)</td><td>6,040</td><td style='color:#FB4E74'>+5.0%</td><td class=l style='color:#FB4E74'>🎯 +5% 익절</td></tr><tr><td>2026-07-22</td><td class=l>한울반도체(320000)</td><td>15,280</td><td style='color:#FB4E74'>+5.0%</td><td class=l style='color:#FB4E74'>🎯 +5% 익절</td></tr></tbody></table>
+      <h3>거래내역 <span class=muted>· 행 클릭 = 시가·고가·저가·청산 상세</span></h3>
+      <table class=trades><thead><tr><th>테스트일</th><th class=l>종목</th><th>매수가</th><th>손익%</th><th class=l>결과</th></tr></thead>
+      <tbody><tr class=norow><td>2026-07-27</td><td class=l>JW신약(067290)</td><td>-</td><td>-</td><td class='l muted'>대기</td></tr><tr class=norow><td>2026-07-27</td><td class=l>SK이터닉스(475150)</td><td>-</td><td>-</td><td class='l muted'>대기</td></tr><tr class=row onclick='tg(this)'><td>2026-07-24</td><td class=l>대원전선(006340)</td><td>14,110</td><td style='color:#4C93F7'>-5.0%</td><td class=l style='color:#4C93F7'>🛑 -5% 손절 <span class=exp>▾</span></td></tr><tr class=detr><td colspan=5><table class=det><thead><tr><th class=l>항목</th><th>가격</th><th>매수가대비</th><th>시각</th></tr></thead><tbody><tr><td class=l>매수가(전일종가)</td><td>14,110</td><td style='color:#A3A2CC'>0.00%</td><td class=muted>-</td></tr><tr><td class=l>시가(개장가)</td><td>13,670</td><td style='color:#4C93F7'>-3.12%</td><td class=muted>09:00:19</td></tr><tr><td class=l>장중 고가</td><td>14,110</td><td style='color:#FB4E74'>+0.00%</td><td class=muted>14:44:13</td></tr><tr><td class=l>장중 저가</td><td>13,100</td><td style='color:#4C93F7'>-7.16%</td><td class=muted>10:15:16</td></tr><tr><td class=l>청산가</td><td>13,404</td><td style='color:#4C93F7'>-5.00%</td><td class=muted>09:20:30</td></tr></tbody></table></td></tr><tr class=row onclick='tg(this)'><td>2026-07-24</td><td class=l>다스코(058730)</td><td>4,180</td><td style='color:#4C93F7'>-5.0%</td><td class=l style='color:#4C93F7'>🛑 -5% 손절 <span class=exp>▾</span></td></tr><tr class=detr><td colspan=5><table class=det><thead><tr><th class=l>항목</th><th>가격</th><th>매수가대비</th><th>시각</th></tr></thead><tbody><tr><td class=l>매수가(전일종가)</td><td>4,180</td><td style='color:#A3A2CC'>0.00%</td><td class=muted>-</td></tr><tr><td class=l>시가(개장가)</td><td>4,170</td><td style='color:#4C93F7'>-0.24%</td><td class=muted>09:00:19</td></tr><tr><td class=l>장중 고가</td><td>4,185</td><td style='color:#FB4E74'>+0.12%</td><td class=muted>10:35:47</td></tr><tr><td class=l>장중 저가</td><td>3,720</td><td style='color:#4C93F7'>-11.00%</td><td class=muted>15:19:14</td></tr><tr><td class=l>청산가</td><td>3,971</td><td style='color:#4C93F7'>-5.00%</td><td class=muted>09:08:40</td></tr></tbody></table></td></tr><tr class=row onclick='tg(this)'><td>2026-07-24</td><td class=l>한울반도체(320000)</td><td>14,390</td><td style='color:#4C93F7'>-5.0%</td><td class=l style='color:#4C93F7'>🛑 -5% 손절 <span class=exp>▾</span></td></tr><tr class=detr><td colspan=5><table class=det><thead><tr><th class=l>항목</th><th>가격</th><th>매수가대비</th><th>시각</th></tr></thead><tbody><tr><td class=l>매수가(전일종가)</td><td>14,390</td><td style='color:#A3A2CC'>0.00%</td><td class=muted>-</td></tr><tr><td class=l>시가(개장가)</td><td>13,940</td><td style='color:#4C93F7'>-3.13%</td><td class=muted>09:00:19</td></tr><tr><td class=l>장중 고가</td><td>13,940</td><td style='color:#4C93F7'>-3.13%</td><td class=muted>09:00:19</td></tr><tr><td class=l>장중 저가</td><td>12,490</td><td style='color:#4C93F7'>-13.20%</td><td class=muted>13:04:42</td></tr><tr><td class=l>청산가</td><td>13,670</td><td style='color:#4C93F7'>-5.00%</td><td class=muted>09:05:53</td></tr></tbody></table></td></tr><tr class=row onclick='tg(this)'><td>2026-07-24</td><td class=l>SK이터닉스(475150)</td><td>80,600</td><td style='color:#4C93F7'>-5.0%</td><td class=l style='color:#4C93F7'>🛑 -5% 손절 <span class=exp>▾</span></td></tr><tr class=detr><td colspan=5><table class=det><thead><tr><th class=l>항목</th><th>가격</th><th>매수가대비</th><th>시각</th></tr></thead><tbody><tr><td class=l>매수가(전일종가)</td><td>80,600</td><td style='color:#A3A2CC'>0.00%</td><td class=muted>-</td></tr><tr><td class=l>시가(개장가)</td><td>80,600</td><td style='color:#FB4E74'>+0.00%</td><td class=muted>09:00:19</td></tr><tr><td class=l>장중 고가</td><td>86,400</td><td style='color:#FB4E74'>+7.20%</td><td class=muted>14:01:40</td></tr><tr><td class=l>장중 저가</td><td>76,200</td><td style='color:#4C93F7'>-5.46%</td><td class=muted>09:08:40</td></tr><tr><td class=l>청산가</td><td>76,570</td><td style='color:#4C93F7'>-5.00%</td><td class=muted>09:08:40</td></tr></tbody></table></td></tr><tr class=row onclick='tg(this)'><td>2026-07-23</td><td class=l>다스코(058730)</td><td>4,045</td><td style='color:#FB4E74'>+3.1%</td><td class=l style='color:#FB4E74'>종가청산 <span class=exp>▾</span></td></tr><tr class=detr><td colspan=5><table class=det><thead><tr><th class=l>항목</th><th>가격</th><th>매수가대비</th><th>시각</th></tr></thead><tbody><tr><td class=l>매수가(전일종가)</td><td>4,045</td><td style='color:#A3A2CC'>0.00%</td><td class=muted>-</td></tr><tr><td class=l>시가(개장가)</td><td>4,070</td><td style='color:#FB4E74'>+0.62%</td><td class=muted>09:00</td></tr><tr><td class=l>장중 고가</td><td>4,180</td><td style='color:#FB4E74'>+3.34%</td><td class=muted>09:06</td></tr><tr><td class=l>장중 저가</td><td>3,975</td><td style='color:#4C93F7'>-1.73%</td><td class=muted>10:49</td></tr><tr><td class=l>청산가</td><td>4,170</td><td style='color:#FB4E74'>+3.09%</td><td class=muted>15:20</td></tr></tbody></table></td></tr><tr class=row onclick='tg(this)'><td>2026-07-23</td><td class=l>스모트로닉(066590)</td><td>3,010</td><td style='color:#4C93F7'>-5.0%</td><td class=l style='color:#4C93F7'>🛑 -5% 손절 <span class=exp>▾</span></td></tr><tr class=detr><td colspan=5><table class=det><thead><tr><th class=l>항목</th><th>가격</th><th>매수가대비</th><th>시각</th></tr></thead><tbody><tr><td class=l>매수가(전일종가)</td><td>3,010</td><td style='color:#A3A2CC'>0.00%</td><td class=muted>-</td></tr><tr><td class=l>시가(개장가)</td><td>3,060</td><td style='color:#FB4E74'>+1.66%</td><td class=muted>09:00</td></tr><tr><td class=l>장중 고가</td><td>3,115</td><td style='color:#FB4E74'>+3.49%</td><td class=muted>09:01</td></tr><tr><td class=l>장중 저가</td><td>2,760</td><td style='color:#4C93F7'>-8.31%</td><td class=muted>15:20</td></tr><tr><td class=l>청산가</td><td>2,860</td><td style='color:#4C93F7'>-5.00%</td><td class=muted>15:20</td></tr></tbody></table></td></tr><tr class=row onclick='tg(this)'><td>2026-07-23</td><td class=l>SK이터닉스(475150)</td><td>61,900</td><td style='color:#FB4E74'>+5.0%</td><td class=l style='color:#FB4E74'>🎯 +5% 익절 <span class=exp>▾</span></td></tr><tr class=detr><td colspan=5><table class=det><thead><tr><th class=l>항목</th><th>가격</th><th>매수가대비</th><th>시각</th></tr></thead><tbody><tr><td class=l>매수가(전일종가)</td><td>61,900</td><td style='color:#A3A2CC'>0.00%</td><td class=muted>-</td></tr><tr><td class=l>시가(개장가)</td><td>64,400</td><td style='color:#FB4E74'>+4.04%</td><td class=muted>09:00</td></tr><tr><td class=l>장중 고가</td><td>80,600</td><td style='color:#FB4E74'>+30.21%</td><td class=muted>15:20</td></tr><tr><td class=l>장중 저가</td><td>4,060</td><td style='color:#4C93F7'>-93.44%</td><td class=muted>09:28</td></tr><tr><td class=l>청산가</td><td>64,995</td><td style='color:#FB4E74'>+5.00%</td><td class=muted>09:01</td></tr></tbody></table></td></tr><tr class=row onclick='tg(this)'><td>2026-07-22</td><td class=l>스모트로닉(066590)</td><td>3,185</td><td style='color:#FB4E74'>+14.1%</td><td class=l style='color:#FB4E74'>🎯 갭 익절(개장가) <span class=exp>▾</span></td></tr><tr class=detr><td colspan=5><table class=det><thead><tr><th class=l>항목</th><th>가격</th><th>매수가대비</th><th>시각</th></tr></thead><tbody><tr><td class=l>매수가(전일종가)</td><td>3,185</td><td style='color:#A3A2CC'>0.00%</td><td class=muted>-</td></tr><tr><td class=l>시가(개장가)</td><td>3,635</td><td style='color:#FB4E74'>+14.13%</td><td class=muted>09:00</td></tr><tr><td class=l>장중 고가</td><td>3,705</td><td style='color:#FB4E74'>+16.33%</td><td class=muted>-</td></tr><tr><td class=l>장중 저가</td><td>2,930</td><td style='color:#4C93F7'>-8.01%</td><td class=muted>-</td></tr><tr><td class=l>청산가</td><td>3,635</td><td style='color:#FB4E74'>+14.13%</td><td class=muted>09:00</td></tr></tbody></table></td></tr><tr class=row onclick='tg(this)'><td>2026-07-22</td><td class=l>JW신약(067290)</td><td>2,145</td><td style='color:#FB4E74'>+5.0%</td><td class=l style='color:#FB4E74'>🎯 +5% 익절 <span class=exp>▾</span></td></tr><tr class=detr><td colspan=5><table class=det><thead><tr><th class=l>항목</th><th>가격</th><th>매수가대비</th><th>시각</th></tr></thead><tbody><tr><td class=l>매수가(전일종가)</td><td>2,145</td><td style='color:#A3A2CC'>0.00%</td><td class=muted>-</td></tr><tr><td class=l>시가(개장가)</td><td>2,185</td><td style='color:#FB4E74'>+1.86%</td><td class=muted>09:00</td></tr><tr><td class=l>장중 고가</td><td>2,290</td><td style='color:#FB4E74'>+6.76%</td><td class=muted>-</td></tr><tr><td class=l>장중 저가</td><td>2,065</td><td style='color:#4C93F7'>-3.73%</td><td class=muted>-</td></tr><tr><td class=l>청산가</td><td>2,252</td><td style='color:#FB4E74'>+5.00%</td><td class=muted>12:00</td></tr></tbody></table></td></tr><tr class=row onclick='tg(this)'><td>2026-07-22</td><td class=l>데이타솔루션(263800)</td><td>6,040</td><td style='color:#FB4E74'>+5.0%</td><td class=l style='color:#FB4E74'>🎯 +5% 익절 <span class=exp>▾</span></td></tr><tr class=detr><td colspan=5><table class=det><thead><tr><th class=l>항목</th><th>가격</th><th>매수가대비</th><th>시각</th></tr></thead><tbody><tr><td class=l>매수가(전일종가)</td><td>6,040</td><td style='color:#A3A2CC'>0.00%</td><td class=muted>-</td></tr><tr><td class=l>시가(개장가)</td><td>6,000</td><td style='color:#4C93F7'>-0.66%</td><td class=muted>09:00</td></tr><tr><td class=l>장중 고가</td><td>6,370</td><td style='color:#FB4E74'>+5.46%</td><td class=muted>-</td></tr><tr><td class=l>장중 저가</td><td>5,850</td><td style='color:#4C93F7'>-3.15%</td><td class=muted>-</td></tr><tr><td class=l>청산가</td><td>6,342</td><td style='color:#FB4E74'>+5.00%</td><td class=muted>12:00</td></tr></tbody></table></td></tr><tr class=row onclick='tg(this)'><td>2026-07-22</td><td class=l>한울반도체(320000)</td><td>15,280</td><td style='color:#FB4E74'>+5.0%</td><td class=l style='color:#FB4E74'>🎯 +5% 익절 <span class=exp>▾</span></td></tr><tr class=detr><td colspan=5><table class=det><thead><tr><th class=l>항목</th><th>가격</th><th>매수가대비</th><th>시각</th></tr></thead><tbody><tr><td class=l>매수가(전일종가)</td><td>15,280</td><td style='color:#A3A2CC'>0.00%</td><td class=muted>-</td></tr><tr><td class=l>시가(개장가)</td><td>15,360</td><td style='color:#FB4E74'>+0.52%</td><td class=muted>09:00</td></tr><tr><td class=l>장중 고가</td><td>16,700</td><td style='color:#FB4E74'>+9.29%</td><td class=muted>-</td></tr><tr><td class=l>장중 저가</td><td>13,800</td><td style='color:#4C93F7'>-9.69%</td><td class=muted>-</td></tr><tr><td class=l>청산가</td><td>16,044</td><td style='color:#FB4E74'>+5.00%</td><td class=muted>12:00</td></tr></tbody></table></td></tr></tbody></table>
+      <h3>🏦 하이브리드 매매내역 <span class=muted>· 행 클릭 = 종목별 청산 상세</span></h3>
+      <table class=trades><thead><tr><th>테스트일</th><th>종목수</th><th>계좌손익%</th><th class=l>결과</th></tr></thead>
+      <tbody><tr class=row onclick='tg(this)'><td>2026-07-24</td><td>4</td><td style='color:#4C93F7'>-5.00%</td><td class=l>개별청산(계좌 미도달) <span class=exp>▾</span></td></tr><tr class=detr><td colspan=4><table class=det><thead><tr><th class=l>종목</th><th class=l>청산 시각 · 방식</th><th>손익%</th></tr></thead><tbody><tr><td class=l>대원전선</td><td class=l>09:20:30 · 🛑 -5% 손절</td><td style='color:#4C93F7'>-5.0%</td></tr><tr><td class=l>다스코</td><td class=l>09:08:40 · 🛑 -5% 손절</td><td style='color:#4C93F7'>-5.0%</td></tr><tr><td class=l>한울반도체</td><td class=l>09:05:53 · 🛑 -5% 손절</td><td style='color:#4C93F7'>-5.0%</td></tr><tr><td class=l>SK이터닉스</td><td class=l>09:08:40 · 🛑 -5% 손절</td><td style='color:#4C93F7'>-5.0%</td></tr></tbody></table></td></tr><tr class=row onclick='tg(this)'><td>2026-07-23</td><td>3</td><td style='color:#FB4E74'>+1.03%</td><td class=l>개별청산(계좌 미도달) <span class=exp>▾</span></td></tr><tr class=detr><td colspan=4><table class=det><thead><tr><th class=l>종목</th><th class=l>청산 시각 · 방식</th><th>손익%</th></tr></thead><tbody><tr><td class=l>SK이터닉스</td><td class=l>09:01 · 🎯 +5% 익절</td><td style='color:#FB4E74'>+5.0%</td></tr><tr><td class=l>다스코</td><td class=l>15:20 · 종가청산</td><td style='color:#FB4E74'>+3.1%</td></tr><tr><td class=l>스모트로닉</td><td class=l>15:20 · 🛑 -5% 손절</td><td style='color:#4C93F7'>-5.0%</td></tr></tbody></table></td></tr><tr class=row onclick='tg(this)'><td>2026-07-22</td><td>4</td><td style='color:#FB4E74'>+7.28%</td><td class=l>🏦 계좌 +5% 전량청산 <span class=exp>▾</span></td></tr><tr class=detr><td colspan=4><table class=det><thead><tr><th class=l>종목</th><th class=l>청산 시각 · 방식</th><th>손익%</th></tr></thead><tbody><tr><td class=l>스모트로닉</td><td class=l>09:00 · 🎯 갭 익절(개장가)</td><td style='color:#FB4E74'>+14.1%</td></tr><tr><td class=l>JW신약</td><td class=l>12:00 · 🎯 +5% 익절</td><td style='color:#FB4E74'>+5.0%</td></tr><tr><td class=l>데이타솔루션</td><td class=l>12:00 · 🎯 +5% 익절</td><td style='color:#FB4E74'>+5.0%</td></tr><tr><td class=l>한울반도체</td><td class=l>12:00 · 🎯 +5% 익절</td><td style='color:#FB4E74'>+5.0%</td></tr></tbody></table></td></tr></tbody></table>
     </section>
     <section>
-      <h2>🇺🇸 미국 종가배팅 <span class="muted">· 페이퍼 · 1일</span></h2>
+      <h2>🇺🇸 미국 종가배팅 <span class="muted">· 매수가 기준 · 1일 · 페이퍼(분석)</span></h2>
       <div class="cards">
     <div class="gcard">
       <div class="gtitle">개별</div>
       <svg viewBox="0 0 100 100" class="ring">
-        <defs><linearGradient id="g33868" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stop-color="#6366F1"/><stop offset="1" stop-color="#8B5CF6"/></linearGradient></defs>
+        <defs><linearGradient id="g65221" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#6366F1"/><stop offset="1" stop-color="#A855F7"/></linearGradient></defs>
         <circle cx="50" cy="50" r="42" fill="none" stroke="#26264A" stroke-width="11"/>
-        <circle cx="50" cy="50" r="42" fill="none" stroke="url(#g33868)" stroke-width="11"
-          stroke-linecap="round" stroke-dasharray="263.9 263.9" transform="rotate(-90 50 50)"/>
+        <circle cx="50" cy="50" r="42" fill="none" stroke="url(#g65221)" stroke-width="11"
+          stroke-linecap="round" stroke-dasharray="263.6 263.9" transform="rotate(-90 50 50)"/>
         <text x="50" y="55" text-anchor="middle" class="gnum" fill="#FB4E74">+5.0%</text>
       </svg>
       <div class="gsub">승률 100% · 평균 +5.00%</div>
@@ -83,10 +86,10 @@
     <div class="gcard">
       <div class="gtitle">포트</div>
       <svg viewBox="0 0 100 100" class="ring">
-        <defs><linearGradient id="g90460" x1="0" y1="0" x2="1" y2="1">
+        <defs><linearGradient id="g71881" x1="0" y1="0" x2="1" y2="1">
           <stop offset="0" stop-color="#8B5CF6"/><stop offset="1" stop-color="#D946EF"/></linearGradient></defs>
         <circle cx="50" cy="50" r="42" fill="none" stroke="#26264A" stroke-width="11"/>
-        <circle cx="50" cy="50" r="42" fill="none" stroke="url(#g90460)" stroke-width="11"
+        <circle cx="50" cy="50" r="42" fill="none" stroke="url(#g71881)" stroke-width="11"
           stroke-linecap="round" stroke-dasharray="0.0 263.9" transform="rotate(-90 50 50)"/>
         <text x="50" y="55" text-anchor="middle" class="gnum" fill="#4C93F7">-3.9%</text>
       </svg>
@@ -95,18 +98,20 @@
     <div class="gcard">
       <div class="gtitle">🏦하이브</div>
       <svg viewBox="0 0 100 100" class="ring">
-        <defs><linearGradient id="g99445" x1="0" y1="0" x2="1" y2="1">
+        <defs><linearGradient id="g84528" x1="0" y1="0" x2="1" y2="1">
           <stop offset="0" stop-color="#34E5A0"/><stop offset="1" stop-color="#8CF5CE"/></linearGradient></defs>
         <circle cx="50" cy="50" r="42" fill="none" stroke="#26264A" stroke-width="11"/>
-        <circle cx="50" cy="50" r="42" fill="none" stroke="url(#g99445)" stroke-width="11"
-          stroke-linecap="round" stroke-dasharray="263.9 263.9" transform="rotate(-90 50 50)"/>
+        <circle cx="50" cy="50" r="42" fill="none" stroke="url(#g84528)" stroke-width="11"
+          stroke-linecap="round" stroke-dasharray="263.6 263.9" transform="rotate(-90 50 50)"/>
         <text x="50" y="55" text-anchor="middle" class="gnum" fill="#FB4E74">+5.0%</text>
       </svg>
-      <div class="gsub">승률 100%</div>
+      <div class="gsub">승률 100% · 하이브S +5.0%</div>
     </div></div>
-      <div class="pend">⏳ 대기 종목 (2026-07-27 매매예정) · 6종목: RNG, WKC, DLR, OII, CLF, OTLY</div>
-      <h3>최근 거래내역</h3>
-      <table><thead><tr><th>테스트일</th><th class=l>종목</th><th>매수가</th><th>손익%</th><th class=l>결과</th></tr></thead>
-      <tbody><tr><td>2026-07-27</td><td class=l>Ringcentral, Inc.(RNG)</td><td>-</td><td>-</td><td class=muted>대기</td></tr><tr><td>2026-07-27</td><td class=l>World Kinect Corporation(WKC)</td><td>-</td><td>-</td><td class=muted>대기</td></tr><tr><td>2026-07-27</td><td class=l>Digital Realty Trust, Inc.(DLR)</td><td>-</td><td>-</td><td class=muted>대기</td></tr><tr><td>2026-07-27</td><td class=l>Oceaneering International, Inc.(OII)</td><td>-</td><td>-</td><td class=muted>대기</td></tr><tr><td>2026-07-27</td><td class=l>Cleveland-Cliffs Inc.(CLF)</td><td>-</td><td>-</td><td class=muted>대기</td></tr><tr><td>2026-07-27</td><td class=l>Oatly Group AB(OTLY)</td><td>-</td><td>-</td><td class=muted>대기</td></tr><tr><td>2026-07-24</td><td class=l>Oatly Group AB(OTLY)</td><td>13</td><td style='color:#FB4E74'>+5.0%</td><td class=l style='color:#FB4E74'>🎯 +5% 익절</td></tr><tr><td>2026-07-24</td><td class=l>Gentherm Inc(THRM)</td><td>46</td><td style='color:#FB4E74'>+5.0%</td><td class=l style='color:#FB4E74'>🎯 +5% 익절</td></tr><tr><td>2026-07-24</td><td class=l>NovoCure Limited(NVCR)</td><td>20</td><td style='color:#FB4E74'>+5.0%</td><td class=l style='color:#FB4E74'>🎯 +5% 익절</td></tr></tbody></table>
-    </section>
-    <div class="stamp" style="margin-top:24px">데이터는 매일 자동 커밋됩니다 · 개별/포트/하이브 전략 비교</div></body></html>
+      <div class="pend">⏳ 대기 종목 (2026-07-27 매매예정) · 6종목: RNG, WKC, DLR, OII, CLF, OTLY — 개장(09:30 ET) 후 추적 시작</div>
+      <h3>거래내역 <span class=muted>· 행 클릭 = 상세(시각 KST)</span></h3>
+      <table class=trades><thead><tr><th>테스트일</th><th class=l>종목</th><th>매수가</th><th>손익%</th><th class=l>결과</th></tr></thead>
+      <tbody><tr class=norow><td>2026-07-27</td><td class=l>Ringcentral, Inc.(RNG)</td><td>-</td><td>-</td><td class='l muted'>대기</td></tr><tr class=norow><td>2026-07-27</td><td class=l>World Kinect Corporation(WKC)</td><td>-</td><td>-</td><td class='l muted'>대기</td></tr><tr class=norow><td>2026-07-27</td><td class=l>Digital Realty Trust, Inc.(DLR)</td><td>-</td><td>-</td><td class='l muted'>대기</td></tr><tr class=norow><td>2026-07-27</td><td class=l>Oceaneering International, Inc.(OII)</td><td>-</td><td>-</td><td class='l muted'>대기</td></tr><tr class=norow><td>2026-07-27</td><td class=l>Cleveland-Cliffs Inc.(CLF)</td><td>-</td><td>-</td><td class='l muted'>대기</td></tr><tr class=norow><td>2026-07-27</td><td class=l>Oatly Group AB(OTLY)</td><td>-</td><td>-</td><td class='l muted'>대기</td></tr><tr class=row onclick='tg(this)'><td>2026-07-24</td><td class=l>Oatly Group AB(OTLY)</td><td>$12.56</td><td style='color:#FB4E74'>+5.0%</td><td class=l style='color:#FB4E74'>🎯 +5% 익절 <span class=exp>▾</span></td></tr><tr class=detr><td colspan=5><table class=det><thead><tr><th class=l>항목</th><th>가격</th><th>매수가대비</th><th>시각</th></tr></thead><tbody><tr><td class=l>매수가(전일종가)</td><td>$12.56</td><td style='color:#A3A2CC'>0.00%</td><td class=muted>-</td></tr><tr><td class=l>시가(개장가)</td><td>$12.56</td><td style='color:#FB4E74'>+0.00%</td><td class=muted>22:30:05</td></tr><tr><td class=l>장중 고가</td><td>$13.47</td><td style='color:#FB4E74'>+7.25%</td><td class=muted>04:37:25(+1일)</td></tr><tr><td class=l>장중 저가</td><td>$12.48</td><td style='color:#4C93F7'>-0.64%</td><td class=muted>23:05:27</td></tr><tr><td class=l>청산가</td><td>$13.19</td><td style='color:#FB4E74'>+5.00%</td><td class=muted>03:17:07(+1일)</td></tr></tbody></table></td></tr><tr class=row onclick='tg(this)'><td>2026-07-24</td><td class=l>Gentherm Inc(THRM)</td><td>$45.61</td><td style='color:#FB4E74'>+5.0%</td><td class=l style='color:#FB4E74'>🎯 +5% 익절 <span class=exp>▾</span></td></tr><tr class=detr><td colspan=5><table class=det><thead><tr><th class=l>항목</th><th>가격</th><th>매수가대비</th><th>시각</th></tr></thead><tbody><tr><td class=l>매수가(전일종가)</td><td>$45.61</td><td style='color:#A3A2CC'>0.00%</td><td class=muted>-</td></tr><tr><td class=l>시가(개장가)</td><td>$46.62</td><td style='color:#FB4E74'>+2.21%</td><td class=muted>22:30:05</td></tr><tr><td class=l>장중 고가</td><td>$48.26</td><td style='color:#FB4E74'>+5.81%</td><td class=muted>22:44:40</td></tr><tr><td class=l>장중 저가</td><td>$42.51</td><td style='color:#4C93F7'>-6.81%</td><td class=muted>04:58:40(+1일)</td></tr><tr><td class=l>청산가</td><td>$47.89</td><td style='color:#FB4E74'>+5.00%</td><td class=muted>22:44:40</td></tr></tbody></table></td></tr><tr class=row onclick='tg(this)'><td>2026-07-24</td><td class=l>NovoCure Limited(NVCR)</td><td>$19.99</td><td style='color:#FB4E74'>+5.0%</td><td class=l style='color:#FB4E74'>🎯 +5% 익절 <span class=exp>▾</span></td></tr><tr class=detr><td colspan=5><table class=det><thead><tr><th class=l>항목</th><th>가격</th><th>매수가대비</th><th>시각</th></tr></thead><tbody><tr><td class=l>매수가(전일종가)</td><td>$19.99</td><td style='color:#A3A2CC'>0.00%</td><td class=muted>-</td></tr><tr><td class=l>시가(개장가)</td><td>$19.99</td><td style='color:#FB4E74'>+0.00%</td><td class=muted>22:30:05</td></tr><tr><td class=l>장중 고가</td><td>$21.02</td><td style='color:#FB4E74'>+5.14%</td><td class=muted>22:32:10</td></tr><tr><td class=l>장중 저가</td><td>$17.73</td><td style='color:#4C93F7'>-11.33%</td><td class=muted>04:59:43(+1일)</td></tr><tr><td class=l>청산가</td><td>$20.99</td><td style='color:#FB4E74'>+5.00%</td><td class=muted>22:32:10</td></tr></tbody></table></td></tr></tbody></table>
+      <h3>🏦 하이브리드 매매내역 <span class=muted>· 행 클릭 = 종목별 청산 상세</span></h3>
+      <table class=trades><thead><tr><th>테스트일</th><th>종목수</th><th>계좌손익%</th><th class=l>결과</th></tr></thead>
+      <tbody><tr class=row onclick='tg(this)'><td>2026-07-24</td><td>3</td><td style='color:#FB4E74'>+5.00%</td><td class=l>🏦 계좌 +5% 전량청산 <span class=exp>▾</span></td></tr><tr class=detr><td colspan=4><table class=det><thead><tr><th class=l>종목</th><th class=l>청산 시각 · 방식</th><th>손익%</th></tr></thead><tbody><tr><td class=l>Oatly Group AB</td><td class=l>03:17:07(+1일) · 🎯 +5% 익절</td><td style='color:#FB4E74'>+5.0%</td></tr><tr><td class=l>Gentherm Inc</td><td class=l>22:44:40 · 🎯 +5% 익절</td><td style='color:#FB4E74'>+5.0%</td></tr><tr><td class=l>NovoCure Limited</td><td class=l>22:32:10 · 🎯 +5% 익절</td><td style='color:#FB4E74'>+5.0%</td></tr></tbody></table></td></tr></tbody></table>
+    </section><div class=stamp style='margin-top:20px'>행을 클릭하면 상세(시가·고가·저가·청산 시각·%)가 펼쳐집니다 · 매일 자동 커밋</div><script>function tg(r){var d=r.nextElementSibling; if(d&&d.classList.contains('detr')){d.style.display=(d.style.display==='table-row'?'none':'table-row');}}</script></body></html>
