@@ -1,0 +1,353 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>종가배팅 30일 백테스트</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0a0e17;color:#e6e9f0;font-family:'Pretendard','Malgun Gothic',-apple-system,system-ui,sans-serif;
+ line-height:1.5;padding:0 0 40px;-webkit-font-smoothing:antialiased}
+.wrap{max-width:760px;margin:0 auto;padding:0 14px}
+.hero{padding:26px 0 18px;border-bottom:1px solid #1c2333}
+.hero h1{font-size:22px;font-weight:900;letter-spacing:-.3px}
+.hero .sub{color:#8b93a7;font-size:12.5px;margin-top:6px}
+.hero .uni{margin-top:10px;font-size:11.5px;color:#6b7488;background:#111726;border:1px solid #1c2333;
+ border-radius:8px;padding:7px 11px;display:inline-block}
+h2{font-size:14px;font-weight:800;margin:26px 0 12px;color:#c9cede;display:flex;align-items:center;gap:7px}
+h2::before{content:"";width:3px;height:15px;background:#F0455C;border-radius:2px}
+.cards{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+@media(max-width:560px){.cards{grid-template-columns:1fr}}
+.card{background:#111726;border:1px solid #1c2333;border-radius:14px;padding:15px 15px 13px}
+.card.hl{border-color:#F0455C66;box-shadow:0 0 0 1px #F0455C22,0 8px 26px #F0455C10}
+.ct{font-size:12.5px;font-weight:800;color:#c9cede}
+.cwr{font-size:30px;font-weight:900;margin:6px 0 8px;letter-spacing:-1px}
+.cwr span{font-size:11px;font-weight:700;color:#6b7488;margin-left:5px;letter-spacing:0}
+.crow{font-size:12px;color:#8b93a7;margin-top:3px}
+.crow b{color:#e6e9f0;font-variant-numeric:tabular-nums}
+.cbar{margin-top:10px;height:5px;background:#1c2333;border-radius:3px;overflow:hidden}
+.cbar i{display:block;height:100%;border-radius:3px}
+.callout{background:linear-gradient(135deg,#15111a,#111726);border:1px solid #2a2233;border-radius:14px;
+ padding:16px 17px;margin-top:6px}
+.callout .big{font-size:15px;font-weight:800;line-height:1.55}
+.callout .big em{font-style:normal;color:#F0455C}
+.callout .big u{text-decoration:none;color:#34E5A0}
+.cmp{display:flex;gap:12px;margin-top:14px}
+.cmp .b{flex:1;background:#0d1220;border:1px solid #1c2333;border-radius:10px;padding:11px 12px}
+.cmp .bt{font-size:12px;font-weight:800}
+.cmp .bv{font-size:22px;font-weight:900;margin-top:4px;font-variant-numeric:tabular-nums}
+.cmp .bs{font-size:11px;color:#8b93a7;margin-top:2px}
+.cmp .bar{margin-top:8px;height:6px;background:#1c2333;border-radius:3px;overflow:hidden}
+.cmp .bar i{display:block;height:100%}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+.tbl{background:#111726;border:1px solid #1c2333;border-radius:12px;overflow:hidden}
+thead th{background:#0d1220;color:#6b7488;font-size:10.5px;font-weight:800;text-transform:uppercase;
+ letter-spacing:.4px;padding:9px 10px;text-align:left}
+tbody td{padding:9px 10px;border-top:1px solid #171d2b;font-variant-numeric:tabular-nums}
+tbody tr:hover{background:#0d1220}
+.gtbl td{padding:10px 12px;font-size:13px}
+.gtbl b{font-size:14px}
+.dt{color:#8b93a7;font-size:11.5px;white-space:nowrap}
+.nm{font-weight:700;color:#e6e9f0}
+.nm .cd{color:#5b6478;font-size:10px;margin-left:5px;font-weight:500}
+.ba{white-space:nowrap;font-weight:700}
+.rt{font-weight:800;text-align:right;white-space:nowrap}
+.hw{color:#9aa2b6;font-size:11px}
+.mx{color:#8b93a7;font-size:11px;text-align:right}
+.mut{color:#5b6478;font-size:11px}
+.scroll{overflow-x:auto}
+.note{font-size:11.5px;color:#7a8299;background:#0d1220;border:1px solid #1c2333;
+ border-radius:10px;padding:12px 14px;margin-top:12px;line-height:1.65}
+.note b{color:#c9cede}
+.foot{color:#5b6478;font-size:10.5px;text-align:center;margin-top:24px}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:11px;color:#8b93a7;margin-top:8px}
+.legend span b{color:#e6e9f0}
+</style></head><body>
+<div class="wrap">
+  <div class="hero">
+    <h1>🐷 종가배팅 · 30일 백테스트</h1>
+    <div class="sub">2026-06-18 ~ 07-30 매수 · 종가매수 → 다음날 청산(±5% / 상한가 ±3%) · 구매매력도 검증</div>
+    <div class="uni">📦 KRX 공식 전종목 2,515개 × 430일 · 조건①세력 ②MA200·400 ③거래량&gt;상장주식수 · 우리 전략 정확 복제</div>
+  </div>
+
+  <h2>전략별 성과</h2>
+  <div class="cards">
+    <div class="card">
+      <div class="ct">전체 (3조건 선정)</div>
+      <div class="cwr" style="color:#F0455C">75%<span>승률</span></div>
+      <div class="crow"><span>픽</span><b>24건</b> <span>(18승 6패)</span></div>
+      <div class="crow"><span>종목평균</span><b style="color:#F0455C">+2.48%</b>/건</div>
+      <div class="crow"><span>실현손익</span><b style="color:#F0455C">+596,300원</b></div>
+      <div class="cbar"><i style="width:75%;background:#F0455C"></i></div>
+    </div>
+    <div class="card">
+      <div class="ct">A·B등급 (≥60점)</div>
+      <div class="cwr" style="color:#F0455C">71%<span>승률</span></div>
+      <div class="crow"><span>픽</span><b>21건</b> <span>(15승 6패)</span></div>
+      <div class="crow"><span>종목평균</span><b style="color:#F0455C">+2.01%</b>/건</div>
+      <div class="crow"><span>실현손익</span><b style="color:#F0455C">+422,300원</b></div>
+      <div class="cbar"><i style="width:71%;background:#F0455C"></i></div>
+    </div>
+    <div class="card hl">
+      <div class="ct">🔥 A등급만 (≥80점)</div>
+      <div class="cwr" style="color:#F0455C">90%<span>승률</span></div>
+      <div class="crow"><span>픽</span><b>10건</b> <span>(9승 1패)</span></div>
+      <div class="crow"><span>종목평균</span><b style="color:#F0455C">+4.54%</b>/건</div>
+      <div class="crow"><span>실현손익</span><b style="color:#F0455C">+454,300원</b></div>
+      <div class="cbar"><i style="width:90%;background:#F0455C"></i></div>
+    </div>
+  </div>
+
+  <h2>핵심 발견 — 등급이 진짜 가른다</h2>
+  <div class="callout">
+    <div class="big">A등급(≥80)은 <em>승률 90% · 평균 +4.54%</em>로 압도적이지만,<br>
+    B등급(60~79)은 <u>승률 55% · 평균 -0.29%</u> — 사실상 본전.</div>
+    <div class="cmp">
+      <div class="b"><div class="bt" style="color:#F0455C">A등급 ≥80</div>
+        <div class="bv" style="color:#F0455C">90%</div>
+        <div class="bs">10건 · 평균 +4.54%</div>
+        <div class="bar"><i style="width:90%;background:#F0455C"></i></div></div>
+      <div class="b"><div class="bt" style="color:#34E5A0">B등급 60~79</div>
+        <div class="bv" style="color:#c9cede">55%</div>
+        <div class="bs">11건 · 평균 -0.29%</div>
+        <div class="bar"><i style="width:55%;background:#34E5A0"></i></div></div>
+    </div>
+    <div class="note" style="margin-top:14px">💡 손실 6건 중 <b>5건이 B등급</b>.
+    "A·B(≥60)" 필터는 B의 노이즈가 A를 희석 → 오히려 전체보다 저조.
+    <b>매수 필터를 A등급(≥80)으로 올리는 게 근거상 최선.</b></div>
+  </div>
+
+  <h2>등급별 상세</h2>
+  <div class="tbl"><table class="gtbl">
+    <thead><tr><th>등급</th><th>픽</th><th>승률</th><th>종목평균</th></tr></thead>
+    <tbody><tr>
+      <td style="color:#F0455C"><b>A</b> ≥80</td>
+      <td>10건</td>
+      <td style="color:#F0455C"><b>90%</b></td>
+      <td style="color:#F0455C"><b>+4.54%</b></td>
+    </tr><tr>
+      <td style="color:#34E5A0"><b>B</b> 60~79</td>
+      <td>11건</td>
+      <td style="color:#c9cede"><b>55%</b></td>
+      <td style="color:#4C8DF7"><b>-0.29%</b></td>
+    </tr><tr>
+      <td style="color:#F5A524"><b>C</b> 40~59</td>
+      <td>2건 <span class='mut'>(표본작음)</span></td>
+      <td style="color:#F0455C"><b>100%</b></td>
+      <td style="color:#F0455C"><b>+7.20%</b></td>
+    </tr><tr>
+      <td style="color:#4C8DF7"><b>D</b> <40</td>
+      <td>1건 <span class='mut'>(표본작음)</span></td>
+      <td style="color:#F0455C"><b>100%</b></td>
+      <td style="color:#F0455C"><b>+3.00%</b></td>
+    </tr></tbody></table></div>
+
+  <h2>전체 거래내역 · 24건</h2>
+  <div class="tbl scroll"><table>
+    <thead><tr><th>매수일</th><th>종목</th><th>매력도</th><th>수익률</th><th>청산결과</th><th>MA200</th><th>LRL</th></tr></thead>
+    <tbody><tr>
+      <td class="dt">06-18</td>
+      <td class="nm">JW신약<span class="cd">067290</span></td>
+      <td class="ba" style="color:#F0455C"><b>A</b> 89</td>
+      <td class="rt" style="color:#F0455C">🔴 +5.00%</td>
+      <td class="hw">🎯+5%익절</td>
+      <td class="mx">+20%</td>
+      <td class="mx">+17.9</td>
+    </tr><tr>
+      <td class="dt">06-18</td>
+      <td class="nm">한켐<span class="cd">457370</span></td>
+      <td class="ba" style="color:#34E5A0"><b>B</b> 69</td>
+      <td class="rt" style="color:#4C8DF7">🔵 -5.00%</td>
+      <td class="hw">🛑-5%손절</td>
+      <td class="mx">+66%</td>
+      <td class="mx">+10.1</td>
+    </tr><tr>
+      <td class="dt">06-19</td>
+      <td class="nm">JW신약<span class="cd">067290</span></td>
+      <td class="ba" style="color:#F0455C"><b>A</b> 82</td>
+      <td class="rt" style="color:#F0455C">🔴 +6.21%</td>
+      <td class="hw">🎯갭익절</td>
+      <td class="mx">+35%</td>
+      <td class="mx">+21.7</td>
+    </tr><tr>
+      <td class="dt">06-22</td>
+      <td class="nm">보해양조<span class="cd">000890</span></td>
+      <td class="ba" style="color:#F0455C"><b>A</b> 96</td>
+      <td class="rt" style="color:#F0455C">🔴 +7.05%</td>
+      <td class="hw">🎯갭익절</td>
+      <td class="mx">+11%</td>
+      <td class="mx">+23.3</td>
+    </tr><tr>
+      <td class="dt">06-22</td>
+      <td class="nm">한울반도체<span class="cd">320000</span></td>
+      <td class="ba" style="color:#4C8DF7"><b>D</b> 33</td>
+      <td class="rt" style="color:#F0455C">🔴 +3.00%</td>
+      <td class="hw">🎯+3%익절</td>
+      <td class="mx">+127%</td>
+      <td class="mx">+0.8</td>
+    </tr><tr>
+      <td class="dt">06-23</td>
+      <td class="nm">부국철강<span class="cd">026940</span></td>
+      <td class="ba" style="color:#34E5A0"><b>B</b> 68</td>
+      <td class="rt" style="color:#F0455C">🔴 +3.00%</td>
+      <td class="hw">🎯+3%익절</td>
+      <td class="mx">+69%</td>
+      <td class="mx">+21.5</td>
+    </tr><tr>
+      <td class="dt">06-23</td>
+      <td class="nm">JW신약<span class="cd">067290</span></td>
+      <td class="ba" style="color:#34E5A0"><b>B</b> 61</td>
+      <td class="rt" style="color:#4C8DF7">🔵 -5.00%</td>
+      <td class="hw">🛑-5%손절</td>
+      <td class="mx">+79%</td>
+      <td class="mx">+31.5</td>
+    </tr><tr>
+      <td class="dt">06-23</td>
+      <td class="nm">한울반도체<span class="cd">320000</span></td>
+      <td class="ba" style="color:#F5A524"><b>C</b> 49</td>
+      <td class="rt" style="color:#F0455C">🔴 +5.00%</td>
+      <td class="hw">🎯+5%익절</td>
+      <td class="mx">+126%</td>
+      <td class="mx">+6.5</td>
+    </tr><tr>
+      <td class="dt">06-24</td>
+      <td class="nm">부국철강<span class="cd">026940</span></td>
+      <td class="ba" style="color:#34E5A0"><b>B</b> 75</td>
+      <td class="rt" style="color:#4C8DF7">🔵 -5.00%</td>
+      <td class="hw">🛑-5%손절</td>
+      <td class="mx">+55%</td>
+      <td class="mx">+25.8</td>
+    </tr><tr>
+      <td class="dt">06-25</td>
+      <td class="nm">다스코<span class="cd">058730</span></td>
+      <td class="ba" style="color:#F0455C"><b>A</b> 87</td>
+      <td class="rt" style="color:#F0455C">🔴 +3.00%</td>
+      <td class="hw">🎯+3%익절</td>
+      <td class="mx">+28%</td>
+      <td class="mx">+24.4</td>
+    </tr><tr>
+      <td class="dt">06-25</td>
+      <td class="nm">보해양조<span class="cd">000890</span></td>
+      <td class="ba" style="color:#F0455C"><b>A</b> 87</td>
+      <td class="rt" style="color:#F0455C">🔴 +5.00%</td>
+      <td class="hw">🎯+5%익절</td>
+      <td class="mx">+31%</td>
+      <td class="mx">+42.1</td>
+    </tr><tr>
+      <td class="dt">06-26</td>
+      <td class="nm">다스코<span class="cd">058730</span></td>
+      <td class="ba" style="color:#F0455C"><b>A</b> 97</td>
+      <td class="rt" style="color:#F0455C">🔴 +9.17%</td>
+      <td class="hw">🎯갭익절</td>
+      <td class="mx">+7%</td>
+      <td class="mx">+25.5</td>
+    </tr><tr>
+      <td class="dt">06-29</td>
+      <td class="nm">삼기<span class="cd">122350</span></td>
+      <td class="ba" style="color:#F0455C"><b>A</b> 82</td>
+      <td class="rt" style="color:#4C8DF7">🔵 -5.00%</td>
+      <td class="hw">🛑-5%손절</td>
+      <td class="mx">+36%</td>
+      <td class="mx">+26.6</td>
+    </tr><tr>
+      <td class="dt">06-30</td>
+      <td class="nm">금호전기<span class="cd">001210</span></td>
+      <td class="ba" style="color:#34E5A0"><b>B</b> 78</td>
+      <td class="rt" style="color:#4C8DF7">🔵 -9.20%</td>
+      <td class="hw">🛑갭손절</td>
+      <td class="mx">+51%</td>
+      <td class="mx">+41.4</td>
+    </tr><tr>
+      <td class="dt">07-01</td>
+      <td class="nm">다스코<span class="cd">058730</span></td>
+      <td class="ba" style="color:#F0455C"><b>A</b> 84</td>
+      <td class="rt" style="color:#F0455C">🔴 +5.00%</td>
+      <td class="hw">🎯+5%익절</td>
+      <td class="mx">+34%</td>
+      <td class="mx">+28.5</td>
+    </tr><tr>
+      <td class="dt">07-01</td>
+      <td class="nm">금호전기<span class="cd">001210</span></td>
+      <td class="ba" style="color:#34E5A0"><b>B</b> 65</td>
+      <td class="rt" style="color:#F0455C">🔴 +5.00%</td>
+      <td class="hw">🎯+5%익절</td>
+      <td class="mx">+78%</td>
+      <td class="mx">+46.3</td>
+    </tr><tr>
+      <td class="dt">07-02</td>
+      <td class="nm">삼호개발<span class="cd">010960</span></td>
+      <td class="ba" style="color:#F0455C"><b>A</b> 90</td>
+      <td class="rt" style="color:#F0455C">🔴 +5.00%</td>
+      <td class="hw">🎯+5%익절</td>
+      <td class="mx">+19%</td>
+      <td class="mx">+14.4</td>
+    </tr><tr>
+      <td class="dt">07-08</td>
+      <td class="nm">다스코<span class="cd">058730</span></td>
+      <td class="ba" style="color:#34E5A0"><b>B</b> 71</td>
+      <td class="rt" style="color:#F0455C">🔴 +3.00%</td>
+      <td class="hw">🎯+3%익절</td>
+      <td class="mx">+59%</td>
+      <td class="mx">+18.5</td>
+    </tr><tr>
+      <td class="dt">07-09</td>
+      <td class="nm">다스코<span class="cd">058730</span></td>
+      <td class="ba" style="color:#34E5A0"><b>B</b> 75</td>
+      <td class="rt" style="color:#F0455C">🔴 +5.00%</td>
+      <td class="hw">🎯+5%익절</td>
+      <td class="mx">+52%</td>
+      <td class="mx">+17.7</td>
+    </tr><tr>
+      <td class="dt">07-09</td>
+      <td class="nm">금호전기<span class="cd">001210</span></td>
+      <td class="ba" style="color:#34E5A0"><b>B</b> 70</td>
+      <td class="rt" style="color:#F0455C">🔴 +5.00%</td>
+      <td class="hw">🎯+5%익절</td>
+      <td class="mx">+68%</td>
+      <td class="mx">+37.8</td>
+    </tr><tr>
+      <td class="dt">07-10</td>
+      <td class="nm">데이타솔루션<span class="cd">263800</span></td>
+      <td class="ba" style="color:#34E5A0"><b>B</b> 79</td>
+      <td class="rt" style="color:#4C8DF7">🔵 -5.00%</td>
+      <td class="hw">🛑-5%손절</td>
+      <td class="mx">+44%</td>
+      <td class="mx">+14.0</td>
+    </tr><tr>
+      <td class="dt">07-13</td>
+      <td class="nm">한성기업<span class="cd">003680</span></td>
+      <td class="ba" style="color:#34E5A0"><b>B</b> 63</td>
+      <td class="rt" style="color:#F0455C">🔴 +5.00%</td>
+      <td class="hw">🎯+5%익절</td>
+      <td class="mx">+77%</td>
+      <td class="mx">+19.9</td>
+    </tr><tr>
+      <td class="dt">07-14</td>
+      <td class="nm">한성기업<span class="cd">003680</span></td>
+      <td class="ba" style="color:#F5A524"><b>C</b> 51</td>
+      <td class="rt" style="color:#F0455C">🔴 +9.40%</td>
+      <td class="hw">🎯갭익절</td>
+      <td class="mx">+112%</td>
+      <td class="mx">+26.2</td>
+    </tr><tr>
+      <td class="dt">07-28</td>
+      <td class="nm">씨피시스템<span class="cd">413630</span></td>
+      <td class="ba" style="color:#F0455C"><b>A</b> 90</td>
+      <td class="rt" style="color:#F0455C">🔴 +5.00%</td>
+      <td class="hw">🎯+5%익절</td>
+      <td class="mx">+10%</td>
+      <td class="mx">+16.1</td>
+    </tr></tbody></table></div>
+  <div class="legend">
+    <span>🔴 수익 · 🔵 손실</span><span>매력도 <b>A</b>≥80 <b>B</b>60~79 <b>C</b>40~59 <b>D</b>&lt;40</span>
+    <span>MA200=이격도 · LRL=세력기울기</span>
+  </div>
+
+  <h2>방법 & 한계</h2>
+  <div class="note">
+    <b>데이터</b>: KRX 공식 전종목(FinanceDataReader) 2,515개 × 430거래일. 키움 API는 주말 미로그인 + 유니버스 규모상 부적합해 KRX 공식데이터 사용.<br>
+    <b>전략 복제</b>: 조건 ①세력(LRL20&gt;LRL40 & 종가&gt;LRL20) ②종가&gt;MA200·MA400 ③거래량&gt;상장주식수. 매매는 종가매수→다음날 갭판정/장중±5%(상한가 시가매수±3%)/종가청산 = 라이브 <b>strategies._realize</b> 동일.<br>
+    <b>검증</b>: 엔진이 라이브 픽(JW신약·다스코·씨피시스템·데이타솔루션)을 독립 재현 → 정확성 확인.<br>
+    <b>한계(보수적)</b>: 조건③에 유통주식(키움 전용) 대신 <b>상장주식수</b> 사용 → 더 엄격. 세아메카닉스·씨피시스템(07-29) 등 회전율 낮은 일부 라이브 픽 누락. 즉 실제 유통 기준이면 픽이 더 많아지며, 이 결과는 <b>고신뢰 픽만의 보수적 하한</b>.
+  </div>
+
+  <div class="foot">생성 2026-06-18~2026-07-28 · 종가배팅 백테스트 엔진 · per_stock 100만원 가정</div>
+</div>
+</body></html>
