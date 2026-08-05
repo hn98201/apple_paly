@@ -183,4 +183,11 @@ drill.addEventListener('click',function(e){
   if(sr){ var tl=sr.nextElementSibling; if(tl&&tl.classList.contains('tl')) tl.classList.toggle('open'); }
 });
 </script>
-</div></body></html>
+</div><script>setTimeout(function(){
+ var rows=document.querySelectorAll('.drow');
+ if(rows[0]){rows[0].click();}           // 최신(08-05) 펼침
+ setTimeout(function(){
+   var sub=document.querySelector('.sub.open');
+   if(sub){var sr=sub.querySelector('.srow'); if(sr) sr.click();}  // 첫 종목 시간별 펼침
+ },80);
+},120);</script></body></html>
