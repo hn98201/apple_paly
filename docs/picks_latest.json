@@ -1,14 +1,68 @@
 {
  "date": "2026-08-11",
- "generated": "샘플",
+ "generated": "15:41:19(수동재스캔)",
  "strategy": "전체+하이브",
  "stocks": [
+  {
+   "code": "002990",
+   "name": "금호건설",
+   "score": null,
+   "entry": 11490.0,
+   "unbuyable": true,
+   "kind": "탈락",
+   "is_new": true
+  },
   {
    "code": "003010",
    "name": "혜인",
    "score": null,
-   "entry": 5910.0,
+   "entry": 7080.0,
    "unbuyable": false,
+   "kind": "선정",
+   "is_new": false
+  },
+  {
+   "code": "003680",
+   "name": "한성기업",
+   "score": null,
+   "entry": 6490.0,
+   "unbuyable": false,
+   "kind": "탈락",
+   "is_new": true
+  },
+  {
+   "code": "058730",
+   "name": "다스코",
+   "score": null,
+   "entry": 3650.0,
+   "unbuyable": false,
+   "kind": "탈락",
+   "is_new": true
+  },
+  {
+   "code": "059120",
+   "name": "아진엑스텍",
+   "score": null,
+   "entry": 7450.0,
+   "unbuyable": false,
+   "kind": "탈락",
+   "is_new": true
+  },
+  {
+   "code": "079650",
+   "name": "서산",
+   "score": null,
+   "entry": 5240.0,
+   "unbuyable": true,
+   "kind": "선정",
+   "is_new": true
+  },
+  {
+   "code": "126730",
+   "name": "코칩",
+   "score": null,
+   "entry": 20000.0,
+   "unbuyable": true,
    "kind": "선정",
    "is_new": true
   }
