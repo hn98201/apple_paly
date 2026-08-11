@@ -6,65 +6,184 @@
   {
    "code": "002990",
    "name": "금호건설",
-   "score": null,
+   "score": 0,
    "entry": 11490.0,
    "unbuyable": true,
    "kind": "탈락",
-   "is_new": true
+   "is_new": true,
+   "feat": {
+    "trade_value": 154410651510,
+    "mcap": 4281,
+    "turnover": 0.6936,
+    "vol": 13437895,
+    "float": 19374412,
+    "disp200": 110.87,
+    "disp400": 168.43,
+    "lrl_slope": -25.408,
+    "theme": "건설",
+    "news_cnt": 5,
+    "news_head": "목동10단지 '현대건설 단독 응찰' 한국토지신탁 협상력 시험대",
+    "news_dt": "202608111510",
+    "eod": true,
+    "eod_close": 11490.0,
+    "eod_days": 1126
+   }
   },
   {
    "code": "003010",
    "name": "혜인",
-   "score": null,
+   "score": 85,
    "entry": 7080.0,
    "unbuyable": false,
    "kind": "선정",
-   "is_new": false
+   "is_new": false,
+   "feat": {
+    "trade_value": 73806238800,
+    "mcap": 900,
+    "turnover": 1.503,
+    "vol": 10412664,
+    "float": 6927965,
+    "disp200": 31.84,
+    "disp400": 33.76,
+    "lrl_slope": 13.672,
+    "theme": "기계",
+    "news_cnt": 5,
+    "news_head": "[마감시황]코스피, 장중 상승분 반납하고 6258.77 마감…외국인 8581억...",
+    "news_dt": "202608071547",
+    "eod": true,
+    "eod_close": 7080.0,
+    "eod_days": 1126
+   }
   },
   {
    "code": "003680",
    "name": "한성기업",
-   "score": null,
+   "score": 46,
    "entry": 6490.0,
    "unbuyable": false,
    "kind": "탈락",
-   "is_new": true
+   "is_new": true,
+   "feat": {
+    "trade_value": 24531745700,
+    "mcap": 403,
+    "turnover": 1.1722,
+    "vol": 3770315,
+    "float": 3216548,
+    "disp200": 18.28,
+    "disp400": 22.13,
+    "lrl_slope": -43.8,
+    "theme": "식품",
+    "news_cnt": 5,
+    "news_head": "한성기업, 필리핀 대표 식품 박람회 참가…크래미·런천미트 알린다",
+    "news_dt": "202608071117",
+    "eod": true,
+    "eod_close": 6490.0,
+    "eod_days": 1126
+   }
   },
   {
    "code": "058730",
    "name": "다스코",
-   "score": null,
+   "score": 50,
    "entry": 3650.0,
    "unbuyable": false,
    "kind": "탈락",
-   "is_new": true
+   "is_new": true,
+   "feat": {
+    "trade_value": 35422815650,
+    "mcap": 739,
+    "turnover": 0.8348,
+    "vol": 9701285,
+    "float": 11621534,
+    "disp200": 8.31,
+    "disp400": 14.08,
+    "lrl_slope": -22.684,
+    "theme": "건축자재",
+    "news_cnt": 5,
+    "news_head": "[서울데이터랩]코스피 거래상위 종목 혼조…혜인 26% 급등, 한화솔루...",
+    "news_dt": "202608071313",
+    "eod": true,
+    "eod_close": 3650.0,
+    "eod_days": 1126
+   }
   },
   {
    "code": "059120",
    "name": "아진엑스텍",
-   "score": null,
+   "score": 90,
    "entry": 7450.0,
    "unbuyable": false,
    "kind": "탈락",
-   "is_new": true
+   "is_new": true,
+   "feat": {
+    "trade_value": 54962062100,
+    "mcap": 1364,
+    "turnover": 0.608,
+    "vol": 7369681,
+    "float": 12120375,
+    "disp200": 12.54,
+    "disp400": 45.98,
+    "lrl_slope": 19.777,
+    "theme": "반도체와반도체장비",
+    "news_cnt": 5,
+    "news_head": "'빅테크 대장' 알파벳, 하반기 182조 퍼붓는다...불붙는 삼전닉스",
+    "news_dt": "202607231719",
+    "eod": true,
+    "eod_close": 7450.0,
+    "eod_days": 1126
+   }
   },
   {
    "code": "079650",
    "name": "서산",
-   "score": null,
+   "score": 28,
    "entry": 5240.0,
    "unbuyable": true,
    "kind": "선정",
-   "is_new": true
+   "is_new": true,
+   "feat": {
+    "trade_value": 58142353560,
+    "mcap": 1048,
+    "turnover": 1.7283,
+    "vol": 11095494,
+    "float": 6420000,
+    "disp200": 151.48,
+    "disp400": 198.98,
+    "lrl_slope": 1.907,
+    "theme": "건축자재",
+    "news_cnt": 5,
+    "news_head": "화학산업협회, 여수·서산 초등학생 대상 생태계 보전 활동 개최",
+    "news_dt": "202608061421",
+    "eod": true,
+    "eod_close": 5240.0,
+    "eod_days": 1126
+   }
   },
   {
    "code": "126730",
    "name": "코칩",
-   "score": null,
+   "score": 89,
    "entry": 20000.0,
    "unbuyable": true,
    "kind": "선정",
-   "is_new": true
+   "is_new": true,
+   "feat": {
+    "trade_value": 75720540000,
+    "mcap": 1754,
+    "turnover": 1.5087,
+    "vol": 3784037,
+    "float": 2508220,
+    "disp200": 18.1,
+    "disp400": 35.73,
+    "lrl_slope": 27.314,
+    "theme": "전기제품",
+    "news_cnt": 5,
+    "news_head": "[서울데이터랩]코스닥 거래상위 종목, 장중 급등세 확산…서산·우리...",
+    "news_dt": "202606181338",
+    "eod": true,
+    "eod_close": 20000.0,
+    "eod_days": 551
+   }
   }
  ]
 }
