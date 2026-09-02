@@ -76,6 +76,26 @@
   .card.scroll{max-height:340px;overflow-y:auto}
   .tr .dt{font-family:var(--mono);font-size:10px;color:var(--mut);width:38px;flex:none;text-align:right}
   .tr .rz{min-width:74px;text-align:right;font-weight:700}
+  /* 날짜 그룹(매매기록) */
+  .dgrp{padding:8px 14px 3px;font-family:var(--mono);font-size:11.5px;color:var(--cyan);font-weight:700;
+    border-bottom:1px solid var(--line);display:flex;justify-content:space-between}
+  .dgrp .dp{font-family:var(--mono)}
+  /* 섹터 */
+  .airc{background:linear-gradient(160deg,#2ec6d618,#2ec6d600);border:1px solid #2ec6d555;border-radius:12px;
+    padding:12px 14px;font-size:13px;line-height:1.65;white-space:pre-wrap;color:var(--ink2);margin-bottom:10px}
+  .airc:empty{display:none}
+  .sumc{font-size:12.5px;color:var(--ink2);line-height:1.7;margin-bottom:12px}
+  .sumc:empty{display:none}
+  .secrow{display:flex;align-items:center;gap:9px;padding:9px 2px;border-bottom:1px solid var(--line)}
+  .secrow:last-child{border-bottom:none}
+  .secrk{font-family:var(--mono);font-size:11px;color:var(--mut);width:20px;text-align:center;flex:none}
+  .secbar{width:70px;height:6px;background:var(--card2);border-radius:3px;overflow:hidden;flex:none}
+  .secbf{height:100%;border-radius:3px}
+  .secnm{font-weight:600;font-size:13.5px} .secx{flex:1;min-width:0}
+  .secchg{font-family:var(--mono);font-size:13px;font-weight:700;width:56px;text-align:right;flex:none}
+  .secmeta{font-size:10.5px;color:var(--mut);margin-top:2px}
+  .secbn{font-size:10px;font-weight:700;color:#241a06;background:var(--gold);padding:1px 6px;border-radius:6px;margin-left:6px}
+  .secstk{font-size:10.5px;color:var(--cyan);margin-top:3px}
   /* 시스템 그리드 */
   .sys{display:grid;grid-template-columns:1fr 1fr;gap:8px}
   .sys .b{background:var(--card);border:1px solid var(--line);border-radius:11px;padding:10px 12px}
@@ -151,6 +171,13 @@
     <div class="card" id="pickCard"><div class="empty">스캔 전 (15:20 자동스캔)</div></div>
   </div>
 
+  <div class="sec" id="secSec" style="display:none">
+    <div class="sh">🔥 오늘 강한 섹터/테마 <span class="cnt" id="secCnt"></span></div>
+    <div class="airc" id="secAi"></div>
+    <div class="sumc" id="secSum"></div>
+    <div id="secList"></div>
+  </div>
+
   <div class="sec">
     <div class="sh">🛠️ 시스템 상태</div>
     <div class="sys">
@@ -201,7 +228,19 @@
     trades:[
       {date:"2026-09-02", name:"어제매수종목A", ret:6.0, pl:118000, reason:"익절", time:"09:12"},
       {date:"2026-09-02", name:"어제매수종목B", ret:-3.5, pl:-70000, reason:"손절", time:"10:05"},
-      {date:"2026-08-29", name:"수급주", ret:6.0, pl:120000, reason:"익절", time:"09:31"}
+      {date:"2026-08-29", name:"수급주1", ret:6.0, pl:120000, reason:"익절", time:"09:31"},
+      {date:"2026-08-29", name:"수급주2", ret:-3.5, pl:-68000, reason:"손절", time:"14:22"}
+    ],
+    sector_date:"2026-09-02 15:00",
+    sector_summary:"💪 강세 석유와가스(+4.97%·상승19/20), 도로와철도운송(+5.95%·상승8/8) · 🚀 오후가속 철강, 증권 · 🔻 약세 화장품(-3.80%), 전자제품(-4.60%)",
+    sector_ai:"🔥 주도섹터: 유가 반등에 석유와가스가 상승 19/20 종목으로 폭넓게 강세, 정책 기대의 도로·철도운송이 동반 상승. 수급이 소수 대형주가 아닌 섹터 전반에 퍼진 점이 특징.\n🔄 순환·약세: 화장품·전자제품은 차익실현으로 약세, 반도체는 보합권 관망.\n🎯 종가배팅 관점: 오늘은 석유·운송 섹터 종목의 매력도 가점이 높아 우선순위 상단에 오를 확률이 큼.",
+    sectors:[
+      {name:"석유와가스", chg:4.97, up:19, down:0, total:20, accel:3, bonus:25, stocks:[{name:"석유와가스대장",score:100,disp:"매수"}]},
+      {name:"도로와철도운송", chg:5.95, up:8, down:0, total:8, accel:1, bonus:22, stocks:[{name:"도로철도운송주",score:88,disp:"매수"}]},
+      {name:"백화점과일반상점", chg:3.22, up:9, down:1, total:14, accel:2, bonus:14, stocks:[]},
+      {name:"게임엔터테인먼트", chg:1.67, up:18, down:6, total:34, accel:4, bonus:10, stocks:[{name:"게임엔터株",score:74,disp:"투자금부족"}]},
+      {name:"반도체와반도체장비", chg:0.71, up:90, down:60, total:172, accel:6, bonus:5, stocks:[{name:"반도체소부장",score:66,disp:"투자금부족"}]},
+      {name:"화장품", chg:-3.80, up:2, down:18, total:22, accel:-1, bonus:0, stocks:[]}
     ]
   };
 
@@ -279,17 +318,45 @@
       '<span>익절 '+d.tp+'%</span><span>손절 '+d.sl+'%</span><span>종목당 '+won(d.invest)+'</span>'
       +'<span>매수 '+d.af+'종목</span><span>유통≤'+d.float_max+'%</span>'
       +'<span>상한'+(d.exclude_upper?"제외":"포함")+'</span><span>테마+'+d.theme_bonus_max+'</span>';
-    // 매매 기록(날짜·종목명·청산시간·사유·손익)
+    // 오늘 강한 섹터/테마 + 종목랭크 + 리서치 요약
+    var sec=d.sectors||[], ss=document.getElementById("secSec");
+    if(sec.length){ ss.style.display="block";
+      document.getElementById("secCnt").textContent = d.sector_date? esc(d.sector_date) : "";
+      document.getElementById("secAi").innerHTML = d.sector_ai? esc(d.sector_ai) : "";
+      document.getElementById("secSum").innerHTML = d.sector_summary? esc(d.sector_summary) : "";
+      var smax = Math.max.apply(null, sec.map(function(s){return Math.abs(s.chg);})) || 1;
+      document.getElementById("secList").innerHTML = sec.map(function(s,i){
+        var c = s.chg>0?"up":(s.chg<0?"dn":"flat");
+        var stk = (s.stocks&&s.stocks.length)? '<div class="secstk">📌 '+s.stocks.map(function(x){return esc(x.name)+"("+(x.score!=null?x.score:"—")+")";}).join(", ")+'</div>' : '';
+        return '<div class="secrow"><div class="secrk">'+(i+1)+'</div>'
+          +'<div class="secbar"><div class="secbf" style="width:'+(Math.abs(s.chg)/smax*100)+'%;background:'+(s.chg>=0?"var(--up)":"var(--dn)")+'"></div></div>'
+          +'<div class="secx"><span class="secnm">'+esc(s.name)+'</span>'+(s.bonus>0?'<span class="secbn">가점+'+s.bonus+'</span>':'')
+          +'<div class="secmeta">상승 '+s.up+'/'+s.total+(s.accel>=3?' · 🚀오후가속+'+s.accel:'')+'</div>'+stk+'</div>'
+          +'<div class="secchg '+c+'">'+(s.chg>=0?"+":"")+s.chg.toFixed(2)+'%</div></div>';
+      }).join("");
+    } else ss.style.display="none";
+
+    // 매매 기록 — 날짜별 그룹, 각 날짜 내 청산시간 내림차순
     var tr=d.trades||[], ts=document.getElementById("trSec");
     if(tr.length){ ts.style.display="block"; document.getElementById("trCnt").textContent=tr.length+"건";
-      var tc=document.getElementById("trCard"); tc.className=tr.length>7?"card scroll":"card";
-      tc.innerHTML = tr.map(function(t){
-        return '<div class="tr"><span class="dt">'+esc((t.date||"").slice(5))+'</span><span>'+esc(t.name)+'</span><span class="sp"></span>'
-          +'<span class="mut" style="font-size:10.5px">'+esc(t.time||"")+'</span>'
-          +'<span class="'+cls(t.ret)+'" style="font-size:12px">'+esc(t.reason||"")+' '+sign((t.ret||0).toFixed(1))+'%</span>'
-          +'<span class="rz '+cls(t.pl)+'">'+(t.pl>=0?"+":"")+wonFull(t.pl).replace("원","")+'</span></div>';
-      }).join(""); }
-    else ts.style.display="none";
+      var tc=document.getElementById("trCard"); tc.className=tr.length>8?"card scroll":"card";
+      var byd={}, order=[];
+      tr.forEach(function(t){ var dd=t.date||"—"; if(!byd[dd]){byd[dd]=[];order.push(dd);} byd[dd].push(t); });
+      order.sort(function(a,b){return b.localeCompare(a);});          // 최신 날짜 먼저
+      var html="";
+      order.forEach(function(dd){
+        var rows=byd[dd].slice().sort(function(a,b){return (b.time||"").localeCompare(a.time||"");});
+        var dsum=rows.reduce(function(a,t){return a+(t.pl||0);},0);
+        var wn=rows.filter(function(t){return (t.reason||"").indexOf("익절")>=0;}).length;
+        html += '<div class="dgrp"><span class="dp">'+esc(dd)+' <span style="color:var(--mut)">·'+rows.length+'건 익'+wn+'</span></span><span class="'+cls(dsum)+'">'+(dsum>=0?"+":"")+wonFull(dsum).replace("원","")+'원</span></div>';
+        html += rows.map(function(t){
+          return '<div class="tr"><span class="dt">'+esc(t.time||"")+'</span><span>'+esc(t.name)+'</span><span class="sp"></span>'
+            +'<span class="'+cls(t.ret)+'" style="font-size:12px">'+esc(t.reason||"")+' '+sign((t.ret||0).toFixed(1))+'%</span>'
+            +'<span class="rz '+cls(t.pl)+'">'+(t.pl>=0?"+":"")+wonFull(t.pl).replace("원","")+'</span></div>';
+        }).join("");
+      });
+      tc.innerHTML = html;
+    } else ts.style.display="none";
     // footer
     lastTs = Date.parse((d.ts||"").replace(" ","T"))||Date.now();
     document.getElementById("foot").innerHTML = "서버 "+esc(d.server||"")+" · 계좌 "+esc(d.account_mask||"")+(d.is_mock?" (모의)":"")
