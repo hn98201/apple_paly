@@ -233,7 +233,13 @@
     ],
     sector_date:"2026-09-02 15:00",
     sector_summary:"💪 강세 석유와가스(+4.97%·상승19/20), 도로와철도운송(+5.95%·상승8/8) · 🚀 오후가속 철강, 증권 · 🔻 약세 화장품(-3.80%), 전자제품(-4.60%)",
-    sector_ai:"🔥 주도섹터: 유가 반등에 석유와가스가 상승 19/20 종목으로 폭넓게 강세, 정책 기대의 도로·철도운송이 동반 상승. 수급이 소수 대형주가 아닌 섹터 전반에 퍼진 점이 특징.\n🔄 순환·약세: 화장품·전자제품은 차익실현으로 약세, 반도체는 보합권 관망.\n🎯 종가배팅 관점: 오늘은 석유·운송 섹터 종목의 매력도 가점이 높아 우선순위 상단에 오를 확률이 큼.",
+    thememap:{ts:"2026-09-02 15:00", source:"ant.wiki/themes",
+      strong:[
+        {name:"금융", chg:"+1.0%", subs:["증권","보험","핀테크","은행"]},
+        {name:"바이오·헬스케어", chg:"+0.5%", subs:["신약개발","진단","CDMO","비만치료"]},
+        {name:"화학·소재", chg:"+0.4%", subs:["2차전지소재","정밀화학","플라스틱"]}
+      ],
+      weak:[{name:"통신", chg:"-1.4%"},{name:"로봇", chg:"-1.3%"}]},
     sectors:[
       {name:"석유와가스", chg:4.97, up:19, down:0, total:20, accel:3, bonus:25, stocks:[{name:"석유와가스대장",score:100,disp:"매수"}]},
       {name:"도로와철도운송", chg:5.95, up:8, down:0, total:8, accel:1, bonus:22, stocks:[{name:"도로철도운송주",score:88,disp:"매수"}]},
@@ -322,7 +328,16 @@
     var sec=d.sectors||[], ss=document.getElementById("secSec");
     if(sec.length){ ss.style.display="block";
       document.getElementById("secCnt").textContent = d.sector_date? esc(d.sector_date) : "";
-      document.getElementById("secAi").innerHTML = d.sector_ai? esc(d.sector_ai) : "";
+      var tm=d.thememap||{}, aih="";
+      if(tm.summary || (tm.strong&&tm.strong.length)){
+        aih='<div style="font-weight:700;color:var(--cyan);margin-bottom:6px">🗺️ 앤트위키 테마맵'+(tm.ts?' <span style="color:var(--mut);font-weight:400;font-size:11px">'+esc(tm.ts)+'</span>':'')+'</div>';
+        (tm.strong||[]).forEach(function(r){
+          aih+='<div style="margin-bottom:3px"><span class="up" style="font-weight:700">▲ '+esc(r.name)+' '+esc(r.chg)+'</span>'
+            +((r.subs&&r.subs.length)?' <span style="color:var(--ink2);font-size:12px">'+esc(r.subs.join(" · "))+'</span>':'')+'</div>';
+        });
+        if(tm.weak&&tm.weak.length) aih+='<div style="margin-top:4px"><span class="dn" style="font-weight:700">▼ 약세</span> <span style="color:var(--ink2);font-size:12px">'+tm.weak.map(function(r){return esc(r.name)+" "+esc(r.chg);}).join(" · ")+'</span></div>';
+      }
+      document.getElementById("secAi").innerHTML = aih;
       document.getElementById("secSum").innerHTML = d.sector_summary? esc(d.sector_summary) : "";
       var smax = Math.max.apply(null, sec.map(function(s){return Math.abs(s.chg);})) || 1;
       document.getElementById("secList").innerHTML = sec.map(function(s,i){
