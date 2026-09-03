@@ -131,6 +131,8 @@
   .accbar{display:flex;gap:8px;margin-top:6px}
   .accbar .b{background:var(--card2);border:1px solid var(--line);border-radius:9px;padding:7px 11px;font-size:12px}
   .accbar .b b{font-family:var(--mono);font-size:15px}
+  .byrank{font-size:12px;color:var(--ink2);margin-top:8px} .byrank b{font-family:var(--mono)}
+  .crit{font-size:11px;color:var(--mut);margin-top:4px}
   /* 시스템 그리드 */
   .sys{display:grid;grid-template-columns:1fr 1fr;gap:8px}
   .sys .b{background:var(--card);border:1px solid var(--line);border-radius:11px;padding:10px 12px}
@@ -490,7 +492,7 @@
   var RESEARCH_RAW = "https://raw.githubusercontent.com/hn98201/apple_paly/main/docs/research.json";
   var researchLoaded = false;
   var SAMPLE_R = {date:"2026-09-03", generated:"2026-09-04 01:56", top:"파인엠텍",
-    accuracy:{n:0,hit:0,rate:null,buy_n:0,buy_hit:0,buy_rate:null},
+    accuracy:{n:15,hit:9,rate:60.0,buy_n:7,buy_hit:5,buy_rate:71.4,criterion:"익절 6% / 손절 3.5%",rank_days:3,top1_win:2,top1_rate:66.7,by_rank:{"1":4.1,"2":2.3,"3":-0.8,"4":-1.5,"5":-2.9}},
     summary:"이미 오른 종목 추격 대신 '재료 지속성+기관 수급+낮은 이격도' 3요소를 충족하는 파인엠텍에 핵심 비중, 아진엑스텍에 위성 비중. 원인 불명확한 원익은 정리.",
     stocks:[
       {code:"441270",name:"파인엠텍",verdict:"매수",confidence:"상",rank:1,catalyst:"삼성D 67조 폴더블 OLED 투자 + 애플 폴더블 내장힌지 공급사 낙점 기대",durability:"애플 신규진입은 연단위 사이클, 5종목 중 지속성 최장",supply:"유일하게 기관 +52만주 대량순매수, 이격도 +14.6% 상승초입",risk:"EPS 적자·PBR 1.9 밸류부담, 애플 물량 지연 시 가동률↓",reason:"개인이 아닌 기관 매수로 뒷받침, 재료 시계열 최장",target:"1차 10,500·2차 11,500(+14~25%), 손절 MA20 8,042"},
@@ -511,9 +513,17 @@
     researchLoaded = true;
     document.getElementById("rDate").textContent = (d.date?d.date+" 스캔":"")+(d.generated?" · 분석 "+d.generated:"");
     var a=d.accuracy||{};
-    document.getElementById("rAcc").innerHTML = (a.rate!=null)
-      ? '<div class="accbar"><div class="b">누적 적중률 <b class="'+(a.rate>=50?"up":"dn")+'">'+a.rate+'%</b> <span class=mut>('+a.hit+'/'+a.n+')</span></div>'+(a.buy_rate!=null?'<div class="b">매수판정 <b>'+a.buy_rate+'%</b> ('+a.buy_hit+'/'+a.buy_n+')</div>':'')+'</div>'
-      : '<span class=mut>📊 정확도: 판정 누적 중 — 다음날 실제결과와 대조해 적중률 산출</span>';
+    if(a.rate!=null){
+      var ah='<div class="accbar"><div class="b">적중률 <b class="'+(a.rate>=50?"up":"dn")+'">'+a.rate+'%</b> <span class=mut>('+a.hit+'/'+a.n+')</span></div>';
+      if(a.buy_rate!=null) ah+='<div class="b">매수판정 <b class="'+(a.buy_rate>=50?"up":"dn")+'">'+a.buy_rate+'%</b></div>';
+      if(a.top1_rate!=null) ah+='<div class="b">🥇1위추천 적중 <b class="'+(a.top1_rate>=50?"up":"dn")+'">'+a.top1_rate+'%</b> <span class=mut>('+a.top1_win+'/'+a.rank_days+')</span></div>';
+      ah+='</div>';
+      if(a.by_rank&&Object.keys(a.by_rank).length) ah+='<div class="byrank">순위별 평균수익 · '+Object.keys(a.by_rank).map(function(k){var v=a.by_rank[k];return k+'위 <b class="'+(v>=0?"up":"dn")+'">'+(v>=0?"+":"")+v+'%</b>';}).join("  ·  ")+'</div>';
+      if(a.criterion) ah+='<div class="crit">채점 기준 · '+esc(a.criterion)+' · 다음날 청산</div>';
+      document.getElementById("rAcc").innerHTML=ah;
+    } else {
+      document.getElementById("rAcc").innerHTML='<span class=mut>📊 정확도: 판정 누적 중 — 다음날 <b>6%익절/3.5%손절</b> 기준으로 적중·순위추천 품질 산출</span>';
+    }
     document.getElementById("rSummary").innerHTML = d.summary?('<b>📌 결론:</b> '+esc(d.summary)+(d.top?'  ·  <b>최종선정</b> '+esc(d.top):'')):"";
     var st=(d.stocks||[]).slice().sort(function(a,b){return (a.rank||99)-(b.rank||99);});
     if(!st.length){ document.getElementById("rList").innerHTML='<div class="empty">리서치 없음</div>'; return; }
