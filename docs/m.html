@@ -96,6 +96,41 @@
   .secmeta{font-size:10.5px;color:var(--mut);margin-top:2px}
   .secbn{font-size:10px;font-weight:700;color:#241a06;background:var(--gold);padding:1px 6px;border-radius:6px;margin-left:6px}
   .secstk{font-size:10.5px;color:var(--cyan);margin-top:3px}
+  /* 탭 */
+  .tabs{position:sticky;top:52px;z-index:8;display:flex;gap:0;background:rgba(10,14,23,.92);backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);padding:0 10px}
+  .tab{flex:1;background:none;border:none;color:var(--mut);font-size:14px;font-weight:700;padding:12px 6px;cursor:pointer;
+    border-bottom:2px solid transparent;font-family:var(--sans)}
+  .tab.on{color:var(--cyan);border-bottom-color:var(--cyan)}
+  /* 리서치 */
+  .rhead{margin-bottom:12px}
+  .rt{font-size:17px;font-weight:800} .rt .cnt{font-size:12px;color:var(--mut);font-weight:500}
+  .rsub{font-size:12px;color:var(--ink2);margin-top:3px}
+  .rsum{background:linear-gradient(160deg,#e8b24b18,#e8b24b00);border:1px solid #e8b24b55;border-radius:13px;
+    padding:12px 14px;font-size:13px;line-height:1.6;color:var(--ink2);margin-bottom:14px}
+  .rsum:empty{display:none} .rsum b{color:var(--gold)}
+  .rc{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--rcol,var(--line));
+    border-radius:13px;padding:14px;margin-bottom:11px}
+  .rc.buy{--rcol:var(--up)} .rc.hold{--rcol:var(--gold)} .rc.sell{--rcol:var(--dn)} .rc.wait{--rcol:var(--mut)}
+  .rc-h{display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+  .rc-rk{font-family:var(--mono);font-size:13px;color:var(--mut);font-weight:700}
+  .rc-nm{font-weight:800;font-size:16px} .rc-cd{font-size:11px;color:var(--mut);font-family:var(--mono)}
+  .rc-h .sp{flex:1}
+  .vb{font-size:12px;font-weight:800;padding:3px 10px;border-radius:8px;white-space:nowrap}
+  .vb.buy{background:var(--up);color:#fff} .vb.hold{background:var(--gold);color:#241a06}
+  .vb.sell{background:var(--dn);color:#fff} .vb.wait{background:var(--surface-2);color:var(--ink2);border:1px solid var(--line)}
+  .conf{font-size:10.5px;color:var(--mut);font-family:var(--mono)}
+  .rc-cat{font-size:13.5px;font-weight:600;color:var(--ink);background:var(--card2);border:1px solid var(--line);
+    border-radius:9px;padding:9px 11px;margin-bottom:9px;line-height:1.5}
+  .rc-cat b{color:var(--cyan)}
+  .rrow{display:grid;grid-template-columns:52px 1fr;gap:8px;font-size:12.5px;padding:5px 0;border-top:1px solid var(--hair,var(--line));line-height:1.55}
+  .rrow:first-child{border-top:none}
+  .rlab{color:var(--mut);font-size:11.5px;font-weight:600}
+  .rlab.risk{color:var(--dn)} .rval2{color:var(--ink2)}
+  .rc-tgt{margin-top:8px;font-size:12px;color:var(--gold);font-family:var(--mono)}
+  .accbar{display:flex;gap:8px;margin-top:6px}
+  .accbar .b{background:var(--card2);border:1px solid var(--line);border-radius:9px;padding:7px 11px;font-size:12px}
+  .accbar .b b{font-family:var(--mono);font-size:15px}
   /* 시스템 그리드 */
   .sys{display:grid;grid-template-columns:1fr 1fr;gap:8px}
   .sys .b{background:var(--card);border:1px solid var(--line);border-radius:11px;padding:10px 12px}
@@ -146,7 +181,12 @@
   <button class="refresh" id="rfBtn" onclick="pull(true)">↻</button>
 </div>
 
+<div class="tabs">
+  <button class="tab on" id="tabDash" onclick="setTab('dash')">📊 대시보드</button>
+  <button class="tab" id="tabResearch" onclick="setTab('research')">🔬 리서치</button>
+</div>
 <div class="wrap">
+  <div id="paneDash">
   <div class="err" id="err"></div>
 
   <div class="hero">
@@ -196,6 +236,17 @@
 
   <div class="foot" id="foot">데이터 대기중…</div>
   <div style="text-align:center;padding-top:10px"><a onclick="logout()" style="color:var(--mut);font-size:11px;cursor:pointer;text-decoration:underline">🔓 비밀번호 변경 / 로그아웃</a></div>
+  </div><!-- /paneDash -->
+
+  <div id="paneResearch" hidden>
+    <div class="rhead">
+      <div class="rt">🔬 급등주 리서치 <span class="cnt" id="rDate"></span></div>
+      <div class="rsub" id="rAcc"></div>
+    </div>
+    <div class="rsum" id="rSummary"></div>
+    <div id="rList"><div class="empty">리서치 대기 — 스캔 후 15:30 자동 생성</div></div>
+    <div class="foot" id="rFoot">급등주 펀드매니저 프롬프트 · 종목별 재료·수급·과열·판정</div>
+  </div>
 </div>
 
 <script>
@@ -433,6 +484,54 @@
         er.innerHTML="⚠️ 실시간 데이터 미연결 — <b>샘플 미리보기</b>.<br>배포(GitHub) + 서버 push 후 실데이터가 뜹니다.";
       }
     }).finally(function(){ if(manual) setTimeout(function(){btn.classList.remove("spin");},600); });
+  }
+
+  // ── 리서치 탭 (급등주 펀드매니저 분석) ──
+  var RESEARCH_RAW = "https://raw.githubusercontent.com/hn98201/apple_paly/main/docs/research.json";
+  var researchLoaded = false;
+  var SAMPLE_R = {date:"2026-09-03", generated:"2026-09-04 01:56", top:"파인엠텍",
+    accuracy:{n:0,hit:0,rate:null,buy_n:0,buy_hit:0,buy_rate:null},
+    summary:"이미 오른 종목 추격 대신 '재료 지속성+기관 수급+낮은 이격도' 3요소를 충족하는 파인엠텍에 핵심 비중, 아진엑스텍에 위성 비중. 원인 불명확한 원익은 정리.",
+    stocks:[
+      {code:"441270",name:"파인엠텍",verdict:"매수",confidence:"상",rank:1,catalyst:"삼성D 67조 폴더블 OLED 투자 + 애플 폴더블 내장힌지 공급사 낙점 기대",durability:"애플 신규진입은 연단위 사이클, 5종목 중 지속성 최장",supply:"유일하게 기관 +52만주 대량순매수, 이격도 +14.6% 상승초입",risk:"EPS 적자·PBR 1.9 밸류부담, 애플 물량 지연 시 가동률↓",reason:"개인이 아닌 기관 매수로 뒷받침, 재료 시계열 최장",target:"1차 10,500·2차 11,500(+14~25%), 손절 MA20 8,042"},
+      {code:"059120",name:"아진엑스텍",verdict:"매수",confidence:"중",rank:2,catalyst:"삼성전자향 로봇 납품 확대 + 상반기 흑자전환, 휴머노이드 밸류체인",durability:"피지컬AI 중장기 테마이나 매출은 설비투자 사이클 연동",supply:"이격도 +1.5% 과열도 최저, 다만 기관 수급 미미",risk:"LRL추세 -12.4 하락추세 안, PER 150 밸류부담",reason:"20일선 위 첫 양봉으로 손익비 우수, 단 수급 부재로 확신 중",target:"1차 8,000(+16%), 손절 MA20 6,808"},
+      {code:"234690",name:"녹십자웰빙",verdict:"보유",confidence:"중",rank:3,catalyst:"협력사 지방분해 신약 중국 3상 성공 + JBP 콜라겐 공동개발",durability:"내 파이프라인 아닌 파트너사 성과라 실적반영 시점 멀다",supply:"상한가 실패·고점대비 −9.9%로 물량소화 실패 신호",risk:"D+1 갭하락 확률 상승",reason:"재료는 진짜지만 지속성·수급이 상한가급엔 못 미침",target:"9/4 강세 시 절반 익절"},
+      {code:"053260",name:"금강철강",verdict:"관망",confidence:"하",rank:4,catalyst:"지정학·전기요금 차등제로 철강 섹터 동반 급등(그날 +3.8%)",durability:"회사 재료 아닌 섹터 순환매, 지정학은 하루만에 방향전환",supply:"업종평균 +2.45%인데 혼자 +22%, 상한가 실패",risk:"유통·가공사라 수혜 실체 약함, 옆자리 종목",reason:"개별 우위 없이 테마 편승, 눌림까지 대기",target:"-"},
+      {code:"032940",name:"원익",verdict:"매도",confidence:"중",rank:5,catalyst:"급등 원인 뉴스 확인 안됨(화장품 기대·저PBR 지주)",durability:"재료 불명확",supply:"개인 주도 급등 정황",risk:"원인 불명 급등은 원인 없이 빠짐",reason:"⚠️샘플: 실제론 로봇(원익로보틱스 3,500억)이 원인 — 뉴스 깊이 한계",target:"-"}
+    ]};
+  function vcls(v){ return v==="매수"?"buy":(v==="매도"?"sell":(v==="보유"?"hold":"wait")); }
+  function setTab(p){
+    document.getElementById("tabDash").classList.toggle("on", p==="dash");
+    document.getElementById("tabResearch").classList.toggle("on", p==="research");
+    document.getElementById("paneDash").hidden = p!=="dash";
+    document.getElementById("paneResearch").hidden = p!=="research";
+    if(p==="research" && !researchLoaded) fetchResearch();
+  }
+  function renderResearch(d){
+    researchLoaded = true;
+    document.getElementById("rDate").textContent = (d.date?d.date+" 스캔":"")+(d.generated?" · 분석 "+d.generated:"");
+    var a=d.accuracy||{};
+    document.getElementById("rAcc").innerHTML = (a.rate!=null)
+      ? '<div class="accbar"><div class="b">누적 적중률 <b class="'+(a.rate>=50?"up":"dn")+'">'+a.rate+'%</b> <span class=mut>('+a.hit+'/'+a.n+')</span></div>'+(a.buy_rate!=null?'<div class="b">매수판정 <b>'+a.buy_rate+'%</b> ('+a.buy_hit+'/'+a.buy_n+')</div>':'')+'</div>'
+      : '<span class=mut>📊 정확도: 판정 누적 중 — 다음날 실제결과와 대조해 적중률 산출</span>';
+    document.getElementById("rSummary").innerHTML = d.summary?('<b>📌 결론:</b> '+esc(d.summary)+(d.top?'  ·  <b>최종선정</b> '+esc(d.top):'')):"";
+    var st=(d.stocks||[]).slice().sort(function(a,b){return (a.rank||99)-(b.rank||99);});
+    if(!st.length){ document.getElementById("rList").innerHTML='<div class="empty">리서치 없음</div>'; return; }
+    function row(lab,val,cls){ return val?'<div class="rrow"><div class="rlab '+(cls||"")+'">'+lab+'</div><div class="rval2">'+esc(val)+'</div></div>':""; }
+    document.getElementById("rList").innerHTML = st.map(function(s){
+      var c=vcls(s.verdict);
+      return '<div class="rc '+c+'"><div class="rc-h"><span class="rc-rk">#'+(s.rank||"")+'</span><span class="rc-nm">'+esc(s.name)+'</span><span class="rc-cd">'+esc(s.code)+'</span><span class="sp"></span>'
+        +'<span class="vb '+c+'">'+esc(s.verdict||"")+'</span><span class="conf">확신 '+esc(s.confidence||"")+'</span></div>'
+        +(s.catalyst?'<div class="rc-cat">🔥 '+esc(s.catalyst)+'</div>':'')
+        +row("지속성",s.durability)+row("수급·과열",s.supply)+row("하락위험",s.risk,"risk")+row("판정근거",s.reason)
+        +(s.target&&s.target!=="-"?'<div class="rc-tgt">🎯 '+esc(s.target)+'</div>':'')+'</div>';
+    }).join("");
+  }
+  function fetchResearch(){
+    document.getElementById("rList").innerHTML='<div class="empty">불러오는 중…</div>';
+    fetch(RESEARCH_RAW+"?t="+Date.now(),{cache:"no-store"}).then(function(r){ if(!r.ok) throw 0; return r.json(); })
+      .then(function(env){ if(!pw) throw {p:1}; return decrypt(env,pw).then(renderResearch); })
+      .catch(function(e){ renderResearch(SAMPLE_R); });
   }
 
   pull(false);
