@@ -519,6 +519,26 @@
       if(a.top1_rate!=null) ah+='<div class="b">🥇1위추천 적중 <b class="'+(a.top1_rate>=50?"up":"dn")+'">'+a.top1_rate+'%</b> <span class=mut>('+a.top1_win+'/'+a.rank_days+')</span></div>';
       ah+='</div>';
       if(a.by_rank&&Object.keys(a.by_rank).length) ah+='<div class="byrank">순위별 평균수익 · '+Object.keys(a.by_rank).map(function(k){var v=a.by_rank[k];return k+'위 <b class="'+(v>=0?"up":"dn")+'">'+(v>=0?"+":"")+v+'%</b>';}).join("  ·  ")+'</div>';
+      // ★강세테마 순위대별 익일 성과(2026-09-08) — top10 테마 종목이 실제로 수익을 주는가
+      // try/catch: 신규 필드가 없거나 형태가 달라도 리서치 탭 전체가 깨지지 않게
+      try{
+      var TL={"top10":"🔥강세테마 TOP10","11-30":"11~30위","31+":"31위+","테마없음":"테마없음"};
+      if(a.by_theme_rank&&Object.keys(a.by_theme_rank).length){
+        var order=["top10","11-30","31+","테마없음"], tr=[];
+        order.forEach(function(k){ var v=a.by_theme_rank[k]; if(!v||!v.n) return;
+          tr.push((TL[k]||k)+' <b class="'+(v["익절확률"]>=50?"up":"dn")+'">'+v["익절확률"]+'%</b>'
+                  +' <span class=mut>('+v["익절"]+'/'+v.n+' · 평균 '+(v["평균수익"]>=0?"+":"")+v["평균수익"]+'%)</span>'); });
+        if(tr.length) ah+='<div class="byrank">테마강도별 익일 익절확률 · '+tr.join("  ·  ")+'</div>';
+      }
+      if(a.by_theme_bonus&&Object.keys(a.by_theme_bonus).length){
+        var bo=["가점21+","가점11-20","가점1-10","가점0"], br=[];
+        bo.forEach(function(k){ var v=a.by_theme_bonus[k]; if(!v||!v.n) return;
+          br.push(k+' <b class="'+(v["익절확률"]>=50?"up":"dn")+'">'+v["익절확률"]+'%</b>'
+                  +' <span class=mut>(n'+v.n+' · '+(v["평균수익"]>=0?"+":"")+v["평균수익"]+'%)</span>'); });
+        if(br.length) ah+='<div class="byrank">테마가점 구간별 · '+br.join("  ·  ")+'</div>';
+      }
+      if(a.samples!=null) ah+='<div class="crit">누적 표본 '+a.samples+'건'+(a.samples<30?' <b class="dn">— 표본 부족, 참고만</b>':'')+'</div>';
+      }catch(e){}
       if(a.criterion) ah+='<div class="crit">채점 기준 · '+esc(a.criterion)+' · 다음날 청산</div>';
       document.getElementById("rAcc").innerHTML=ah;
     } else {
