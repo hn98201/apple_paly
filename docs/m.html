@@ -99,9 +99,49 @@
   /* 탭 */
   .tabs{position:sticky;top:52px;z-index:8;display:flex;gap:0;background:rgba(10,14,23,.92);backdrop-filter:blur(10px);
     border-bottom:1px solid var(--line);padding:0 10px}
-  .tab{flex:1;background:none;border:none;color:var(--mut);font-size:14px;font-weight:700;padding:12px 6px;cursor:pointer;
-    border-bottom:2px solid transparent;font-family:var(--sans)}
+  .tab{flex:1;background:none;border:none;color:var(--mut);font-size:12.5px;font-weight:700;padding:12px 2px;cursor:pointer;
+    border-bottom:2px solid transparent;font-family:var(--sans);white-space:nowrap}
   .tab.on{color:var(--cyan);border-bottom-color:var(--cyan)}
+  /* 접속현황 */
+  .cl{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line)}
+  .cl:last-child{border-bottom:none}
+  .cl .d{width:9px;height:9px;border-radius:50%;flex:none;box-shadow:0 0 8px currentColor}
+  .cl .n{font-weight:700;font-size:14.5px} .cl .sp{flex:1}
+  .cl .sub{font-size:11px;color:var(--mut);margin-top:2px;font-family:var(--mono)}
+  .cl .r{text-align:right;font-size:11.5px;color:var(--ink2);font-family:var(--mono);line-height:1.5}
+  .cl .r b{font-size:12.5px}
+  .badge.on{background:var(--grn);color:#04240f} .badge.rec{background:var(--gold);color:#241a06}
+  .badge.off{background:var(--card2);color:var(--mut);border:1px solid var(--line)}
+  .badge.no{background:var(--card2);color:var(--dn);border:1px solid var(--line)}
+  .badge.exp{background:var(--up);color:#fff}
+  .clsum{display:flex;gap:8px;margin-bottom:10px}
+  .clsum .b{flex:1;background:var(--card2);border:1px solid var(--line);border-radius:11px;padding:9px 6px;text-align:center}
+  .clsum .b .k{font-size:10.5px;color:var(--mut)} .clsum .b .v{font-size:19px;font-weight:800;font-family:var(--mono)}
+  /* IR 리서치 */
+  .irv{background:linear-gradient(160deg,#38e7f218,#38e7f200);border:1px solid #38e7f244;border-radius:13px;
+    padding:13px 14px;margin-bottom:12px}
+  .irv .t{font-size:19px;font-weight:800} .irv .t.ok{color:var(--grn)} .irv .t.no{color:var(--up)}
+  .irv .s{font-size:12px;color:var(--ink2);margin-top:4px;line-height:1.6}
+  .irv .s b{font-family:var(--mono);color:var(--cyan)}
+  .irq{background:var(--card2);border:1px solid var(--line);border-radius:11px;padding:11px 13px;
+    font-size:12.5px;line-height:1.65;color:var(--ink2);margin-bottom:10px}
+  .irq .who{font-size:11px;color:var(--gold);font-weight:800;display:block;margin-bottom:4px}
+  .irs{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--rcol,var(--line));
+    border-radius:13px;padding:13px 14px;margin-bottom:11px}
+  .irs.ok{--rcol:var(--grn)} .irs.no{--rcol:var(--up)}
+  .irs-h{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+  .irs-h .nm{font-weight:800;font-size:16px} .irs-h .cd{font-size:11px;color:var(--mut);font-family:var(--mono)}
+  .irs-h .sp{flex:1}
+  .dept{display:grid;grid-template-columns:74px 34px 1fr;gap:7px;align-items:start;font-size:12px;
+    padding:6px 0;border-top:1px solid var(--line);line-height:1.5}
+  .dept:first-child{border-top:none}
+  .dept .dn{color:var(--mut);font-size:11.5px;font-weight:700}
+  .dept .ds{font-family:var(--mono);font-weight:800;text-align:right}
+  .dept .dw{color:var(--ink2)}
+  .irmore{background:none;border:1px solid var(--line);color:var(--cyan);border-radius:9px;
+    padding:7px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--sans);width:100%;margin-top:6px}
+  .irrep{white-space:pre-wrap;font-size:12px;line-height:1.7;color:var(--ink2);background:var(--card2);
+    border:1px solid var(--line);border-radius:11px;padding:12px 13px;margin-top:8px}
   /* 리서치 */
   .rhead{margin-bottom:12px}
   .rt{font-size:17px;font-weight:800} .rt .cnt{font-size:12px;color:var(--mut);font-weight:500}
@@ -186,6 +226,8 @@
 <div class="tabs">
   <button class="tab on" id="tabDash" onclick="setTab('dash')">📊 대시보드</button>
   <button class="tab" id="tabResearch" onclick="setTab('research')">🔬 리서치</button>
+  <button class="tab" id="tabClients" onclick="setTab('clients')">📡 접속현황</button>
+  <button class="tab" id="tabIr" onclick="setTab('ir')">🏛 IR</button>
 </div>
 <div class="wrap">
   <div id="paneDash">
@@ -248,6 +290,25 @@
     <div class="rsum" id="rSummary"></div>
     <div id="rList"><div class="empty">리서치 대기 — 스캔 후 15:30 자동 생성</div></div>
     <div class="foot" id="rFoot">급등주 펀드매니저 프롬프트 · 종목별 재료·수급·과열·판정</div>
+  </div>
+
+  <div id="paneClients" hidden>
+    <div class="rhead">
+      <div class="rt">📡 클라이언트 접속현황 <span class="cnt" id="clDate"></span></div>
+      <div class="rsub">클라이언트 프로그램이 약 30초마다 허브에 신호를 보냅니다. 90초 안이면 온라인.</div>
+    </div>
+    <div class="clsum" id="clSum"></div>
+    <div class="card" id="clCard"><div class="empty">접속 기록 없음</div></div>
+    <div class="foot">허브 <span id="clHub">—</span> · 오늘 신호 수는 각 PC가 오늘 보낸 확인 횟수입니다</div>
+  </div>
+
+  <div id="paneIr" hidden>
+    <div class="rhead">
+      <div class="rt">🏛 IR 리서치 <span class="cnt" id="irDate"></span></div>
+      <div class="rsub">AI증권사 — 6개 분석부서 · 리스크심사 · 리서치센터장 · 심의위 · 대표 승인</div>
+    </div>
+    <div id="irBody"><div class="empty">IR 리포트 대기 — 장 마감 후 자동 생성</div></div>
+    <div class="foot">종가배팅 픽을 가상 증권사 조직이 심의한 결과입니다 · 매매는 종가배팅 기준을 따릅니다</div>
   </div>
 </div>
 
@@ -317,6 +378,7 @@
 
   function render(d){
     lastData=d;
+    try{ renderExtra(d); }catch(e){}   // ★접속현황·IR (신규 필드 없어도 대시보드는 안 깨짐)
     // 상단
     var cd=document.getElementById("connDot");
     cd.style.color = d.conn ? "var(--grn)" : "var(--up)";
@@ -502,12 +564,110 @@
       {code:"032940",name:"원익",verdict:"매도",confidence:"중",rank:5,catalyst:"급등 원인 뉴스 확인 안됨(화장품 기대·저PBR 지주)",durability:"재료 불명확",supply:"개인 주도 급등 정황",risk:"원인 불명 급등은 원인 없이 빠짐",reason:"⚠️샘플: 실제론 로봇(원익로보틱스 3,500억)이 원인 — 뉴스 깊이 한계",target:"-"}
     ]};
   function vcls(v){ return v==="매수"?"buy":(v==="매도"?"sell":(v==="보유"?"hold":"wait")); }
+  var TABS=[["dash","tabDash","paneDash"],["research","tabResearch","paneResearch"],
+            ["clients","tabClients","paneClients"],["ir","tabIr","paneIr"]];
   function setTab(p){
-    document.getElementById("tabDash").classList.toggle("on", p==="dash");
-    document.getElementById("tabResearch").classList.toggle("on", p==="research");
-    document.getElementById("paneDash").hidden = p!=="dash";
-    document.getElementById("paneResearch").hidden = p!=="research";
+    TABS.forEach(function(t){
+      var b=document.getElementById(t[1]), n=document.getElementById(t[2]);
+      if(b) b.classList.toggle("on", p===t[0]);
+      if(n) n.hidden = p!==t[0];
+    });
     if(p==="research" && !researchLoaded) fetchResearch();
+    // 접속현황·IR 은 status.json 에 함께 실려오므로 마지막 수신분을 바로 그린다
+    try{ if(lastData && (p==="clients"||p==="ir")) renderExtra(lastData); }catch(e){}
+  }
+
+  // ── 접속현황 · IR 리서치 (status.json 에 동봉) ──────────────────────
+  function agoTxt(s){
+    if(s==null) return "기록 없음";
+    if(s<60) return s+"초 전";
+    if(s<3600) return Math.floor(s/60)+"분 전";
+    if(s<86400) return Math.floor(s/3600)+"시간 전";
+    return Math.floor(s/86400)+"일 전";
+  }
+  function renderClients(d){
+    var cs=d.clients||[], box=document.getElementById("clCard");
+    if(!box) return;
+    var on=0,rc=0,off=0;
+    cs.forEach(function(c){ if(c.state==="온라인") on++; else if(c.state==="최근") rc++; else off++; });
+    document.getElementById("clDate").textContent = cs.length? cs.length+"대 등록" : "";
+    document.getElementById("clSum").innerHTML =
+      '<div class="b"><div class="k">온라인</div><div class="v" style="color:var(--grn)">'+on+'</div></div>'+
+      '<div class="b"><div class="k">최근(10분)</div><div class="v" style="color:var(--gold)">'+rc+'</div></div>'+
+      '<div class="b"><div class="k">끊김</div><div class="v" style="color:var(--mut)">'+off+'</div></div>';
+    var hub=document.getElementById("clHub"); if(hub) hub.textContent = esc(d.server||"—");
+    if(!cs.length){ box.innerHTML='<div class="empty">등록된 클라이언트 없음</div>'; return; }
+    box.innerHTML = cs.map(function(c){
+      var col = c.state==="온라인"?"var(--grn)":(c.state==="최근"?"var(--gold)":"var(--mut)");
+      var bc  = c.state==="온라인"?"on":(c.state==="최근"?"rec":(c.state==="미접속"?"no":"off"));
+      var lic = c.status==="approved"
+              ? (c.left!=null && c.left<0 ? '<span class="badge exp">만료</span>'
+                 : '<span class="badge off">'+(c.left!=null?"D-"+c.left:"승인")+'</span>')
+              : '<span class="badge no">'+esc(c.status==="pending"?"승인대기":c.status)+'</span>';
+      return '<div class="cl">'+
+        '<span class="d" style="color:'+col+'"></span>'+
+        '<div><div class="n">'+esc(c.nick)+' '+lic+'</div>'+
+        '<div class="sub">'+esc(c.ip||"IP 미확인")+(c.expiry?' · ~'+esc(c.expiry):'')+'</div></div>'+
+        '<span class="sp"></span>'+
+        '<div class="r"><span class="badge '+bc+'">'+esc(c.state)+'</span>'+
+        '<div>'+agoTxt(c.gap)+'</div>'+
+        '<div style="color:var(--mut)">오늘 '+(c.today||0)+'회</div></div></div>';
+    }).join("");
+  }
+  var irOpen=false;
+  function toggleIrReport(){ irOpen=!irOpen; try{ renderIr(lastData); }catch(e){} }
+  function renderIr(d){
+    var ir=d.ir||{}, box=document.getElementById("irBody");
+    if(!box) return;
+    document.getElementById("irDate").textContent = ir.date? ir.date+" 심의" : "";
+    if(!ir.date){ box.innerHTML='<div class="empty">IR 리포트 없음 — AI증권사 산출물 대기</div>'; return; }
+    var ok = (ir.n_ok||0)>0;
+    var h = '<div class="irv"><div class="t '+(ok?"ok":"no")+'">'+esc(ir.verdict||"—")+'</div>'+
+      '<div class="s">승인 <b>'+(ir.n_ok||0)+'</b>건 · 부결 <b>'+(ir.n_no||0)+'</b>건 · 총 투입 <b>'+
+      (ir.fund||0).toLocaleString()+'</b>원<br>심의위 표결 <b>'+esc(ir.vote||"—")+'</b>'+
+      (ir.crowd?' · <b style="color:var(--up)">집단쏠림 경고</b>':'')+
+      (ir.gen?'<br><span style="color:var(--mut)">생성 '+esc(ir.gen)+'</span>':'')+'</div></div>';
+    if(ir.ceo)    h+='<div class="irq"><span class="who">대표 코멘트</span>'+esc(ir.ceo)+'</div>';
+    if(ir.market) h+='<div class="irq"><span class="who">시황 경고</span>'+esc(ir.market)+'</div>';
+    (ir.stocks||[]).forEach(function(s){
+      var cl = s.result==="승인"?"ok":(s.result==="부결"?"no":"");
+      h += '<div class="irs '+cl+'"><div class="irs-h">'+
+        '<span class="nm">'+esc(s.name||s.code)+'</span><span class="cd">'+esc(s.code)+'</span>'+
+        '<span class="sp"></span>'+
+        (s.grade?'<span class="conf">'+esc(s.grade)+(s.conf!=null?" · 확신도 "+s.conf:"")+'</span>':'')+
+        '<span class="badge '+(s.result==="승인"?"on":"no")+'">'+esc(s.result||"-")+'</span></div>';
+      if(s.avg!=null||s.trust!=null)
+        h+='<div class="sub" style="font-size:11.5px;color:var(--mut);font-family:var(--mono);margin-bottom:7px">'+
+           '부서 평균 '+(s.avg!=null?s.avg:"—")+'점 · 센터장 신뢰도 '+(s.trust!=null?s.trust:"—")+'</div>';
+      if(s.reason) h+='<div class="rc-cat">'+esc(s.reason)+'</div>';
+      (s.depts||[]).forEach(function(x){
+        h+='<div class="dept"><span class="dn">'+esc(x.d)+'</span>'+
+           '<span class="ds" style="color:'+((x.score||0)>=50?"var(--grn)":"var(--up)")+'">'+
+           (x.score!=null?x.score:"—")+'</span>'+
+           '<span class="dw"><b style="color:var(--ink)">'+esc(x.judge||"")+'</b> '+esc(x.why||"")+'</span></div>';
+      });
+      (s.risk||[]).forEach(function(r){
+        h+='<div class="dept"><span class="dn">'+esc(r.who)+'</span>'+
+           '<span class="ds" style="color:'+(r.ok?"var(--grn)":"var(--up)")+'">'+(r.ok?"승인":"부결")+'</span>'+
+           '<span class="dw">'+(r.risk!=null?'위험도 '+r.risk+' · ':'')+esc(r.why||(r.warn||[])[0]||"")+'</span></div>';
+      });
+      if(s.counter) h+='<div class="rrow"><span class="rlab risk">반증</span><span class="rval2">'+esc(s.counter)+'</span></div>';
+      (s.conflict||[]).forEach(function(x){
+        h+='<div class="rrow"><span class="rlab">모순</span><span class="rval2">'+esc(x)+'</span></div>';
+      });
+      h+='</div>';
+    });
+    if(ir.chief) h+='<div class="irq"><span class="who">리서치센터장 총평</span>'+esc(ir.chief)+'</div>';
+    if(ir.panel) h+='<div class="irq"><span class="who">심의위 총평</span>'+esc(ir.panel)+'</div>';
+    if(ir.report){
+      h+='<button class="irmore" onclick="toggleIrReport()">'+(irOpen?"▲ 리포트 전문 접기":"▼ 리포트 전문 보기")+'</button>';
+      if(irOpen) h+='<div class="irrep">'+esc(ir.report)+'</div>';
+    }
+    box.innerHTML=h;
+  }
+  function renderExtra(d){
+    try{ renderClients(d); }catch(e){}
+    try{ renderIr(d); }catch(e){}
   }
   function renderResearch(d){
     researchLoaded = true;
