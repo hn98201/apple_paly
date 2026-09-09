@@ -33,6 +33,25 @@
   .hero .eq small{font-size:16px;color:var(--ink2);font-weight:600}
   .hero .pl{font-size:15px;font-weight:700;margin-top:4px}
   .hero .row{display:flex;gap:8px;margin-top:14px}
+  /* 히어로 우측 미니 수익률곡선 + 하단 성과요약 (2026-09-09) */
+  .htop{display:flex;align-items:flex-start;gap:10px;flex-wrap:wrap}
+  .hl{flex:1 1 150px;min-width:0}
+  .hr{flex:none;width:122px;margin-left:auto;text-align:right}
+  .hr .ck{font-size:10px;color:var(--mut)}
+  .hr .cv{font-size:17px;font-weight:800;font-family:var(--mono);line-height:1.15}
+  .hr svg{display:block;margin:5px 0 0 auto}
+  .hr .cd{font-size:9.5px;color:var(--mut);font-family:var(--mono);margin-top:2px}
+  /* 고정 4열이 아니라 flex-wrap — 폭이 모자라면 2+2 로 접힌다.
+     min-width 를 주지 않아야 flex 가 내용보다 좁게 못 줄여 글자가 안 잘린다. */
+  .hstat{display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px 6px;margin-top:13px;
+    padding-top:11px;border-top:1px solid var(--line)}
+  .hstat .c{flex:1 1 auto;text-align:center}
+  .hstat .c .k{font-size:9.5px;color:var(--mut);white-space:nowrap}
+  .hstat .c .v{font-size:13.5px;font-weight:800;font-family:var(--mono);margin-top:2px;white-space:nowrap}
+  .hstat .c .s{font-size:9.5px;color:var(--mut);white-space:nowrap;margin-top:1px}
+  .hstat .c .v em{font-style:normal;font-size:11px;color:var(--mut);font-weight:600}
+  .hsub{font-size:10.5px;color:var(--mut);text-align:center;margin-top:7px;font-family:var(--mono)}
+  .hstat:empty,.hsub:empty{display:none}
   .hero .row .b{flex:1;background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:9px 11px}
   .hero .row .b .k{font-size:11px;color:var(--mut)}
   .hero .row .b .v{font-size:15px;font-weight:700;margin-top:2px}
@@ -234,13 +253,20 @@
   <div class="err" id="err"></div>
 
   <div class="hero">
-    <div class="lb">전략자산 (복리)</div>
-    <div class="eq tnum" id="eq">—</div>
-    <div class="pl tnum" id="todayPl">—</div>
+    <div class="htop">
+      <div class="hl">
+        <div class="lb">전략자산 (복리)</div>
+        <div class="eq tnum" id="eq">—</div>
+        <div class="pl tnum" id="todayPl">—</div>
+      </div>
+      <div class="hr" id="hChart"></div>
+    </div>
     <div class="row">
       <div class="b"><div class="k">평가손익(보유)</div><div class="v tnum" id="unreal">—</div></div>
       <div class="b"><div class="k">실현손익(오늘)</div><div class="v tnum" id="real">—</div></div>
     </div>
+    <div class="hstat" id="hStat"></div>
+    <div class="hsub" id="hSub"></div>
   </div>
 
   <div class="stage"><span>📍</span><span id="stage">—</span></div>
@@ -668,6 +694,55 @@
   function renderExtra(d){
     try{ renderClients(d); }catch(e){}
     try{ renderIr(d); }catch(e){}
+    try{ renderStats(d); }catch(e){}
+  }
+
+  // ── 히어로 성과요약 (2026-09-09) ────────────────────────────────────
+  // 색은 CSS 변수 대신 리터럴 — SVG 표현속성(stroke=)에 var() 는 브라우저마다 안 먹는다.
+  var C_UP="#f0455c", C_DN="#4c8df7", C_LINE="#1e2a3a";
+  function sparkSvg(cv, w, h){
+    if(!cv || cv.length < 2) return "";
+    var mn=Math.min.apply(null,cv), mx=Math.max.apply(null,cv);
+    if(mx-mn < 0.0001){ mn-=1; mx+=1; }
+    var p=2, iw=w-p*2, ih=h-p*2;
+    function X(i){ return p + iw*i/(cv.length-1); }
+    function Y(v){ return p + ih*(1-(v-mn)/(mx-mn)); }
+    var pts=[], i;
+    for(i=0;i<cv.length;i++) pts.push(X(i).toFixed(1)+","+Y(cv[i]).toFixed(1));
+    pts = pts.join(" ");
+    var last=cv[cv.length-1], col=(last>=0?C_UP:C_DN);
+    var zero = (mn<=0 && mx>=0)
+      ? '<line x1="'+p+'" y1="'+Y(0).toFixed(1)+'" x2="'+(w-p)+'" y2="'+Y(0).toFixed(1)+
+        '" stroke="'+C_LINE+'" stroke-width="1" stroke-dasharray="2 2"/>' : "";
+    return '<svg width="'+w+'" height="'+h+'" viewBox="0 0 '+w+' '+h+'" aria-hidden="true">'+zero+
+      '<polygon points="'+X(0).toFixed(1)+','+(h-p)+' '+pts+' '+X(cv.length-1).toFixed(1)+','+(h-p)+
+      '" fill="'+col+'" opacity=".13"/>'+
+      '<polyline points="'+pts+'" fill="none" stroke="'+col+
+      '" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>'+
+      '<circle cx="'+X(cv.length-1).toFixed(1)+'" cy="'+Y(last).toFixed(1)+'" r="2.2" fill="'+col+'"/></svg>';
+  }
+  function renderStats(d){
+    var s=d.stats||{}, ch=document.getElementById("hChart"),
+        hs=document.getElementById("hStat"), hb=document.getElementById("hSub");
+    if(!ch||!hs||!hb) return;
+    if(s.n==null){ ch.innerHTML=""; hs.innerHTML=""; hb.innerHTML=""; return; }
+    var tc=cls(s.total);
+    ch.innerHTML = '<div class="ck">누적 수익률</div>'+
+      '<div class="cv '+tc+'">'+(s.total>=0?"+":"")+s.total+'%</div>'+
+      sparkSvg(s.curve, 122, 36)+
+      '<div class="cd">'+s.n+'거래</div>';
+    function col(k,v,sub){ return '<div class="c"><div class="k">'+k+'</div><div class="v">'+v+'</div>'+
+      (sub?'<div class="s">'+sub+'</div>':'')+'</div>'; }
+    hs.innerHTML =
+      col("승률", '<span class="'+(s.win>=50?"up":"dn")+'">'+s.win+'%</span>', s.wins+'승 '+s.loses+'패') +
+      col("익절 · 손절", '<span class="up">'+s.tp+'</span><em> · </em><span class="dn">'+s.sl+'</span>',
+          (s.etc?'기타 '+s.etc:'&nbsp;')) +
+      col("MDD", '<span class="dn">-'+s.mdd+'</span><em>%p</em>', '고점대비') +
+      col("기간", (s.days!=null?"D+"+s.days:"—"), (s.start?esc(s.start).slice(5):'&nbsp;'));
+    var parts=[];
+    if(s.start) parts.push(esc(s.start)+" 시작");
+    if(s.best!=null) parts.push("최고 +"+s.best+"% / 최저 "+s.worst+"%");
+    hb.textContent = parts.join("  ·  ");
   }
   function renderResearch(d){
     researchLoaded = true;
