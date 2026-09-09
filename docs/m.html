@@ -462,8 +462,12 @@
     ynv("sReal", d.real_on, "👁 "+((d.positions||[]).length)+"종목", "—");
     var sc=document.getElementById("sCond"); sc.className="v flat"; sc.textContent=esc(d.cond_ok||"—");
     document.getElementById("cfg").innerHTML =
-      '<span>익절 '+d.tp+'%</span><span>손절 '+d.sl+'%</span><span>종목당 '+won(d.invest)+'</span>'
-      +'<span>매수 '+d.af+'종목</span><span>유통≤'+d.float_max+'%</span>'
+      '<span>익절 '+d.tp+'%</span><span>손절 '+d.sl+'%</span>'
+      // ★종목당은 이제 고정액이 아니라 max(하한, (자산−버퍼)÷N) 로 계산된 값이다(2026-09-09)
+      +'<span>종목당 '+won(d.invest)+'</span><span>매수 '+d.af+'종목</span>'
+      +(d.gapcut?'<span>갭컷 '+d.gapcut+'%</span>':'')
+      +(d.cash_buffer?'<span>버퍼 '+won(d.cash_buffer)+'</span>':'')
+      +'<span>유통≤'+d.float_max+'%</span>'
       +'<span>상한'+(d.exclude_upper?"제외":"포함")+'</span><span>테마+'+d.theme_bonus_max+'</span>';
     // 오늘 강한 섹터/테마 + 종목랭크 + 리서치 요약
     var sec=d.sectors||[], ss=document.getElementById("secSec");
