@@ -850,6 +850,20 @@
                   +' <span class=mut>(n'+v.n+' · '+(v["평균수익"]>=0?"+":"")+v["평균수익"]+'%)</span>'); });
         if(br.length) ah+='<div class="byrank">테마가점 구간별 · '+br.join("  ·  ")+'</div>';
       }
+      // ★예측 등급별 실제 성적(2026-09-10) — 예측기가 맞아 가는지 매일 누적된다.
+      //   백테 기대치는 리서치 탭 위쪽 '내일 등급 예측' 표에 있고, 여기는 실전 누적이다.
+      if(a.by_grade&&Object.keys(a.by_grade).length){
+        var GL={A:"양호",B:"보통",C:"회피"}, gr=[];
+        ["A","B","C"].forEach(function(k){ var v=a.by_grade[k]; if(!v||!v.n) return;
+          gr.push('<span class="pg pg-'+k+'">'+(GL[k]||k)+'</span> <b class="'+(v["평균수익"]>=0?"up":"dn")+'">'
+                  +(v["평균수익"]>=0?"+":"")+v["평균수익"]+'%</b>'
+                  +' <span class=mut>(n'+v.n+' · 익절 '+v["익절확률"]+'%)</span>'); });
+        if(gr.length){
+          ah+='<div class="byrank">예측 등급별 실전성적 · '+gr.join("  ·  ")+'</div>';
+          var tot=["A","B","C"].reduce(function(t,k){return t+((a.by_grade[k]||{}).n||0);},0);
+          if(tot<30) ah+='<div class="crit">⚠️ 누적 '+tot+'건뿐 — 백테 기대치(268건)와 어긋나는 게 정상이다</div>';
+        }
+      }
       if(a.samples!=null) ah+='<div class="crit">누적 표본 '+a.samples+'건'+(a.samples<30?' <b class="dn">— 표본 부족, 참고만</b>':'')+'</div>';
       }catch(e){}
       if(a.criterion) ah+='<div class="crit">채점 기준 · '+esc(a.criterion)+' · 다음날 청산</div>';
