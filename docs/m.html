@@ -192,6 +192,23 @@
   .accbar .b b{font-family:var(--mono);font-size:15px}
   .byrank{font-size:12px;color:var(--ink2);margin-top:8px} .byrank b{font-family:var(--mono)}
   .crit{font-size:11px;color:var(--mut);margin-top:4px}
+  /* 익일 등급 예측 (2026-09-10) */
+  .pg{font-size:10px;font-weight:800;padding:2px 7px;border-radius:7px;white-space:nowrap}
+  .pg-A{background:var(--grn);color:#04240f}
+  .pg-B{background:var(--gold);color:#241a06}
+  .pg-C{background:var(--up);color:#fff}
+  .pg-Q{background:var(--card2);color:var(--mut);border:1px solid var(--line)}
+  .pcard{background:var(--card);border:1px solid var(--line);border-radius:13px;padding:13px 14px;margin-bottom:11px}
+  .prow{display:flex;align-items:center;gap:8px;padding:8px 0;border-top:1px solid var(--line)}
+  .prow:first-child{border-top:none}
+  .prow .n{font-weight:700;font-size:14.5px}
+  .prow .sp{flex:1}
+  .prow .m{font-size:11px;color:var(--mut);font-family:var(--mono)}
+  .ptab{width:100%;border-collapse:collapse;font-size:11.5px;margin-top:8px}
+  .ptab th,.ptab td{padding:5px 6px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+  .ptab th{color:var(--mut);font-weight:600;font-size:10.5px}
+  .ptab th:first-child,.ptab td:first-child{text-align:left}
+  .pnote{font-size:11px;color:var(--mut);line-height:1.7;margin-top:8px}
   /* 시스템 그리드 */
   .sys{display:grid;grid-template-columns:1fr 1fr;gap:8px}
   .sys .b{background:var(--card);border:1px solid var(--line);border-radius:11px;padding:10px 12px}
@@ -313,6 +330,7 @@
       <div class="rt">🔬 급등주 리서치 <span class="cnt" id="rDate"></span></div>
       <div class="rsub" id="rAcc"></div>
     </div>
+    <div id="predBox"></div>
     <div class="rsum" id="rSummary"></div>
     <div id="rList"><div class="empty">리서치 대기 — 스캔 후 15:30 자동 생성</div></div>
     <div class="foot" id="rFoot">급등주 펀드매니저 프롬프트 · 종목별 재료·수급·과열·판정</div>
@@ -448,7 +466,8 @@
       kc.className = pk.length>7?"card scroll":"card";
       kc.innerHTML = pk.map(function(s){
         var g=s.grade||"D"; var dd=DMAP[s.disp]||[s.disp||"-","tag-none"];
-        return '<div class="it"><div class="r1"><span class="nm">'+esc(s.name)+'</span><span class="cd">'+esc(s.code)+'</span><span class="sp"></span><span class="dtag '+dd[1]+'">'+dd[0]+'</span></div>'
+        return '<div class="it"><div class="r1"><span class="nm">'+esc(s.name)+'</span><span class="cd">'+esc(s.code)+'</span>'
+          +pgTag(s.pg)+'<span class="sp"></span><span class="dtag '+dd[1]+'">'+dd[0]+'</span></div>'
           +'<div class="r2"><span class="badge g'+g+'">'+g+' '+(s.score!=null?s.score:"—")+'</span>'
           +(s.theme_bonus>0?'<span class="th">⭐'+esc(s.theme)+'+'+s.theme_bonus+'</span>':(s.theme?'<span class="tagwait">'+esc(s.theme)+'</span>':''))
           +'<span class="sp"></span><span class="px">'+(s.entry||0).toLocaleString()+'원</span>'
@@ -699,6 +718,61 @@
     try{ renderClients(d); }catch(e){}
     try{ renderIr(d); }catch(e){}
     try{ renderStats(d); }catch(e){}
+    try{ renderPred(d); }catch(e){}
+  }
+
+  // ── 익일 등급 예측 (2026-09-10) ─────────────────────────────────────
+  // 등급은 '나쁜 것 걸러내기'용이다. 60 이상끼리의 순위는 근거가 없어 나누지 않는다.
+  var PGL={A:"양호",B:"보통",C:"회피","?":"판정불가"};
+  function pgTag(g){
+    if(!g) return "";
+    var c = (g==="A"||g==="B"||g==="C") ? ("pg-"+g) : "pg-Q";
+    return ' <span class="pg '+c+'">'+esc(PGL[g]||g)+'</span>';
+  }
+  function renderPred(d){
+    var box=document.getElementById("predBox"); if(!box) return;
+    var pr=d.predictor||{}, pk=(d.picks||[]).filter(function(s){return s.pg;});
+    if(!pr.grades || !pr.grades.length){ box.innerHTML=""; return; }
+    var gm={}; pr.grades.forEach(function(g){ gm[g.g]=g; });
+    var h='<div class="pcard"><div class="rt" style="font-size:15px">🔮 내일 등급 예측'
+      + '<span class="cnt" style="font-size:11px;color:var(--mut);font-weight:500"> · 근거 '
+      + pr.n+'건 / '+pr.days+'일</span></div>';
+    if(pk.length){
+      h+='<div style="margin-top:8px">';
+      pk.forEach(function(s){
+        var g=gm[s.pg]||{};
+        h+='<div class="prow"><span class="n">'+esc(s.name)+'</span>'+pgTag(s.pg)
+          +'<span class="sp"></span><span class="m">매력도 '+(s.score!=null?s.score:"—")
+          +(s.turnover?' · 회전율 '+s.turnover:'')+'</span></div>';
+        if(g.exp!=null){
+          h+='<div class="m" style="padding:0 0 6px 2px">기대 <b class="'+(g.exp>=0?"up":"dn")+'">'
+            +(g.exp>=0?"+":"")+g.exp+'%</b> · 익절 '+g.tp+'% · 손실 '+g.loss+'% <span style="opacity:.7">(n'+g.n+')</span></div>';
+        }
+      });
+      h+='</div>';
+    } else {
+      h+='<div class="empty" style="padding:14px">오늘 스캔 종목 없음</div>';
+    }
+    h+='<table class="ptab"><thead><tr><th>등급</th><th>조건</th><th>표본</th><th>기대</th>'
+      +'<th>익절률</th><th>손실률</th><th>전반</th><th>후반</th></tr></thead><tbody>';
+    var COND={A:"매력도 "+pr.floor+"↑ · 회전율 "+pr.turnover_hi+"↓", B:"매력도 "+pr.floor+"↑ · 회전율 "+pr.turnover_hi+"↑",
+              C:"매력도 "+pr.floor+" 미만"};
+    pr.grades.forEach(function(g){
+      h+='<tr><td><span class="pg pg-'+g.g+'">'+esc(g.label)+'</span></td>'
+        +'<td style="color:var(--ink2)">'+esc(COND[g.g]||"")+'</td>'
+        +'<td class="mono">'+g.n+'</td>'
+        +'<td class="mono '+(g.exp>=0?"up":"dn")+'"><b>'+(g.exp>=0?"+":"")+g.exp+'%</b></td>'
+        +'<td class="mono">'+g.tp+'%</td><td class="mono">'+g.loss+'%</td>'
+        +'<td class="mono '+(g.fh>=0?"up":"dn")+'">'+(g.fh==null?"—":(g.fh>=0?"+":"")+g.fh)+'</td>'
+        +'<td class="mono '+(g.sh>=0?"up":"dn")+'">'+(g.sh==null?"—":(g.sh>=0?"+":"")+g.sh)+'</td></tr>';
+    });
+    h+='</tbody></table>';
+    h+='<div class="pnote">· <b>나쁜 것을 걸러내는 용도</b>다. 매력도 '+pr.floor
+      +' 이상끼리의 순위는 근거가 없어 등급을 나누지 않는다.<br>'
+      +'· <b>전반·후반</b>이 비슷해야 믿을 수 있다 — A는 +'+(gm.A?gm.A.fh:'')+' / +'+(gm.A?gm.A.sh:'')
+      +' 로 거의 같고, B는 표본 '+(gm.B?gm.B.n:'')+'건에 부호가 갈려 참고만 한다.<br>'
+      +'· 이 예측은 <b>표시 전용</b>이다. 매수 여부를 바꾸지 않는다.</div></div>';
+    box.innerHTML=h;
   }
 
   // ── 히어로 성과요약 (2026-09-09) ────────────────────────────────────
