@@ -805,20 +805,24 @@
     if(!ch||!hs||!hb) return;
     if(s.n==null){ ch.innerHTML=""; hs.innerHTML=""; hb.innerHTML=""; return; }
     var tc=cls(s.total);
-    ch.innerHTML = '<div class="ck">누적 수익률</div>'+
+    // ★2026-09-11 — 여기 숫자는 '거래 수익률 단순합'이 아니라 **실제 계좌 수익률**이다.
+    //   원금 대비 자산이 얼마나 늘었나. 거래 평균은 아래 보조줄에 따로 쓴다.
+    ch.innerHTML = '<div class="ck">계좌 수익률</div>'+
       '<div class="cv '+tc+'">'+(s.total>=0?"+":"")+s.total+'%</div>'+
       sparkSvg(s.curve, 122, 36)+
-      '<div class="cd">'+s.n+'거래</div>';
+      '<div class="cd">'+(s.pl!=null?(s.pl>=0?"+":"")+won(s.pl):s.n+'거래')+'</div>';
     function col(k,v,sub){ return '<div class="c"><div class="k">'+k+'</div><div class="v">'+v+'</div>'+
       (sub?'<div class="s">'+sub+'</div>':'')+'</div>'; }
     hs.innerHTML =
       col("승률", '<span class="'+(s.win>=50?"up":"dn")+'">'+s.win+'%</span>', s.wins+'승 '+s.loses+'패') +
       col("익절 · 손절", '<span class="up">'+s.tp+'</span><em> · </em><span class="dn">'+s.sl+'</span>',
           (s.etc?'기타 '+s.etc:'&nbsp;')) +
-      col("MDD", '<span class="dn">-'+s.mdd+'</span><em>%p</em>', '고점대비') +
+      col("MDD", '<span class="dn">-'+s.mdd+'</span><em>%</em>', '자산 고점대비') +
       col("기간", (s.days!=null?"D+"+s.days:"—"), (s.start?esc(s.start).slice(5):'&nbsp;'));
     var parts=[];
+    if(s.base!=null&&s.eq!=null) parts.push(won(s.base)+" → "+won(s.eq));
     if(s.start) parts.push(esc(s.start)+" 시작");
+    if(s.avg_ret!=null) parts.push("거래평균 "+(s.avg_ret>=0?"+":"")+s.avg_ret+"%");
     if(s.best!=null) parts.push("최고 +"+s.best+"% / 최저 "+s.worst+"%");
     hb.textContent = parts.join("  ·  ");
   }
