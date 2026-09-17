@@ -444,20 +444,34 @@
     var cd=document.getElementById("connDot");
     cd.style.color = d.conn ? "var(--grn)" : "var(--up)";
     document.getElementById("stTop").textContent = (d.is_mock?"모의":"실전")+" · 자동 "+(d.enabled?"ON":"OFF");
+    // ★🟢모의/🔴실전 — 화면 전체를 선택한 모드로 갈아 끼운다 (2026-09-17)
+    //   _live = 지금 키움에 접속해 있는 모드인가. 보유(평가손익)는 접속 모드에만 존재한다.
+    LASTD = d;
+    var _cur  = statMode || (d.is_mock === false ? "acct" : "mock");
+    var _md   = (d.mode_data && d.mode_data[_cur]) || null;
+    var _live = (_cur === (d.is_mock === false ? "acct" : "mock"));
     // 히어로
-    document.getElementById("eq").innerHTML = won(d.equity)+' <small>원</small>';
-    var p=d.pnl||{}, t=p.total||0;
+    document.getElementById("eq").innerHTML = won(_md ? _md.equity : d.equity)+' <small>원</small>';
+    var p=d.pnl||{};
+    var _rz = _md ? (_md.realized_today||0) : (p.realized||0);   // 그 모드의 오늘 실현손익
+    var _ur = _live ? (p.unrealized||0) : 0;                     // 평가손익은 접속 모드에만
+    var t = _rz + _ur;
+    var _prin = d.principal || 0;
+    var _ar = _md ? (_prin ? t/_prin*100 : 0) : (p.acct_ret||0);
     var pe=document.getElementById("todayPl");
     pe.className="pl tnum "+cls(t);
-    pe.textContent = "오늘 "+(t>=0?"+":"")+wonFull(t).replace("원","")+"원 ("+(p.acct_ret>=0?"+":"")+(p.acct_ret||0).toFixed(2)+"%)";
-    var ur=document.getElementById("unreal"); ur.className="v tnum "+cls(p.unrealized||0); ur.textContent=(p.unrealized>=0?"+":"")+won(p.unrealized||0);
-    var rl=document.getElementById("real"); rl.className="v tnum "+cls(p.realized||0); rl.textContent=(p.realized>=0?"+":"")+won(p.realized||0);
+    pe.textContent = "오늘 "+(t>=0?"+":"")+wonFull(t).replace("원","")+"원 ("+(_ar>=0?"+":"")+_ar.toFixed(2)+"%)";
+    var ur=document.getElementById("unreal"); ur.className="v tnum "+cls(_ur);
+    ur.textContent = (_md && !_live) ? "—" : ((_ur>=0?"+":"")+won(_ur));
+    var rl=document.getElementById("real"); rl.className="v tnum "+cls(_rz); rl.textContent=(_rz>=0?"+":"")+won(_rz);
     // 단계
     document.getElementById("stage").innerHTML = "<b>"+esc(d.stage||"—")+"</b>  ("+esc(d.hm||"")+")";
     // 보유
-    var pc=document.getElementById("posCard"), pos=d.positions||[];
+    var pc=document.getElementById("posCard"), pos=_live ? (d.positions||[]) : [];
     document.getElementById("posCnt").textContent = pos.length?pos.length+"종목":"";
-    if(!pos.length){ pc.innerHTML='<div class="empty">보유 종목 없음</div>'; }
+    if(!pos.length){ pc.innerHTML='<div class="empty">'+
+      (_live ? "보유 종목 없음"
+             : "지금 "+(d.is_mock?"모의":"실전")+"로 접속 중입니다 — 보유는 접속한 쪽에만 보입니다")+'</div>'; }
     else{
       pc.innerHTML = pos.map(function(o){
         var c=cls(o.ret);
@@ -533,8 +547,13 @@
     } else ss.style.display="none";
 
     // 매매 기록 — 날짜별 그룹, 각 날짜 내 청산시간 내림차순
-    var tr=d.trades||[], ts=document.getElementById("trSec");
-    if(tr.length){ ts.style.display="block"; document.getElementById("trCnt").textContent=tr.length+"건";
+    var tr=(_md ? (_md.trades||[]) : (d.trades||[])), ts=document.getElementById("trSec");
+    if(!tr.length && _md){                                  // ★그 모드에 거래가 없다 — 숨기지 말고 그렇다고 말해 준다
+      ts.style.display="block"; document.getElementById("trCnt").textContent="0건";
+      var _tc0=document.getElementById("trCard"); _tc0.className="card";
+      _tc0.innerHTML='<div class="empty">'+(_cur==="acct"?"실전":"모의")+' 거래기록이 아직 없습니다</div>';
+    }
+    else if(tr.length){ ts.style.display="block"; document.getElementById("trCnt").textContent=tr.length+"건";
       var tc=document.getElementById("trCard"); tc.className=tr.length>8?"card scroll":"card";
       var byd={}, order=[];
       tr.forEach(function(t){ var dd=t.date||"—"; if(!byd[dd]){byd[dd]=[];order.push(dd);} byd[dd].push(t); });
@@ -819,8 +838,12 @@
   // ★🟢모의 / 🔴실전 전환 (2026-09-17)
   //   statMode 가 null 이면 '지금 접속한 모드'를 따라간다 — 실전으로 돌리면 실전부터 보인다.
   //   한 번 누르면 그 선택을 유지한다(자동 갱신이 와도 되돌리지 않는다).
-  var statMode = null, _statD = null;
-  function setStatMode(m){ statMode = m; if(_statD) renderStats(_statD); }
+  var statMode = null, _statD = null, LASTD = null;
+  function setStatMode(m){
+    statMode = m;
+    if(LASTD) render(LASTD);          // 전략자산·오늘손익·보유·매매기록까지 전부 다시
+    if(_statD) renderStats(_statD);   // 계좌 수익률·성과요약
+  }
   function renderStats(d){
     _statD = d;
     var sm = d.stats_mode || null;
