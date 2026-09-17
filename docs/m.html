@@ -52,6 +52,18 @@
   .hstat .c .v em{font-style:normal;font-size:11px;color:var(--mut);font-weight:600}
   .hsub{font-size:10.5px;color:var(--mut);text-align:center;margin-top:7px;font-family:var(--mono)}
   .hstat:empty,.hsub:empty{display:none}
+  /* 🟢모의 / 🔴실전 성과 토글 (2026-09-17) — 둘을 섞어 보면 실전 성과가 모의에 묻힌다.
+     GUI 거래내역 탭과 같은 색(모의=초록/실전=빨강)을 써서 헷갈리지 않게 한다. */
+  .hmode{display:flex;gap:6px;margin-top:13px;padding-top:11px;border-top:1px solid var(--line)}
+  .hmode .mb{flex:1;background:var(--card2);color:var(--mut);border:1px solid var(--line);
+    border-radius:10px;padding:7px 0;font-size:11.5px;font-weight:800;cursor:pointer;
+    font-family:inherit;-webkit-appearance:none;transition:background .12s,color .12s}
+  .hmode .mb.on{color:#fff}
+  .hmode .mb.on.mock{background:#12703f;border-color:#22c55e}
+  .hmode .mb.on.real{background:#8a1f1f;border-color:#ef4444}
+  .hmode .mb .n{font-weight:600;opacity:.72;font-family:var(--mono)}
+  /* 토글이 위에 붙으면 hstat 의 구분선이 겹쳐 두 줄로 보인다 */
+  .hmode + .hstat{border-top:0;margin-top:11px;padding-top:0}
   .hero .row .b{flex:1;background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:9px 11px}
   .hero .row .b .k{font-size:11px;color:var(--mut)}
   .hero .row .b .v{font-size:15px;font-weight:700;margin-top:2px}
@@ -281,6 +293,11 @@
     <div class="row">
       <div class="b"><div class="k">평가손익(보유)</div><div class="v tnum" id="unreal">—</div></div>
       <div class="b"><div class="k">실현손익(오늘)</div><div class="v tnum" id="real">—</div></div>
+    </div>
+    <!-- 🟢모의 / 🔴실전 성과 전환 (2026-09-17). 자료가 한쪽뿐이면 JS 가 통째로 숨긴다. -->
+    <div class="hmode" id="hMode" style="display:none">
+      <button type="button" class="mb mock" id="hmMock" onclick="setStatMode('mock')">🟢 모의</button>
+      <button type="button" class="mb real" id="hmReal" onclick="setStatMode('acct')">🔴 실전</button>
     </div>
     <div class="hstat" id="hStat"></div>
     <div class="hsub" id="hSub"></div>
@@ -799,11 +816,38 @@
       '" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>'+
       '<circle cx="'+X(cv.length-1).toFixed(1)+'" cy="'+Y(last).toFixed(1)+'" r="2.2" fill="'+col+'"/></svg>';
   }
+  // ★🟢모의 / 🔴실전 전환 (2026-09-17)
+  //   statMode 가 null 이면 '지금 접속한 모드'를 따라간다 — 실전으로 돌리면 실전부터 보인다.
+  //   한 번 누르면 그 선택을 유지한다(자동 갱신이 와도 되돌리지 않는다).
+  var statMode = null, _statD = null;
+  function setStatMode(m){ statMode = m; if(_statD) renderStats(_statD); }
   function renderStats(d){
-    var s=d.stats||{}, ch=document.getElementById("hChart"),
+    _statD = d;
+    var sm = d.stats_mode || null;
+    var cur = statMode || (d.is_mock === false ? "acct" : "mock");
+    var s = sm ? (sm[cur] || {}) : (d.stats || {});
+    var ch=document.getElementById("hChart"),
         hs=document.getElementById("hStat"), hb=document.getElementById("hSub");
     if(!ch||!hs||!hb) return;
-    if(s.n==null){ ch.innerHTML=""; hs.innerHTML=""; hb.innerHTML=""; return; }
+    // 토글은 먼저 그린다 — 한쪽에 거래가 없어도 버튼은 남아 있어야 건너갈 수 있다
+    var mw=document.getElementById("hMode"),
+        mm=document.getElementById("hmMock"), mr=document.getElementById("hmReal");
+    if(mw && mm && mr){
+      if(!sm){ mw.style.display="none"; }          // 옛 status.json — 토글 숨기고 예전처럼 합산 표시
+      else{
+        mw.style.display="";
+        var nm=(sm.mock&&sm.mock.n)||0, nr=(sm.acct&&sm.acct.n)||0;
+        mm.className="mb mock"+(cur==="mock"?" on":"");
+        mr.className="mb real"+(cur==="acct"?" on":"");
+        mm.innerHTML='\uD83D\uDFE2 모의 <span class="n">'+nm+'</span>';
+        mr.innerHTML='\uD83D\uDD34 실전 <span class="n">'+nr+'</span>';
+      }
+    }
+    if(s.n==null){
+      ch.innerHTML=""; hs.innerHTML="";
+      hb.textContent = sm ? ((cur==="acct"?"실전":"모의")+" 거래내역이 아직 없습니다") : "";
+      return;
+    }
     var tc=cls(s.total);
     // ★2026-09-11 — 여기 숫자는 '거래 수익률 단순합'이 아니라 **실제 계좌 수익률**이다.
     //   원금 대비 자산이 얼마나 늘었나. 거래 평균은 아래 보조줄에 따로 쓴다.
