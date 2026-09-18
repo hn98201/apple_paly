@@ -419,6 +419,7 @@ body.office-on{overflow:hidden}
  border:1px solid #2A303C;border-radius:999px;padding:7px 12px;min-height:32px;cursor:pointer;
  white-space:nowrap;font-family:inherit}
 .of-chip[aria-pressed="true"]{color:#FF8590;border-color:rgba(255,77,94,.5);background:rgba(31,14,18,.9)}
+.of-chip-rep{color:#2fcf9e;border-color:rgba(47,207,158,.55)}
 
 #ofStaff{position:absolute;left:12px;bottom:calc(150px + env(safe-area-inset-bottom,0px));
  display:flex;flex-direction:column;gap:6px;max-width:162px}
@@ -461,8 +462,9 @@ body.office-on{overflow:hidden}
 #ofMeetAgenda{font-size:11.5px;line-height:1.5;color:#ECEEF2}
 #ofMeet .of-mp{height:4px;border-radius:3px;background:#20262f;overflow:hidden}
 #ofMeet .of-mp i{display:block;height:100%;width:0;background:#2fcf9e;transition:width 400ms ease}
-#ofMeetLog{min-height:32px;border:none;border-radius:9px;background:#20262f;color:#ECEEF2;
+#ofMeetLog,#ofMeetRep{min-height:32px;border:none;border-radius:9px;background:#20262f;color:#ECEEF2;
  font-family:inherit;font-size:10.5px;font-weight:600;cursor:pointer}
+#ofMeetRep{background:#2fcf9e;color:#06140f}
 @media (max-height:620px){#ofMeetLog{display:none}}
 
 /* 전광판 큰 그래프 */
@@ -562,12 +564,14 @@ body.office-on{overflow:hidden}
       <div id="ofMeetAgenda">—</div>
       <div class="of-mp"><i id="ofMeetBar"></i></div>
       <button type="button" id="ofMeetLog">회의록 보기</button>
+      <button type="button" id="ofMeetRep">분석 보고서</button>
     </div>
 
     <div id="ofBottom">
       <div id="ofTicker"><i class="of-dot"></i><span id="ofTickText">사무실 가동 중</span><time id="ofTickTime">—</time></div>
       <div id="ofPrompt">
         <div class="who"><b id="ofPromptTitle">내 자리</b><span id="ofPromptDesc">—</span></div>
+        <button class="of-act of-act2" id="ofAnalBtn" type="button">분석</button>
         <button class="of-act of-act2" id="ofMeetBtn" type="button">회의</button>
         <button class="of-act" id="ofPromptBtn" type="button">열기</button>
       </div>
@@ -1222,13 +1226,15 @@ body.office-on{overflow:hidden}
     return ZONES[(z < 0 ? 0 : 1) * 3 + col];
   }
 
+  /* ★팀 넷 (2026-09-19) — 사용자가 정한 구성.
+     번호가 고정이다: 0 전략 · 1 테마 · 2 트레이딩 · 3 총괄.
+     아래 코드 곳곳이 이 번호를 쓴다. 순서를 바꾸면 대사가 엉뚱한 팀에 붙는다. */
+  var A_STRAT = 0, A_THEME = 1, A_TRADE = 2, A_CHIEF = 3;
   var AGENTS = [
-    { id:'sigma',  name:'시그마',     role:'전략팀장',   color:0xff4d5e, hair:0x5b2730, home:[-9.6,-5.6] },
-    { id:'analy',  name:'애널리',     role:'리서치팀장', color:0x3e8bf5, hair:0x1f3a5c, home:[-7.2,-3.0] },
-    { id:'guard',  name:'가드',       role:'리스크팀장', color:0x2fcf9e, hair:0x2a4a3c, home:[6.2,-6.4] },
-    { id:'orch',   name:'오케스트라', role:'운용본부장', color:0x8b93a5, hair:0x767d8c, home:[10.4,-5.2] },
-    { id:'exec',   name:'엑스',       role:'체결팀장',   color:0xb03744, hair:0x2a2e38, home:[-9.8,4.2] },
-    { id:'ledger', name:'레저',       role:'회계팀장',   color:0x5a6070, hair:0x4a4f5c, home:[9.6,5.4] }
+    { id:'strat', name:'전략팀',   role:'익절·손절·기대값', color:0xff4d5e, hair:0x5b2730, home:[-9.6,-5.6] },
+    { id:'theme', name:'테마팀',   role:'테마·수급 분석',   color:0x3e8bf5, hair:0x1f3a5c, home:[-7.2,-3.0] },
+    { id:'trade', name:'트레이딩팀', role:'체결·보유 관리',  color:0xb03744, hair:0x2a2e38, home:[-9.8,4.2] },
+    { id:'chief', name:'총괄팀',   role:'조율·의결·보고',   color:0x8b93a5, hair:0x767d8c, home:[10.4,-5.2] }
   ];
 
   /* ── 화면 전환 (사무실 ↔ 기존 목록) ── */
@@ -1408,6 +1414,52 @@ body.office-on{overflow:hidden}
         ['주문가능', acc.orderable ? nf(acc.orderable) + '원' : '—'],
         ['조회 시각', acc.asof || '—', acc.stale ? 'dn' : '']]);
     }
+    if (id === 'report') {
+      var A = LASTA || ANALYZE();
+      var TN = ['전략팀', '테마팀', '트레이딩팀', '총괄팀'];
+      var h = '<div class="of-brief"><div class="of-bk">총괄팀 보고 · ' + esc(A.VERDICT) + '</div><div class="of-bg">' +
+        [['청산 (전체 원장)', (A.n || 0) + '건 · ' + (A.days || 0) + '일'],
+         ['승률', A.n ? (A.wr * 100).toFixed(0) + '%' : '—', A.wr >= .5 ? 'up' : 'dn'],
+         ['1회 평균', A.n ? pct(A.exp) : '—', (A.exp > 0) ? 'up' : 'dn'],
+         ['손익비 (최근 ' + (A.recent || 0) + '건)', A.rr ? A.rr.toFixed(2) : '—', (A.rr && A.rr >= 1) ? 'up' : 'dn'],
+         ['누적 수익률', pct(A.ret), (A.ret >= 0) ? 'up' : 'dn'],
+         ['MDD', pct(A.mdd, 1), 'dn']]
+        .map(function (r) { return '<div class="of-bi"><span>' + r[0] + '</span><b class="' + (r[2] || '') + '">' + r[1] + '</b></div>'; }).join('') +
+        '</div></div>';
+
+      if (A.n) {
+        h += '<div class="of-brief"><div class="of-bk">어떻게 끝났나 (' + A.n + '건)</div><div class="of-bg">' +
+          A.reasons.map(function (r) {
+            return '<div class="of-bi"><span>' + esc(r.k) + '</span><b>' + r.v + '건 · ' + (r.p * 100).toFixed(0) + '%</b></div>';
+          }).join('') + '</div>' +
+          '<div class="of-bv" style="margin-top:9px">최근 ' + (A.recent || 0) + '건 기준 — 익절 실제 ' +
+          (A.tpReal != null ? pct(A.tpReal) : '—') + ' (설정 +' + A.tp + '%) · 손절 실제 ' +
+          (A.slReal != null ? pct(A.slReal) : '—') + ' (설정 ' + A.sl + '%)</div></div>';
+      }
+
+      [A_STRAT, A_THEME, A_TRADE].forEach(function (tm) {
+        var ff = A.F.filter(function (x) { return x.team === tm; });
+        if (!ff.length) return;
+        h += '<div class="of-brief"><div class="of-bk">' + TN[tm] + ' 보고</div><div class="of-min">';
+        ff.forEach(function (x) {
+          var c = x.tone === 'good' ? 'up' : (x.tone === 'bad' ? 'dn' : '');
+          h += '<div class="of-mrow"><span class="of-mt">' +
+               (x.tone === 'good' ? '○' : (x.tone === 'bad' ? '●' : '·')) + '</span>' +
+               '<span class="of-mx"><b class="' + c + '">' + esc(x.t) + '</b>' +
+               (x.why ? '<br><span style="color:#636a80">' + esc(x.why) + '</span>' : '') + '</span></div>';
+        });
+        h += '</div></div>';
+      });
+
+      h += '<div class="of-brief"><div class="of-bk">의결 · 할 일</div><div class="of-min">' +
+        ((A.todo && A.todo.length) ? A.todo.map(function (x, i) {
+          return '<div class="of-mrow"><span class="of-mt">' + (i + 1) + '</span><span class="of-mx">' + esc(x) + '</span></div>';
+        }).join('') : '<div class="of-mrow"><span class="of-mx">지금 바꿀 것 없음</span></div>') +
+        '</div><div class="of-fnote">이 보고서는 휴대폰이 받은 status.json 만으로 계산합니다. ' +
+        '<b>익절선을 바꿨다면 얼마였을까</b> 같은 재계산은 분봉이 필요해 여기서는 못 합니다 — ' +
+        'PC 의 백테(bt_time)가 할 일입니다.</div></div>';
+      return h;
+    }
     if (id === 'board') {
       // ★전광판을 크게 — 3D 판은 멀어서 작다. 여기서 제대로 본다
       var S = statsNow(d);
@@ -1445,7 +1497,10 @@ body.office-on{overflow:hidden}
   }
 
   // ★전광판은 구역이 아니다 — 가상 항목으로 시트만 연다(zoneAt 인덱스를 깨지 않게)
-  var VZONE = { board: { id: 'board', name: '전광판 · 수익률', desc: '', action: '', secs: [] } };
+  var VZONE = {
+    board:  { id: 'board',  name: '전광판 · 수익률', desc: '', action: '', secs: [] },
+    report: { id: 'report', name: '분석 보고서',     desc: '', action: '', secs: [] }
+  };
   function drawBoard() {
     var cvEl = document.getElementById('ofBoardCv');
     if (!cvEl) return;
@@ -1504,6 +1559,9 @@ body.office-on{overflow:hidden}
     sheetBody.innerHTML = brief(id);
     if (id === 'chief') { try { wireCfg(); } catch (e) {} }
     if (id === 'board') { try { drawBoard(); } catch (e) {} }
+    if (id === 'report') { if (!LASTA) LASTA = ANALYZE();
+      document.getElementById('ofSheetSub').textContent =
+      (LASTA ? '의결 · ' + LASTA.VERDICT : '') + ' · ' + ((window.lastData && lastData.hm) || ''); }
     z.secs.forEach(function (sid) {
       var el = document.getElementById(sid);
       if (!el) return;
@@ -1815,6 +1873,12 @@ body.office-on{overflow:hidden}
   var staff = document.getElementById('ofStaff');
   var target = new THREE.Vector3(0, 0, 6.6);
 
+  (function () {                       // ★분석 보고서는 회의를 끝까지 안 봐도 열린다
+    var b = document.createElement('button');
+    b.className = 'of-chip of-chip-rep'; b.type = 'button'; b.textContent = '📄 분석 보고서';
+    b.addEventListener('click', function () { openZone('report'); });
+    chips.appendChild(b);
+  })();
   ZONES.forEach(function (z) {
     var b = document.createElement('button');
     b.className = 'of-chip'; b.type = 'button'; b.textContent = z.name;
@@ -1859,24 +1923,21 @@ body.office-on{overflow:hidden}
   function lineFor(i) {
     var d = window.lastData;
     if (!d) return '자료를 기다리는 중입니다';
-    var P = d.pnl || {}, ps = d.positions || [], pk = d.picks || [], sec = d.sectors || [];
-    switch (i) {
-      case 0:
-        if (!pk.length) return (d.scan_state === 'today') ? '오늘 조건검색에 걸린 종목이 없습니다' : '15:20 스캔을 기다리고 있습니다';
-        return '오늘 픽 ' + pk.length + '종목 · 1등 ' + (pk[0].name || '') + ' ' + (pk[0].score || 0) + '점입니다';
-      case 1:
-        if (sec.length) return '가장 센 테마는 ' + sec[0].name + ' ' + (sec[0].chg >= 0 ? '+' : '') + sec[0].chg + '% 입니다';
-        return '테마 수급을 모으는 중입니다';
-      case 2:
-        return '익절 +' + (d.tp != null ? d.tp : '—') + '% · 손절 ' + (d.sl != null ? d.sl : '—') + '% 로 지키고 있습니다';
-      case 3:
-        return (d.enabled ? '자동매매 가동 중입니다' : '자동매매가 멈춰 있습니다') +
-               (d.is_mock ? ' (모의)' : ' (실전)');
-      case 4:
-        return traderLine();          // ★루틴(발주·미체결·보정)을 그대로 말한다
-      case 5:
-        return '전략자산 ' + nf(d.equity) + '원 · 오늘 ' + ((P.total >= 0 ? '+' : '') + nf(P.total)) + '원입니다';
+    var P = d.pnl || {}, pk = d.picks || [], sec = d.sectors || [];
+    if (i === A_STRAT) {
+      var A = ANALYZE();
+      if (A.n) return '청산 ' + A.n + '건 기준 승률 ' + (A.wr * 100).toFixed(0) + '% · 1회 기대값 ' + pct(A.exp) + ' 입니다';
+      if (!pk.length) return (d.scan_state === 'today') ? '오늘 조건검색에 걸린 종목이 없습니다' : '15:20 스캔을 기다리고 있습니다';
+      return '오늘 픽 ' + pk.length + '종목 · 1등 ' + (pk[0].name || '') + ' ' + (pk[0].score || 0) + '점입니다';
     }
+    if (i === A_THEME) {
+      if (sec.length) return '가장 센 테마는 ' + sec[0].name + ' ' + pct(sec[0].chg, 1) +
+                             ' (상승 ' + sec[0].up + '/' + sec[0].total + ') 입니다';
+      return '테마 수급을 모으는 중입니다';
+    }
+    if (i === A_TRADE) return traderLine();
+    if (i === A_CHIEF) return (d.enabled ? '자동매매 가동 중' : '자동매매 정지') + (d.is_mock ? ' (모의)' : ' (실전)') +
+           ' · 전략자산 ' + nf(d.equity) + '원 · 오늘 ' + ((P.total >= 0 ? '+' : '') + nf(P.total)) + '원';
     return '';
   }
 
@@ -1952,6 +2013,207 @@ body.office-on{overflow:hidden}
     return '오늘 매매는 끝났습니다 · 보유 ' + ps.length + '종목 넘깁니다';
   }
 
+
+  /* ═════════ 분석 엔진 (2026-09-19) ═════════
+     status.json 의 실제 값만으로 계산한다. 캐시하지 않는다 — 데이터가 바뀌면 결론도 바뀌어야 한다.
+
+     ★수수료는 빼고 본다. 설정의 익절 n% 는 수수료 미포함 등락률이지만,
+       '실제로 남은 돈'을 판단하려면 왕복 수수료를 뺀 순수익률로 세야 한다.
+     ★할 수 없는 것은 하지 않는다. 원장에 고가/저가가 없어 '익절선을 바꿨다면' 은 계산 불가다.
+       그건 PC 의 백테(bt_time)가 분봉을 가지고 하는 일이다. 여기서는 실현된 것만 센다. */
+  function ANALYZE() {
+    var d = window.lastData || {}, S = statsNow(d);
+    var tr = d.trades || [], ps = d.positions || [], pk = d.picks || [], sec = d.sectors || [];
+    var fee = (d.fee_pct != null) ? Number(d.fee_pct) : 0.23;
+    var tp = (d.tp != null) ? Number(d.tp) : null, sl = (d.sl != null) ? Number(d.sl) : null;
+    var A = { fee: fee, tp: tp, sl: sl, F: [] };          // F = 팀별 findings
+    function f(team, tone, txt, why) { A.F.push({ team: team, tone: tone, t: txt, why: why || '' }); }
+    var sum = function (a) { return a.reduce(function (x, y) { return x + y; }, 0); };
+    var avg = function (a) { return a.length ? sum(a) / a.length : 0; };
+
+    /* ── ① 전략팀: 익절·손절이 실제로 어땠나 ──
+       ★수치는 관리자가 **전체 원장**으로 계산해 보낸 stats 를 쓴다(_equity_stats 한 곳에서 나온다).
+         화면의 trades 는 최근 25건뿐이라, 그걸로 다시 세면 표본이 잘린다.
+       ★stats.mdd 는 양수 크기다(7.66 = -7.66%). 부호를 붙여 쓴다. */
+    A.n = Number(S.n) || 0;
+    A.wr = (S.win != null) ? Number(S.win) / 100 : 0;
+    A.exp = (S.avg_ret != null) ? Number(S.avg_ret) : null;   // 1회 평균 = 기대값(수수료 반영)
+    A.ret = (S.total != null) ? Number(S.total) : null;       // 누적 수익률
+    A.mdd = (S.mdd != null) ? -Math.abs(Number(S.mdd)) : null;
+    A.best = (S.best != null) ? Number(S.best) : null;
+    A.worst = (S.worst != null) ? Number(S.worst) : null;
+    A.days = Number(S.days) || 0;
+    A.nTp = Number(S.tp) || 0; A.nSl = Number(S.sl) || 0; A.nEtc = Number(S.etc) || 0;
+    A.tpRate = A.n ? A.nTp / A.n : 0;
+    A.slRate = A.n ? A.nSl / A.n : 0;
+    A.otherRate = A.n ? A.nEtc / A.n : 0;
+    A.reasons = [{ k: '익절', v: A.nTp, p: A.tpRate },
+                 { k: '손절', v: A.nSl, p: A.slRate },
+                 { k: '시간마감·기타', v: A.nEtc, p: A.otherRate }].filter(function (r) { return r.v; });
+
+    // 최근 25건으로만 알 수 있는 것 — 손익비와 '손절이 설정선 어디서 나갔나'
+    var net = tr.map(function (x) { return (Number(x.ret) || 0) - fee; });
+    A.recent = net.length;
+    var win = net.filter(function (r) { return r > 0; });
+    var lose = net.filter(function (r) { return r <= 0; });
+    A.avgW = win.length ? avg(win) : null;
+    A.avgL = lose.length ? Math.abs(avg(lose)) : null;
+    A.rr = (A.avgW != null && A.avgL) ? A.avgW / A.avgL : null;
+    var hitSl = tr.filter(function (x) { return /손절|갭/.test(x.reason || ''); });
+    var hitTp = tr.filter(function (x) { return /익절/.test(x.reason || ''); });
+    A.slReal = hitSl.length ? avg(hitSl.map(function (x) { return Number(x.ret) || 0; })) : null;
+    A.tpReal = hitTp.length ? avg(hitTp.map(function (x) { return Number(x.ret) || 0; })) : null;
+
+    if (!A.n) {
+      f(A_STRAT, 'flat', '청산 기록이 아직 없습니다. 익절·손절을 평가할 근거가 없습니다',
+        '원장이 비어 있으면 어떤 판단도 추측입니다');
+    } else {
+      f(A_STRAT, (A.exp != null && A.exp > 0) ? 'good' : 'bad',
+        '전체 원장 ' + A.n + '건 (' + A.days + '거래일) · 승률 ' + (A.wr * 100).toFixed(0) +
+        '% · 1회 평균 ' + pct(A.exp),
+        (function () {                      // ★없는 항목 자리에 '/' 만 남지 않게 조각을 모아 잇는다
+          var b = [];
+          if (A.avgW != null) b.push('평균이익 ' + pct(A.avgW));
+          if (A.avgL != null) b.push('평균손실 ' + pct(-A.avgL));
+          if (A.rr) b.push('손익비 ' + A.rr.toFixed(2));
+          return '수수료 ' + fee + '% 를 반영한 실수령 기준' +
+                 (b.length ? ' · 최근 ' + A.recent + '건 ' + b.join(' / ') : '') +
+                 (A.recent && A.avgL == null ? ' (최근 구간엔 손실 거래가 없습니다)' : '');
+        })());
+
+      if (A.n >= 5) {                      // ★표본이 적으면 분포 이야기를 하지 않는다
+        if (A.otherRate >= 0.5) {
+          f(A_STRAT, 'bad',
+            A.n + '건 중 ' + A.nEtc + '건(' + (A.otherRate * 100).toFixed(0) +
+            '%)이 익절·손절에 못 닿고 시간마감으로 끝났습니다',
+            '익절 +' + tp + '% / 손절 ' + sl + '% 폭이 하루 안에 닿기엔 넓다는 뜻입니다');
+        } else if (A.nTp >= A.nSl * 1.5) {
+          f(A_STRAT, 'good',
+            '익절 ' + A.nTp + '건 vs 손절 ' + A.nSl + '건 — 익절 쪽이 확실히 많습니다',
+            '지금 익절선 +' + tp + '% 가 하루 안에 실제로 닿고 있습니다');
+        } else if (A.nSl > A.nTp) {
+          f(A_STRAT, 'bad',
+            '손절 ' + A.nSl + '건이 익절 ' + A.nTp + '건보다 잦습니다',
+            '진입 자체가 밀리고 있거나 익절선이 너무 멀다는 신호입니다');
+        }
+      } else {
+        f(A_STRAT, 'flat', '표본이 ' + A.n + '건뿐이라 익절·손절 분포는 말하지 않겠습니다',
+          '이 정도로는 운과 실력이 구분되지 않습니다. 5건 넘으면 다시 보고하겠습니다');
+      }
+
+      if (A.slReal != null && sl != null && A.slReal < sl - 0.8) {
+        f(A_STRAT, 'bad',
+          '손절이 설정선보다 ' + Math.abs(A.slReal - sl).toFixed(2) + '%p 아래에서 체결됩니다 (최근 평균 ' + pct(A.slReal) + ')',
+          '갭하락이나 슬리피지입니다. 손절선을 더 조여도 이 손실은 줄지 않습니다');
+      }
+      if (A.tpReal != null && tp != null && Math.abs(A.tpReal - tp) <= 0.8) {
+        f(A_STRAT, 'good', '익절은 설정선 +' + tp + '% 근처(최근 평균 ' + pct(A.tpReal) + ')에서 체결됩니다',
+          '매도 지정가가 제대로 걸리고 있습니다');
+      }
+      if (A.mdd != null) {
+        f(A_STRAT, Math.abs(A.mdd) > 20 ? 'bad' : 'good',
+          '누적 ' + pct(A.ret) + ' · MDD ' + pct(A.mdd, 1) +
+          (A.best != null ? ' · 최고 ' + pct(A.best) + ' / 최저 ' + pct(A.worst) : ''),
+          Math.abs(A.mdd) > 20 ? '고점 대비 낙폭이 큽니다. 종목당 금액을 먼저 보세요'
+                               : '낙폭이 통제 범위 안입니다');
+      }
+    }
+
+    /* ── ② 테마팀: 테마가 실제로 순위를 바꿨는가 ── */
+    A.secTop = sec.slice(0, 3);
+    var strong = sec.filter(function (s) { return Number(s.chg) > 0.5; });
+    A.strongN = strong.length;
+    if (!sec.length) {
+      f(A_THEME, 'flat', '테마 수급 자료가 아직 없습니다', '13시부터 30분마다 모입니다');
+    } else {
+      var s0 = sec[0];
+      f(A_THEME, Number(s0.chg) > 0 ? 'good' : 'flat',
+        '가장 센 테마는 ' + s0.name + ' ' + pct(s0.chg, 1) + ' · 상승 ' + s0.up + '/' + s0.total + '종목',
+        (Number(s0.accel) >= 3 ? '오후 들어 ' + s0.accel + '종목 더 붙었습니다(가속)' : '가속은 크지 않습니다'));
+
+      // 가점이 순위를 실제로 바꿨는지 — 기본점수(가점 前) 순위와 최종 순위를 견준다
+      if (pk.length > 1) {
+        var base = pk.map(function (p, i) {
+          return { name: p.name, i: i, b: (Number(p.score) || 0) - (Number(p.theme_bonus) || 0) };
+        }).slice().sort(function (x, y) { return y.b - x.b; });
+        var moved = 0;
+        base.forEach(function (p, j) { if (p.i !== j) moved++; });
+        A.themeMoved = moved;
+        f(A_THEME, moved ? 'good' : 'flat',
+          moved ? '테마가점이 ' + moved + '종목의 순위를 바꿨습니다' : '테마가점이 순위를 바꾸지 못했습니다',
+          moved ? '가점이 없었다면 다른 종목이 올라왔다는 뜻입니다 — 가점이 일을 하고 있습니다'
+                : '가점 유무와 상관없이 같은 종목이 뽑혔습니다. 최대가점 +' +
+                  (d.theme_bonus_max != null ? d.theme_bonus_max : 25) + ' 이 작다는 신호일 수 있습니다');
+
+        // 매수된 종목이 실제로 가점을 더 받았는가
+        var buy = pk.filter(function (p) { return p.disp === '선정' || p.disp === '매수'; });
+        var rest = pk.filter(function (p) { return p.disp !== '선정' && p.disp !== '매수'; });
+        if (buy.length && rest.length) {
+          var bb = avg(buy.map(function (p) { return Number(p.theme_bonus) || 0; }));
+          var rb = avg(rest.map(function (p) { return Number(p.theme_bonus) || 0; }));
+          A.bonusBuy = bb; A.bonusRest = rb;
+          f(A_THEME, bb > rb ? 'good' : 'flat',
+            '사기로 한 ' + buy.length + '종목의 평균 테마가점 ' + bb.toFixed(1) +
+            ' vs 나머지 ' + rb.toFixed(1),
+            bb > rb ? '가점이 높은 쪽이 실제로 뽑히고 있습니다'
+                    : '가점이 선택에 반영되지 않았습니다 — 매력도가 가점을 압도하고 있습니다');
+        }
+        var tset = {}; A.secTop.forEach(function (s) { tset[s.name] = 1; });
+        var inTop = pk.filter(function (p) { return p.theme && tset[p.theme]; });
+        A.inTop = inTop.length;
+        f(A_THEME, inTop.length ? 'good' : 'bad',
+          inTop.length ? '오늘 픽 ' + pk.length + '종목 중 ' + inTop.length + '종목이 강세 테마 소속입니다'
+                       : '오늘 픽 중 강세 테마에 걸친 종목이 없습니다',
+          inTop.length ? inTop.slice(0, 3).map(function (p) { return p.name + '(' + p.theme + ')'; }).join(', ')
+                       : '테마 없이 개별 지표만으로 뽑혔다는 뜻입니다');
+      } else {
+        f(A_THEME, 'flat', '오늘 픽이 없어 테마 기여도를 볼 수 없습니다', '');
+      }
+    }
+
+    /* ── ③ 트레이딩팀: 지금 들고 있는 것과 실행 상태 ── */
+    var r = RT() || {};
+    A.held = ps.length;
+    if (!ps.length) {
+      f(A_TRADE, 'flat', '보유가 없습니다', traderLine());
+    } else {
+      var near = ps.filter(function (p) { return tp != null && (tp - (Number(p.ret) || 0)) <= 1.5; });
+      var risk = ps.filter(function (p) { return sl != null && ((Number(p.ret) || 0) - sl) <= 1.5; });
+      A.near = near.length; A.risk = risk.length;
+      f(A_TRADE, (d.pnl || {}).unrealized >= 0 ? 'good' : 'bad',
+        '보유 ' + ps.length + '종목 · 평가손익 ' + nf((d.pnl || {}).unrealized) + '원',
+        ps.map(function (p) { return p.name + ' ' + pct(p.ret); }).join(' · '));
+      if (near.length) f(A_TRADE, 'good', near.length + '종목이 익절선 1.5%p 안입니다',
+        near.map(function (p) { return p.name + ' (남은 ' + (tp - p.ret).toFixed(2) + '%p)'; }).join(', '));
+      if (risk.length) f(A_TRADE, 'bad', risk.length + '종목이 손절선 1.5%p 안입니다',
+        risk.map(function (p) { return p.name + ' (남은 ' + ((p.ret - sl)).toFixed(2) + '%p)'; }).join(', '));
+      if (!d.real_on) f(A_TRADE, 'bad', '실시간 감시가 꺼져 있습니다', '주기 조회로만 보면 손익절이 늦습니다');
+    }
+    // 돈이 실제로 있는가 — 사이징이 종이 위에서만 되는 경우를 잡는다
+    var acc = d.acct || {};
+    if (acc.orderable != null && d.invest) {
+      var canBuy = Math.floor(Number(acc.orderable) / Number(d.invest));
+      A.canBuy = canBuy;
+      f(A_TRADE, canBuy >= (d.af || 0) ? 'good' : 'bad',
+        '주문가능 ' + nf(acc.orderable) + '원 → 종목당 ' + nf(d.invest) + '원으로 ' + canBuy + '종목',
+        canBuy >= (d.af || 0) ? '계획한 ' + (d.af || 0) + '종목을 실제로 살 수 있습니다'
+                              : '계획은 ' + (d.af || 0) + '종목인데 돈은 ' + canBuy + '종목분뿐입니다');
+    }
+    if (r.pend_upper) f(A_TRADE, 'flat', '상한가로 못 산 ' + r.pend_upper + '종목이 다음 거래일 시가 예약입니다', '');
+    if (r.sell_stuck) f(A_TRADE, 'bad', '매도 잠금(sell_stuck)이 걸려 있습니다', '풀리기 전까지 신규 주문이 막힙니다');
+
+    /* ── ④ 총괄팀: 팀 결론이 엇갈릴 때만 조율한다 ── */
+    var bad = A.F.filter(function (x) { return x.tone === 'bad'; });
+    var good = A.F.filter(function (x) { return x.tone === 'good'; });
+    A.bad = bad.length; A.good = good.length;
+    A.verdict = (!A.n) ? 'nodata'
+      : (A.exp > 0 && bad.length <= 1) ? 'keep'
+      : (A.exp > 0 && bad.length > 1) ? 'watch'
+      : 'fix';
+    A.VERDICT = { nodata: '판단 보류 — 근거 부족', keep: '현행 유지', watch: '유지하되 지켜본다', fix: '손볼 곳이 있다' }[A.verdict];
+    return A;
+  }
+
   /* ═════════ 회의 대본 — 단계에 맞는 안건으로 짠다 ═════════ */
   function MPLAN() {
     var d = window.lastData || {}, r = RT() || {}, S = statsNow(d);
@@ -1959,7 +2221,10 @@ body.office-on{overflow:hidden}
     var P = d.pnl || {}, ph = phaseNow(), L = [];
     var sel = pk.filter(function (p) { return p.disp === '선정' || p.disp === '매수'; });
     var cut = pk.filter(function (p) { return p.disp === '상한가' || p.disp === '투자금부족'; });
-    function add(i, s) { if (s) L.push([i, s]); }
+    /* ★옛 6명 번호로 쓰인 대본을 팀 넷으로 통역한다.
+       0 전략·1 리서치·2 리스크·3 본부장·4 체결·5 회계  →  전략·테마·전략·총괄·트레이딩·총괄 */
+    var MAP6 = [A_STRAT, A_THEME, A_STRAT, A_CHIEF, A_TRADE, A_CHIEF];
+    function add(i, s) { if (s) L.push([MAP6[i], s]); }
     function money(v) { return nf(v) + '원'; }
     function themeTop(k) {
       var s = sec.filter(function (x) { return x.chg > 0; }).slice(0, k || 2);
@@ -2096,14 +2361,102 @@ body.office-on{overflow:hidden}
     return { agenda: agenda, ph: ph, phLab: phLab, lines: L };
   }
 
+
+  /* ═════════ 분석회의 대본 (2026-09-19) ═════════
+     ★각본이 없다. ANALYZE() 가 만든 findings 를 팀별로 읽고,
+       총괄팀은 **결론이 엇갈릴 때만** 끼어들어 조율한다.
+       숫자가 달라지면 발언도, 의결도 달라진다. */
+  function APLAN() {
+    var A = ANALYZE(), d = window.lastData || {}, L = [];
+    function add(i, s) { if (s) L.push([i, s]); }
+    function of(team) { return A.F.filter(function (x) { return x.team === team; }); }
+
+    add(A_CHIEF, '분석회의 시작합니다. 오늘까지 쌓인 것만 놓고 봅니다 — 느낌은 빼고요');
+
+    /* 전략팀 — 익절·손절이 실제로 어땠나 */
+    add(A_STRAT, '전략팀입니다. 원장에 남은 청산 ' + A.n + '건으로 보고합니다');
+    of(A_STRAT).forEach(function (x) {
+      add(A_STRAT, x.t);
+      if (x.why) add(A_STRAT, '  근거 — ' + x.why);
+    });
+
+    /* 테마팀 */
+    add(A_THEME, '테마팀입니다');
+    of(A_THEME).forEach(function (x) {
+      add(A_THEME, x.t);
+      if (x.why) add(A_THEME, '  근거 — ' + x.why);
+    });
+
+    /* 트레이딩팀 */
+    add(A_TRADE, '트레이딩팀입니다. 지금 실행 상태부터 말씀드립니다');
+    of(A_TRADE).forEach(function (x) {
+      add(A_TRADE, x.t);
+      if (x.why) add(A_TRADE, '  근거 — ' + x.why);
+    });
+
+    /* ── 조율: 총괄팀이 엇갈리는 지점만 집는다 ── */
+    var sBad = of(A_STRAT).filter(function (x) { return x.tone === 'bad'; });
+    var tBad = of(A_TRADE).filter(function (x) { return x.tone === 'bad'; });
+    var hBad = of(A_THEME).filter(function (x) { return x.tone === 'bad' || x.tone === 'flat'; });
+
+    if (A.n && A.exp > 0 && sBad.length) {
+      add(A_CHIEF, '잠깐 — 전략팀은 문제를 짚었는데 기대값은 ' + pct(A.exp) + ' 로 플러스입니다. 둘 중 뭐가 맞습니까');
+      add(A_STRAT, '둘 다 맞습니다. 지금은 남고 있지만 ' + sBad[0].t.replace(/^\d+종목이 /, '') + ' 쪽이 새는 구멍입니다');
+      add(A_CHIEF, '그럼 구조를 바꾸지 말고 그 구멍만 막읍시다');
+    }
+    if (A.n && A.exp <= 0) {
+      add(A_CHIEF, '기대값이 ' + pct(A.exp) + ' 입니다. 한 번 거래할 때마다 돈이 줄고 있다는 뜻입니다. 원인 짚어 주세요');
+      if (A.otherRate >= 0.5) add(A_STRAT, '익절·손절에 못 닿고 시간마감으로 끝나는 게 ' + (A.otherRate * 100).toFixed(0) + '% 입니다. 폭이 넓습니다');
+      else if (A.slRate > A.tpRate) add(A_STRAT, '손절이 익절보다 잦습니다. 진입 쪽 문제입니다 — 손절선을 만질 문제가 아닙니다');
+      else add(A_STRAT, '승률은 ' + (A.wr * 100).toFixed(0) + '% 인데 손익비가 ' + (A.rr ? A.rr.toFixed(2) : '—') + ' 입니다. 이기는 폭이 작습니다');
+    }
+    if (A.themeMoved === 0) {
+      add(A_CHIEF, '테마팀, 가점이 순위를 못 바꿨다면 지금 가점은 없는 것과 같습니다');
+      add(A_THEME, '맞습니다. 최대가점 +' + (d.theme_bonus_max != null ? d.theme_bonus_max : 25) +
+                   ' 로는 매력도 점수 차를 못 넘습니다. 올리든지, 아니면 가점을 접고 매력도만 쓰든지 정해야 합니다');
+    }
+    if (A.canBuy != null && A.canBuy < (d.af || 0)) {
+      add(A_CHIEF, '트레이딩팀, 계획이 ' + (d.af || 0) + '종목인데 살 돈은 ' + A.canBuy + '종목분이면 계획이 아니라 희망입니다');
+      add(A_TRADE, '종목당 금액을 낮추거나 종목 수를 줄여야 합니다. 지금대로면 상위 ' + A.canBuy + '종목만 실제로 들어갑니다');
+    }
+    if (A.n && A.slReal != null && A.sl != null && A.slReal < A.sl - 0.8) {
+      add(A_CHIEF, '손절이 설정선보다 밑에서 나간다면, 손절선을 조이자는 말은 의미가 없겠군요');
+      add(A_STRAT, '없습니다. 갭으로 뛰어넘는 거라 선을 올려도 같은 손실이 납니다. 줄이려면 종목당 금액을 줄이는 쪽입니다');
+    }
+    if (!A.n) {
+      add(A_CHIEF, '근거가 없으면 결정도 없습니다. 오늘은 여기까지 합니다');
+    }
+
+    /* ── 의결 ── */
+    add(A_CHIEF, '정리하겠습니다. 의결 — ' + A.VERDICT);
+    var todo = [];
+    if (A.verdict === 'fix') {
+      if (A.otherRate >= 0.5) todo.push('익절·손절 폭을 좁혀 하루 안에 닿게 할지 PC 백테로 검증');
+      if (A.slRate > A.tpRate) todo.push('진입 조건(매력도 하한) 점검 — 손절선이 아니라 진입이 문제');
+      if (A.canBuy != null && A.canBuy < (d.af || 0)) todo.push('종목당 금액을 주문가능금액에 맞추기');
+    } else if (A.verdict === 'watch') {
+      todo.push('지금 설정 유지 · 아래 지적 사항만 따로 확인');
+    } else if (A.verdict === 'keep') {
+      todo.push('익절 +' + A.tp + '% / 손절 ' + A.sl + '% 유지');
+    }
+    if (A.themeMoved === 0) todo.push('테마 최대가점 재검토');
+    if (!d.real_on && A.held) todo.push('실시간 감시 켜기');
+    A.todo = todo;
+    todo.forEach(function (x, i) { add(A_CHIEF, '  ' + (i + 1) + '. ' + x); });
+    add(A_CHIEF, '사장님께 보고 올리겠습니다. 보고서 띄웁니다');
+
+    LASTA = A;
+    return { agenda: '분석회의 — 지금까지의 실제 성적으로 익절·손절·테마·실행을 점검한다',
+             ph: 'analysis', phLab: '데이터 분석', lines: L, analysis: true };
+  }
+  var LASTA = null;         // 마지막 분석 결과 — 보고서가 읽는다
+
   /* ── 회의: 한 명이 말하면 다른 한 명이 받는다 ── */
   var TALK = [
-    [0, 1, '테마 쪽 어떻습니까'],
-    [1, 2, '이 종목 위험도 봐 주세요'],
-    [2, 3, '한도 안쪽입니다. 올릴까요'],
-    [3, 4, '집행 준비하세요'],
-    [4, 5, '체결분 정산 부탁합니다'],
-    [5, 0, '오늘 자산 공유했습니다']
+    [A_STRAT, A_THEME, ''],
+    [A_THEME, A_TRADE, ''],
+    [A_TRADE, A_CHIEF, ''],
+    [A_CHIEF, A_STRAT, '']
   ];
   var lastTalk = -1;
   function converse() {
@@ -2124,25 +2477,25 @@ body.office-on{overflow:hidden}
   function react(d) {
     if (!d) return;
     if (d.stage && d.stage !== seen.stage) {
-      if (seen.stage !== null) { say(3, '단계 전환 — ' + d.stage); minute('오케스트라', '단계 전환 — ' + d.stage, 'ev'); }
+      if (seen.stage !== null) { say(A_CHIEF, '단계 전환 — ' + d.stage); minute('총괄팀', '단계 전환 — ' + d.stage, 'ev'); }
       seen.stage = d.stage;
     }
     var nt = (d.trades || []).length;
     if (seen.trades >= 0 && nt > seen.trades) {
       var f = (d.trades || [])[0] || {};
       var m = '체결 — ' + (f.name || '') + ' ' + ((f.ret >= 0 ? '+' : '') + (f.ret || 0) + '%') + ' (' + (f.reason || '') + ')';
-      say(4, m); minute('엑스', m, 'ev');
+      say(A_TRADE, m); minute('트레이딩팀', m, 'ev');
     }
     seen.trades = nt;
     var np = (d.picks || []).length;
     if (seen.picks >= 0 && np !== seen.picks && np > 0) {
       var m2 = '픽 갱신 — ' + np + '종목 수신했습니다';
-      say(0, m2); minute('시그마', m2, 'ev');
+      say(A_STRAT, m2); minute('전략팀', m2, 'ev');
     }
     seen.picks = np;
     if (seen.enabled !== null && d.enabled !== seen.enabled) {
       var m3 = d.enabled ? '자동매매를 켰습니다' : '자동매매가 멈췄습니다';
-      say(3, m3); minute('오케스트라', m3, 'ev');
+      say(A_CHIEF, m3); minute('총괄팀', m3, 'ev');
     }
     seen.enabled = d.enabled;
   }
@@ -2175,7 +2528,7 @@ body.office-on{overflow:hidden}
   var camSave = null, camWant = null;
   function camGoto(y, p, dd) { camWant = { y: y, p: p, d: dd }; }
   function seatOf(i) {                       // 원탁(0,-4.6) 의자 반경 2.7 — 살짝 안쪽에 앉힌다
-    var a = i / 6 * Math.PI * 2;
+    var a = i / AGENTS.length * Math.PI * 2;
     return [Math.cos(a) * 2.45, -4.6 + Math.sin(a) * 2.45];
   }
   function seated() {
@@ -2192,9 +2545,9 @@ body.office-on{overflow:hidden}
     var tot = (MT.plan && MT.plan.lines.length) || 1;
     meetBar.style.width = Math.max(0, Math.min(100, (MT.i + 1) / tot * 100)) + '%';
   }
-  function startMeeting() {
+  function startMeeting(kind) {
     if (MT.on) { endMeeting(false); return; }
-    var p = MPLAN();
+    var p = (kind === 'analysis') ? APLAN() : MPLAN();
     if (!p.lines.length) { tickText.textContent = '지금은 회의할 안건이 없습니다'; return; }
     MT.on = true; MT.plan = p; MT.i = -1; MT.agenda = p.agenda; MT.ph = p.ph;
     MT.next = performance.now() + 900;
@@ -2205,7 +2558,9 @@ body.office-on{overflow:hidden}
     meetEl.hidden = false;
     document.getElementById('ofMeetAgenda').textContent = p.agenda;
     document.getElementById('ofMeetPh').textContent = p.phLab || '';
-    meetBtn.textContent = '회의 종료'; meetBtn.classList.add('on');
+    (p.analysis ? analBtn : meetBtn).textContent = p.analysis ? '분석 종료' : '회의 종료';
+    (p.analysis ? analBtn : meetBtn).classList.add('on');
+    MT.kind = p.analysis ? 'analysis' : 'routine';
     minute('사회', '회의 시작 — ' + p.agenda, 'ev');
     setMeetProg();
   }
@@ -2216,14 +2571,20 @@ body.office-on{overflow:hidden}
     if (camSave) { camGoto(camSave.y, camSave.p, camSave.d); camSave = null; }
     meetEl.hidden = true;
     meetBtn.textContent = '회의'; meetBtn.classList.remove('on');
+    analBtn.textContent = '분석'; analBtn.classList.remove('on');
     if (!quiet) minute('사회', '회의 종료 — ' + MT.agenda, 'ev');
+    // ★분석회의가 끝나면 보고서를 바로 띄운다 — '보고 받아본다'가 목적이다
+    if (MT.kind === 'analysis' && !quiet) { try { openZone('report'); } catch (e) {} }
   }
   function stepMeeting(now) {
     if (!MT.on || now < MT.next) return;
     if (!seated()) { MT.next = now + 350; return; }          // 다 앉을 때까지 시작하지 않는다
     MT.i++;
     if (MT.i >= MT.plan.lines.length) { endMeeting(false); return; }
-    var ln = MT.plan.lines[MT.i], ms = Math.min(7200, 2500 + ln[1].length * 46);
+    var ln = MT.plan.lines[MT.i];
+    // ★분석회의는 '보고를 받는 것'이 목적이라 루틴 회의보다 빠르게 넘긴다
+    var ms = (MT.kind === 'analysis') ? Math.min(4200, 1300 + ln[1].length * 30)
+                                      : Math.min(7200, 2500 + ln[1].length * 46);
     say(ln[0], ln[1], ms + 500);
     minute(AGENTS[ln[0]].name, ln[1]);
     MT.next = now + ms;
@@ -2243,13 +2604,19 @@ body.office-on{overflow:hidden}
     try { had = localStorage.getItem(AUTO_KEY) || ''; } catch (e) {}
     if (had === key) return;
     try { localStorage.setItem(AUTO_KEY, key); } catch (e) {}
-    startMeeting();
+    startMeeting('routine');
   }
   setInterval(autoMeet, 20000);
 
-  meetBtn.addEventListener('click', startMeeting);
+  var analBtn = document.getElementById('ofAnalBtn');
+  analBtn.addEventListener('click', function () {
+    if (MT.on) { endMeeting(false); return; }
+    startMeeting('analysis');
+  });
+  meetBtn.addEventListener('click', function () { startMeeting('routine'); });
   document.getElementById('ofMeetEnd').addEventListener('click', function () { endMeeting(false); });
   document.getElementById('ofMeetLog').addEventListener('click', function () { openZone('meeting'); });
+  document.getElementById('ofMeetRep').addEventListener('click', function () { openZone('report'); });
 
   /* ── HUD ── */
   var elEq = document.getElementById('ofEq'), elEqLab = document.getElementById('ofEqLab');
@@ -2286,6 +2653,7 @@ body.office-on{overflow:hidden}
             tmpd.innerHTML = brief(openId);
             var nb = tmpd.querySelector('.of-brief');
             if (nb) { bb.replaceWith(nb); if (openId === 'chief') wireCfg(); if (openId === 'board') drawBoard(); }
+            // ★보고서는 회의가 낸 결론(LASTA)을 보여주는 것이라 자동으로 갈아끼우지 않는다
           }
         }
       } catch (e) {}
@@ -2304,8 +2672,8 @@ body.office-on{overflow:hidden}
   var first = true;
   function bootDone() {
     boot.style.display = 'none';
-    say(3, lineFor(3));
-    setTimeout(function () { say(0, lineFor(0)); }, 2600);
+    say(A_CHIEF, lineFor(A_CHIEF));
+    setTimeout(function () { say(A_STRAT, lineFor(A_STRAT)); }, 2600);
   }
 
   /* ── 입력 ── */
@@ -2329,9 +2697,10 @@ body.office-on{overflow:hidden}
     moved += Math.abs(dx) + Math.abs(dy);
     if (moved > 6) {
       camWant = null;                                   // 손으로 돌리면 자동 시점이동은 접는다
-      camYaw -= dx * 0.006;
-      // ★상하(2026-09-18) — 9도~76도. 더 낮추면 바닥이 보이고 더 올리면 천장 밖으로 나간다
-      camPitch = Math.max(0.16, Math.min(1.32, camPitch - dy * 0.005));
+      // ★2026-09-19 부호를 뒤집었다 — '전부 반대로 움직인다'는 신고.
+      //   손가락을 끄는 쪽으로 시점이 도는 게 아니라, 손가락 방향으로 **장면이** 도는 감각이 맞다.
+      camYaw += dx * 0.006;
+      camPitch = Math.max(0.16, Math.min(1.32, camPitch + dy * 0.005));   // 상하 9도~76도
     }
   });
   canvas.addEventListener('pointerup', function (e) {
@@ -2361,7 +2730,8 @@ body.office-on{overflow:hidden}
     if (!office.classList.contains('on')) return;
     var k = (e.key || '').toLowerCase(); keys[k] = true;
     if (k === 'e') { e.preventDefault(); openZone(cur.id); }
-    if (k === 'm') { e.preventDefault(); startMeeting(); }
+    if (k === 'm') { e.preventDefault(); startMeeting('routine'); }
+    if (k === 'a') { e.preventDefault(); startMeeting('analysis'); }
     if (k === 'escape') { if (MT.on) endMeeting(false); else closeSheet(); }
   });
   window.addEventListener('keyup', function (e) { keys[(e.key || '').toLowerCase()] = false; });
@@ -2402,7 +2772,8 @@ body.office-on{overflow:hidden}
     var kz = (keys['s'] || keys['arrowdown'] ? 1 : 0) - (keys['w'] || keys['arrowup'] ? 1 : 0);
     if (kx || kz) {
       goOpen = null;                                  // 직접 걸으면 '도착하면 열기'는 취소
-      var s = Math.sin(camYaw), c = Math.cos(camYaw);
+      // ★시점 부호를 뒤집었으므로 걷는 방향도 같이 뒤집어야 화면과 어긋나지 않는다
+      var s = -Math.sin(camYaw), c = Math.cos(camYaw);
       target.x = Math.max(-W / 2 + 1, Math.min(W / 2 - 1, player.position.x + (kx * c - kz * s) * .9));
       target.z = Math.max(-D / 2 + 1, Math.min(D / 2 - 1, player.position.z + (kx * s + kz * c) * .9));
     }
