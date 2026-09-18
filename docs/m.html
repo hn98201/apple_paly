@@ -271,6 +271,7 @@
   <button class="refresh" id="rfBtn" onclick="pull(true)">↻</button>
 </div>
 
+<div id="listView" hidden>
 <div class="tabs">
   <button class="tab on" id="tabDash" onclick="setTab('dash')">📊 대시보드</button>
   <button class="tab" id="tabResearch" onclick="setTab('research')">🔬 리서치</button>
@@ -281,7 +282,7 @@
   <div id="paneDash">
   <div class="err" id="err"></div>
 
-  <div class="hero">
+  <div class="hero" id="secHero">
     <div class="htop">
       <div class="hl">
         <div class="lb">전략자산 (복리)</div>
@@ -303,14 +304,14 @@
     <div class="hsub" id="hSub"></div>
   </div>
 
-  <div class="stage"><span>📍</span><span id="stage">—</span></div>
+  <div class="stage" id="secStage"><span>📍</span><span id="stage">—</span></div>
 
-  <div class="sec">
+  <div class="sec" id="secPos">
     <div class="sh">💼 보유 종목 <span class="cnt" id="posCnt"></span></div>
     <div class="card" id="posCard"><div class="empty">보유 종목 없음</div></div>
   </div>
 
-  <div class="sec">
+  <div class="sec" id="secPick">
     <div class="sh">🎯 오늘 스캔 종목 <span class="cnt" id="pickCnt"></span></div>
     <div class="card" id="pickCard"><div class="empty">스캔 전 (15:20 자동스캔)</div></div>
   </div>
@@ -322,7 +323,7 @@
     <div id="secList"></div>
   </div>
 
-  <div class="sec">
+  <div class="sec" id="secSys">
     <div class="sh">🛠️ 시스템 상태</div>
     <div class="sys">
       <div class="b"><div class="k">키움 접속</div><div class="v" id="sConn">—</div></div>
@@ -372,6 +373,155 @@
     <div class="foot">종가배팅 픽을 가상 증권사 조직이 심의한 결과입니다 · 매매는 종가배팅 기준을 따릅니다</div>
   </div>
 </div>
+</div><!-- /listView -->
+
+
+<style id="ofCss">
+/* ═══════════ 3D 사무실 (2026-09-18) ═══════════ */
+#office{position:fixed;inset:0;z-index:40;background:#0B0D11;overflow:hidden;display:none}
+#office.on{display:block}
+body.office-on{overflow:hidden}
+#ofScene{position:absolute;inset:0;display:block;width:100%;height:100%;touch-action:none}
+#ofLabels{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.of-layer{position:absolute;inset:0;pointer-events:none}
+.of-layer > *{pointer-events:auto}
+
+.of-zone{position:absolute;left:0;top:0;transform:translate(-50%,-50%);
+ font-size:11px;font-weight:600;color:#98A0AE;background:rgba(11,13,17,.72);
+ border:1px solid #1F242E;border-radius:6px;padding:3px 8px;white-space:nowrap}
+.of-zone.here{color:#FF8590;border-color:rgba(255,77,94,.55);background:rgba(31,14,18,.85)}
+.of-name{position:absolute;left:0;top:0;transform:translate(-50%,-100%);
+ font-size:10px;font-weight:600;white-space:nowrap;background:rgba(11,13,17,.75);border-radius:5px;padding:2px 6px}
+.of-bubble{position:absolute;left:0;top:0;transform:translate(-50%,-100%);max-width:200px;
+ background:#ECEEF2;color:#0B0D11;font-size:11px;line-height:1.4;font-weight:500;
+ border-radius:9px;padding:7px 9px;box-shadow:0 8px 22px -10px rgba(0,0,0,.9)}
+.of-bubble::after{content:"";position:absolute;left:50%;bottom:-5px;width:10px;height:10px;
+ background:#ECEEF2;transform:translateX(-50%) rotate(45deg);border-radius:2px}
+
+#ofHud{position:absolute;left:0;right:0;top:0;padding:10px 12px 0;
+ padding-top:calc(10px + env(safe-area-inset-top,0px));display:flex;flex-direction:column;gap:8px}
+.of-bar{display:flex;align-items:center;gap:12px;background:rgba(20,23,30,.88);
+ -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
+ border:1px solid #2A303C;border-radius:14px;padding:10px 13px}
+.of-asset{display:flex;flex-direction:column;gap:3px;min-width:0;flex:1 1 auto}
+.of-asset span{font-size:10px;color:#98A0AE}
+.of-val{font-family:var(--mono,ui-monospace,monospace);font-size:18px;font-weight:600;
+ letter-spacing:-.02em;font-variant-numeric:tabular-nums;color:#ECEEF2}
+.of-right{display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex:0 0 auto}
+.of-pnl{font-family:var(--mono,ui-monospace,monospace);font-size:12px;font-weight:600;font-variant-numeric:tabular-nums}
+.of-clock{font-family:var(--mono,ui-monospace,monospace);font-size:11px;color:#98A0AE}
+.of-mode{font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;border:none;cursor:pointer;
+ background:#1B1F28;color:#98A0AE;border:1px solid #2A303C;font-family:inherit}
+.of-mode[data-m="live"]{background:#FF4D5E;color:#0B0D11;border-color:#FF4D5E}
+.of-chips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+.of-chips::-webkit-scrollbar{display:none}
+.of-chip{flex:0 0 auto;font-size:11px;font-weight:600;color:#98A0AE;background:rgba(20,23,30,.88);
+ border:1px solid #2A303C;border-radius:999px;padding:7px 12px;min-height:32px;cursor:pointer;
+ white-space:nowrap;font-family:inherit}
+.of-chip[aria-pressed="true"]{color:#FF8590;border-color:rgba(255,77,94,.5);background:rgba(31,14,18,.9)}
+
+#ofStaff{position:absolute;left:12px;bottom:calc(150px + env(safe-area-inset-bottom,0px));
+ display:flex;flex-direction:column;gap:6px;max-width:162px}
+.of-staff{display:flex;align-items:center;gap:8px;background:rgba(20,23,30,.84);
+ border:1px solid #1F242E;border-radius:9px;padding:5px 8px;font-size:10px;color:#98A0AE;
+ cursor:pointer;text-align:left;font-family:inherit}
+.of-staff b{color:#ECEEF2;font-size:11px;font-weight:600}
+.of-dot{width:6px;height:6px;border-radius:50%;flex:0 0 auto;background:#2FCF9E}
+
+#ofBottom{position:absolute;left:0;right:0;bottom:0;padding:0 12px 12px;
+ padding-bottom:calc(12px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:8px}
+#ofTicker{display:flex;align-items:center;gap:8px;background:rgba(20,23,30,.88);
+ border:1px solid #1F242E;border-radius:10px;padding:8px 11px;font-size:11px;color:#98A0AE}
+#ofTicker .of-dot{animation:ofPulse 1.8s ease-in-out infinite}
+#ofTicker span{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#ofTicker time{font-family:var(--mono,ui-monospace,monospace);font-size:10px;flex:0 0 auto}
+#ofPrompt{display:flex;align-items:center;gap:12px;background:rgba(20,23,30,.94);
+ border:1px solid #2A303C;border-radius:16px;padding:12px 13px}
+#ofPrompt .who{display:flex;flex-direction:column;gap:4px;flex:1 1 auto;min-width:0}
+#ofPrompt .who b{font-size:14px;font-weight:700;color:#ECEEF2}
+#ofPrompt .who span{font-size:11px;color:#98A0AE;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.of-act{flex:0 0 auto;min-height:44px;padding:0 16px;border:none;border-radius:12px;
+ background:#FF4D5E;color:#0B0D11;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer}
+#ofHint{font-size:10px;color:#98A0AE;text-align:center}
+
+#ofSheet{position:absolute;left:0;right:0;bottom:0;max-height:82%;background:#14171E;
+ border-top:1px solid #2A303C;border-radius:20px 20px 0 0;display:flex;flex-direction:column;
+ transform:translateY(101%);transition:transform 260ms cubic-bezier(.22,.7,.3,1);
+ box-shadow:0 -18px 50px -20px rgba(0,0,0,.95);z-index:5}
+#ofSheet.open{transform:translateY(0)}
+.of-sheet-head{display:flex;align-items:center;gap:10px;padding:14px 16px 10px;border-bottom:1px solid #1F242E}
+.of-sheet-head h2{margin:0;font-size:15px;font-weight:700;flex:1 1 auto;color:#ECEEF2}
+.of-sheet-head .sub{font-size:11px;color:#98A0AE;font-family:var(--mono,ui-monospace,monospace)}
+.of-sheet-close{width:34px;height:34px;border-radius:10px;border:1px solid #2A303C;background:transparent;
+ color:#ECEEF2;cursor:pointer;font-size:15px;line-height:1}
+.of-sheet-body{padding:12px 14px calc(22px + env(safe-area-inset-bottom,0px));overflow-y:auto;
+ -webkit-overflow-scrolling:touch}
+/* 시트 안으로 옮겨온 기존 섹션이 화면 밖으로 안 넘치게 */
+.of-sheet-body .sec,.of-sheet-body .hero,.of-sheet-body .stage{margin-bottom:12px}
+/* ★시트로 옮겨온 **직계** 섹션만 펼친다. 자손까지 풀면 렌더가 일부러 숨긴
+   빈 블록까지 드러나 화면이 지저분해진다. */
+.of-sheet-body > [hidden]{display:block !important}
+
+#ofToggle{position:absolute;right:12px;bottom:calc(150px + env(safe-area-inset-bottom,0px));
+ z-index:6;min-height:36px;padding:0 13px;border-radius:999px;border:1px solid #2A303C;
+ background:rgba(20,23,30,.9);color:#ECEEF2;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer}
+#ofBoot{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+ flex-direction:column;gap:10px;background:#0B0D11;font-size:12px;color:#98A0AE;z-index:9}
+#ofBoot b{color:#ECEEF2;font-size:14px}
+#ofBack{position:fixed;right:12px;bottom:calc(14px + env(safe-area-inset-bottom,0px));z-index:30;
+ min-height:40px;padding:0 15px;border-radius:999px;border:1px solid var(--line,#2A303C);
+ background:rgba(20,23,30,.94);color:var(--fg,#ECEEF2);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer}
+@keyframes ofPulse{0%,100%{opacity:1}50%{opacity:.3}}
+@media (prefers-reduced-motion:reduce){#ofTicker .of-dot{animation:none}#ofSheet{transition:none}}
+@media (max-width:430px){#ofStaff{max-width:138px}.of-val{font-size:16px}}
+@media (max-height:620px){#ofStaff{display:none}}
+</style>
+<!-- ═══════════ 3D 사무실 (2026-09-18) ═══════════ -->
+<div id="office">
+  <canvas id="ofScene"></canvas>
+  <div id="ofLabels"></div>
+
+  <div class="of-layer">
+    <div id="ofHud">
+      <div class="of-bar">
+        <div class="of-asset">
+          <span id="ofEqLab">전략자산</span>
+          <b class="of-val" id="ofEq">—</b>
+        </div>
+        <div class="of-right">
+          <button class="of-mode" id="ofMode" type="button">—</button>
+          <span class="of-pnl" id="ofPnl">—</span>
+          <span class="of-clock" id="ofClock">—</span>
+        </div>
+      </div>
+      <div class="of-chips" id="ofChips"></div>
+    </div>
+
+    <div id="ofStaff"></div>
+
+    <div id="ofBottom">
+      <div id="ofTicker"><i class="of-dot"></i><span id="ofTickText">사무실 가동 중</span><time id="ofTickTime">—</time></div>
+      <div id="ofPrompt">
+        <div class="who"><b id="ofPromptTitle">내 자리</b><span id="ofPromptDesc">—</span></div>
+        <button class="of-act" id="ofPromptBtn" type="button">열기</button>
+      </div>
+      <div id="ofHint">바닥을 누르면 걸어갑니다 · 드래그 회전 · 휠 줌 · E 열기</div>
+    </div>
+  </div>
+
+  <div id="ofSheet" aria-hidden="true">
+    <div class="of-sheet-head">
+      <h2 id="ofSheetTitle">내 자리</h2>
+      <span class="sub" id="ofSheetSub"></span>
+      <button class="of-sheet-close" id="ofSheetClose" type="button" aria-label="닫기">✕</button>
+    </div>
+    <div class="of-sheet-body" id="ofSheetBody"></div>
+  </div>
+
+  <button id="ofToggle" type="button">📋 목록</button>
+  <div id="ofBoot"><b>다담 AI 운용본부</b><span id="ofBootMsg">사무실 불 켜는 중…</span></div>
+</div>
+<div id="ofStash" hidden></div>
 
 <script>
   // 배포 시 서버(admin)가 push하는 상태파일을 raw로 fetch (GitHub Pages 빌드제한 회피)
@@ -967,3 +1117,559 @@
   setInterval(tickAgo, 1000);
   document.addEventListener("visibilitychange", function(){ if(!document.hidden && pw) pull(false); });
 </script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+/* ═══════════════════ 다담 AI 운용본부 — 3D 사무실 (2026-09-18) ═══════════════════
+   기존 기능은 하나도 건드리지 않는다.
+   구역을 열면 **기존 섹션 노드를 시트 안으로 옮겨** 보여 주고, 닫으면 제자리로 돌린다.
+   렌더 함수들이 전부 getElementById 로 찾으므로 부모가 바뀌어도 그대로 동작한다.
+   three.js 를 못 받으면 조용히 목록 화면으로 물러난다. */
+(function () {
+  "use strict";
+
+  var office = document.getElementById('office');
+  var boot = document.getElementById('ofBoot');
+  var bootMsg = document.getElementById('ofBootMsg');
+  var listView = document.getElementById('listView');
+  var stash = document.getElementById('ofStash');
+  var LS = 'mview';
+
+  /* ── 구역: 종가배팅의 실제 기능에 맞춘다 ── */
+  var ZONES = [
+    { id:'strategy', name:'전략실',   cx:-8.75, cz:-4.5, tint:0xff4d5e,
+      desc:'오늘 스캔 종목 · 강한 테마', action:'픽 보기', secs:['secPick','secSec'] },
+    { id:'meeting',  name:'리서치실', cx:0,     cz:-4.5, tint:0x3e8bf5,
+      desc:'급등주 판정 · 누적 채점',   action:'리서치',  secs:['paneResearch'] },
+    { id:'chief',    name:'본부장실', cx:8.75,  cz:-4.5, tint:0x8b93a5,
+      desc:'모드 · 익절손절 · 시스템',  action:'상태',    secs:['secSys'] },
+    { id:'trading',  name:'트레이딩', cx:-8.75, cz:4.5,  tint:0xff4d5e,
+      desc:'매매 기록 · 체결 내역',     action:'기록',    secs:['trSec'] },
+    { id:'desk',     name:'내 자리',  cx:0,     cz:4.5,  tint:0xffffff,
+      desc:'전략자산 · 오늘 손익 · 보유', action:'열기',   secs:['secHero','secStage','secPos'] },
+    { id:'records',  name:'서버실',   cx:8.75,  cz:4.5,  tint:0x2fcf9e,
+      desc:'클라이언트 접속 · IR 리서치', action:'현황',   secs:['paneClients','paneIr'] }
+  ];
+  var W = 26, D = 18, COLX = [[-13,-4.5],[-4.5,4.5],[4.5,13]], ROWZ = [[-9,0],[0,9]];
+  function zoneAt(x, z) {
+    var col = x < COLX[0][1] ? 0 : (x < COLX[1][1] ? 1 : 2);
+    return ZONES[(z < 0 ? 0 : 1) * 3 + col];
+  }
+
+  var AGENTS = [
+    { id:'sigma',  name:'시그마',     role:'전략팀장',   color:0xff4d5e, hair:0x5b2730, home:[-9.6,-5.6] },
+    { id:'analy',  name:'애널리',     role:'리서치팀장', color:0x3e8bf5, hair:0x1f3a5c, home:[-7.2,-3.0] },
+    { id:'guard',  name:'가드',       role:'리스크팀장', color:0x2fcf9e, hair:0x2a4a3c, home:[6.2,-6.4] },
+    { id:'orch',   name:'오케스트라', role:'운용본부장', color:0x8b93a5, hair:0x767d8c, home:[10.4,-5.2] },
+    { id:'exec',   name:'엑스',       role:'체결팀장',   color:0xb03744, hair:0x2a2e38, home:[-9.8,4.2] },
+    { id:'ledger', name:'레저',       role:'회계팀장',   color:0x5a6070, hair:0x4a4f5c, home:[9.6,5.4] }
+  ];
+
+  /* ── 화면 전환 (사무실 ↔ 기존 목록) ── */
+  function setView(v) {
+    var on = (v === 'office');
+    office.classList.toggle('on', on);
+    listView.hidden = on;
+    document.body.classList.toggle('office-on', on);
+    try { localStorage.setItem(LS, v); } catch (e) {}
+    if (!on) restoreAll();
+    if (on && typeof layout === 'function') layout();
+  }
+  var backBtn = document.createElement('button');
+  backBtn.id = 'ofBack'; backBtn.type = 'button'; backBtn.textContent = '🏢 사무실';
+  backBtn.addEventListener('click', function () { setView('office'); });
+  document.body.appendChild(backBtn);
+  document.getElementById('ofToggle').addEventListener('click', function () { setView('list'); });
+
+  /* ── 섹션 옮기기 ── */
+  var HOME = {};                       // id → {parent, next, hidden}  원래 자리
+  function remember(el) {
+    if (HOME[el.id]) return;
+    HOME[el.id] = { parent: el.parentNode, next: el.nextSibling, hidden: el.hidden };
+  }
+  function restoreAll() {
+    Object.keys(HOME).forEach(function (id) {
+      var el = document.getElementById(id), h = HOME[id];
+      if (!el || !h.parent) return;
+      h.parent.insertBefore(el, h.next);
+      el.hidden = h.hidden;
+    });
+    HOME = {};
+  }
+
+  var sheet = document.getElementById('ofSheet');
+  var sheetBody = document.getElementById('ofSheetBody');
+  var openId = null;
+  function closeSheet() {
+    sheet.classList.remove('open'); sheet.setAttribute('aria-hidden', 'true');
+    openId = null; restoreAll();
+  }
+  document.getElementById('ofSheetClose').addEventListener('click', closeSheet);
+
+  function openZone(id) {
+    var z = ZONES.filter(function (q) { return q.id === id; })[0];
+    if (!z) return;
+    if (openId) restoreAll();
+    openId = id;
+    document.getElementById('ofSheetTitle').textContent = z.name;
+    document.getElementById('ofSheetSub').textContent = (window.lastData && lastData.hm) || '';
+    sheetBody.innerHTML = '';
+    z.secs.forEach(function (sid) {
+      var el = document.getElementById(sid);
+      if (!el) return;
+      remember(el);
+      el.hidden = false;
+      sheetBody.appendChild(el);
+    });
+    if (!sheetBody.children.length) {
+      sheetBody.appendChild(Object.assign(document.createElement('div'),
+        { className: 'empty', textContent: '표시할 자료가 아직 없습니다' }));
+    }
+    sheetBody.scrollTop = 0;
+    sheet.classList.add('open'); sheet.setAttribute('aria-hidden', 'false');
+  }
+  document.getElementById('ofPromptBtn').addEventListener('click', function () { openZone(cur.id); });
+
+  /* ── three.js 없으면 목록으로 ── */
+  if (typeof THREE === 'undefined') {
+    bootMsg.textContent = '3D 엔진을 불러오지 못했습니다 — 목록 화면으로 엽니다';
+    backBtn.hidden = true;
+    setView('list');
+    return;
+  }
+
+  var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var canvas = document.getElementById('ofScene');
+  var renderer, scene, camera;
+  try {
+    renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+  } catch (e) {
+    bootMsg.textContent = '이 기기에서 3D를 켤 수 없습니다 — 목록 화면으로 엽니다';
+    backBtn.hidden = true; setView('list'); return;
+  }
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x0b0d11);
+  scene.fog = new THREE.Fog(0x0b0d11, 34, 64);
+  camera = new THREE.PerspectiveCamera(36, 1, 0.1, 200);
+  var camYaw = Math.PI * 0.25, camDist = 26, camTarget = new THREE.Vector3(0, 0, 3);
+
+  scene.add(new THREE.HemisphereLight(0x8aa0c0, 0x0b0d11, 0.5));
+  var key = new THREE.DirectionalLight(0xdfe6f5, 0.85);
+  key.position.set(12, 22, 10); key.castShadow = true;
+  key.shadow.mapSize.width = key.shadow.mapSize.height = 1024;
+  key.shadow.camera.left = -20; key.shadow.camera.right = 20;
+  key.shadow.camera.top = 20; key.shadow.camera.bottom = -20;
+  key.shadow.camera.far = 60; key.shadow.bias = -0.0012;
+  scene.add(key);
+  var fillL = new THREE.DirectionalLight(0x4a5a7a, 0.35);
+  fillL.position.set(-14, 10, -12); scene.add(fillL);
+
+  function M(c, r, m) { return new THREE.MeshStandardMaterial({ color: c, roughness: r === undefined ? .85 : r, metalness: m || .05 }); }
+  function box(w, h, d, mt, x, y, z, p) {
+    var o = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mt);
+    o.position.set(x, y, z); o.castShadow = true; o.receiveShadow = true;
+    (p || scene).add(o); return o;
+  }
+
+  var fc = document.createElement('canvas'); fc.width = fc.height = 128;
+  var fg = fc.getContext('2d');
+  fg.fillStyle = '#171B23'; fg.fillRect(0, 0, 128, 128);
+  fg.strokeStyle = '#1F2531'; fg.lineWidth = 3; fg.strokeRect(0, 0, 128, 128);
+  var ftex = new THREE.CanvasTexture(fc);
+  ftex.wrapS = ftex.wrapT = THREE.RepeatWrapping; ftex.repeat.set(W, D);
+  var floor = new THREE.Mesh(new THREE.PlaneGeometry(W, D),
+    new THREE.MeshStandardMaterial({ map: ftex, roughness: .92, metalness: .02 }));
+  floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true; scene.add(floor);
+
+  var zoneMat = {};
+  ZONES.forEach(function (z, i) {
+    var col = i % 3, row = Math.floor(i / 3);
+    var m = new THREE.MeshBasicMaterial({ color: z.tint, transparent: true, opacity: .04 });
+    var p = new THREE.Mesh(new THREE.PlaneGeometry(COLX[col][1] - COLX[col][0] - .5, ROWZ[row][1] - ROWZ[row][0] - .5), m);
+    p.rotation.x = -Math.PI / 2; p.position.set(z.cx, .012, z.cz);
+    scene.add(p); zoneMat[z.id] = m;
+  });
+
+  var wallM = M(0x1a1e27, .95, .02), trimM = M(0x2e3644, .6, .2);
+  box(W + 1, 3.6, .5, wallM, 0, 1.8, -D / 2 - .25);
+  box(.5, 3.6, D + 1, wallM, -W / 2 - .25, 1.8, 0);
+  box(W + 1, .16, .56, trimM, 0, 3.62, -D / 2 - .25);
+  box(.56, .16, D + 1, trimM, -W / 2 - .25, 3.62, 0);
+
+  var glassM = new THREE.MeshStandardMaterial({ color: 0x9dc4e6, transparent: true, opacity: .1, roughness: .1, metalness: .1 });
+  var frameM = M(0x39414f, .5, .35);
+  function part(x1, z1, x2, z2) {
+    var dx = x2 - x1, dz = z2 - z1, len = Math.sqrt(dx * dx + dz * dz);
+    var g = new THREE.Group();
+    g.position.set((x1 + x2) / 2, 0, (z1 + z2) / 2);
+    g.rotation.y = Math.atan2(dx, dz);
+    var pane = new THREE.Mesh(new THREE.BoxGeometry(.08, 2.1, len), glassM); pane.position.y = 1.15; g.add(pane);
+    var top = new THREE.Mesh(new THREE.BoxGeometry(.14, .09, len), frameM); top.position.y = 2.2; top.castShadow = true; g.add(top);
+    scene.add(g);
+  }
+  part(-4.5, -9, -4.5, -1.6); part(-4.5, 1.6, -4.5, 9);
+  part(4.5, -9, 4.5, -1.6);   part(4.5, 1.6, 4.5, 9);
+  part(-13, 0, -6.4, 0);      part(-2.6, 0, 2.6, 0);  part(6.4, 0, 13, 0);
+
+  var topM = M(0x2c3340, .7, .1), legM = M(0x1b1f28, .8, .2);
+  function desk(x, z, w, d, rot) {
+    var g = new THREE.Group(); g.position.set(x, 0, z); g.rotation.y = rot || 0;
+    var t = new THREE.Mesh(new THREE.BoxGeometry(w, .1, d), topM);
+    t.position.y = .74; t.castShadow = true; t.receiveShadow = true; g.add(t);
+    [[-w / 2 + .2, -d / 2 + .2], [w / 2 - .2, -d / 2 + .2], [-w / 2 + .2, d / 2 - .2], [w / 2 - .2, d / 2 - .2]]
+      .forEach(function (p) {
+        var l = new THREE.Mesh(new THREE.BoxGeometry(.09, .72, .09), legM);
+        l.position.set(p[0], .36, p[1]); l.castShadow = true; g.add(l);
+      });
+    scene.add(g);
+  }
+  function chair(x, z) {
+    var g = new THREE.Group(); g.position.set(x, 0, z);
+    var s = new THREE.Mesh(new THREE.BoxGeometry(.52, .09, .5), M(0x232936, .85));
+    s.position.y = .45; s.castShadow = true; g.add(s);
+    var b = new THREE.Mesh(new THREE.BoxGeometry(.5, .55, .08), M(0x232936, .85));
+    b.position.set(0, .74, -.22); b.castShadow = true; g.add(b);
+    scene.add(g);
+  }
+  function mon(x, y, z, w, h, rot, c) {
+    var g = new THREE.Group(); g.position.set(x, y, z); g.rotation.y = rot || 0;
+    var f = new THREE.Mesh(new THREE.BoxGeometry(w, h, .05), M(0x11141a, .5, .3)); f.castShadow = true; g.add(f);
+    var s = new THREE.Mesh(new THREE.PlaneGeometry(w - .08, h - .08),
+      new THREE.MeshBasicMaterial({ color: c, transparent: true, opacity: .55 }));
+    s.position.z = .031; g.add(s);
+    scene.add(g); return s;
+  }
+  function plant(x, z) {
+    var g = new THREE.Group(); g.position.set(x, 0, z);
+    var pot = new THREE.Mesh(new THREE.CylinderGeometry(.22, .17, .32, 10), M(0x2a303c, .9));
+    pot.position.y = .16; pot.castShadow = true; g.add(pot);
+    for (var i = 0; i < 4; i++) {
+      var lf = new THREE.Mesh(new THREE.ConeGeometry(.18, .7, 5), M(0x2a6b55, .95));
+      lf.position.set(Math.cos(i * 1.6) * .1, .62, Math.sin(i * 1.6) * .1);
+      lf.rotation.z = Math.cos(i * 1.6) * .4; lf.rotation.x = Math.sin(i * 1.6) * .4;
+      lf.castShadow = true; g.add(lf);
+    }
+    scene.add(g);
+  }
+
+  desk(-9.6, -5.0, 3.0, 1.2); chair(-9.6, -3.9);
+  var scScreen = mon(-10.3, 1.12, -5.4, .9, .55, 0, 0xff4d5e);
+  mon(-8.9, 1.12, -5.4, .9, .55, 0, 0xff4d5e);
+  desk(-7.2, -2.4, 2.4, 1.1); chair(-7.2, -1.4);
+  mon(-7.2, 1.10, -2.8, .85, .52, 0, 0x3e8bf5);
+  plant(-12.2, -8.0);
+
+  var tt = new THREE.Mesh(new THREE.CylinderGeometry(1.9, 1.9, .1, 40), topM);
+  tt.position.set(0, .74, -4.6); tt.castShadow = true; tt.receiveShadow = true; scene.add(tt);
+  var tb = new THREE.Mesh(new THREE.CylinderGeometry(.28, .5, .7, 16), legM);
+  tb.position.set(0, .35, -4.6); scene.add(tb);
+  for (var a = 0; a < 6; a++) chair(Math.cos(a / 6 * Math.PI * 2) * 2.7, -4.6 + Math.sin(a / 6 * Math.PI * 2) * 2.7);
+  mon(0, 1.75, -8.55, 2.6, 1.5, 0, 0x3e8bf5);
+
+  desk(9.4, -5.6, 2.8, 1.2, -.2); chair(9.2, -4.4);
+  mon(9.4, 1.12, -6.1, 1.0, .6, -.2, 0x8b93a5);
+  plant(12.2, -8.0);
+
+  desk(-9.6, 4.6, 4.2, 1.3); chair(-9.6, 5.8);
+  mon(-11.0, 1.16, 4.1, 1.05, .62, .18, 0xff4d5e);
+  var trScreen = mon(-9.6, 1.22, 3.95, 1.15, .7, 0, 0xff4d5e);
+  mon(-8.2, 1.16, 4.1, 1.05, .62, -.18, 0x3e8bf5);
+
+  desk(0, 4.8, 2.6, 1.2); chair(0, 6.0);
+  var myScreen = mon(0, 1.14, 4.3, 1.1, .64, 0, 0x2fcf9e);
+
+  for (var r = 0; r < 3; r++) {
+    box(.8, 2.0, .9, M(0x1b1f28, .8, .25), 8.4 + r * 1.1, 1.0, 5.6);
+    for (var L = 0; L < 5; L++) {
+      var led = new THREE.Mesh(new THREE.PlaneGeometry(.34, .05),
+        new THREE.MeshBasicMaterial({ color: L % 3 === 2 ? 0x3e8bf5 : 0x2fcf9e }));
+      led.position.set(8.4 + r * 1.1, 1.55 - L * .28, 6.06); scene.add(led);
+    }
+  }
+  plant(12.2, 8.0);
+
+  var skinM = M(0xe0b992, .9);
+  function person(c, hair) {
+    var g = new THREE.Group();
+    var b = new THREE.Mesh(new THREE.CylinderGeometry(.26, .32, .86, 14), M(c, .75));
+    b.position.y = .55; b.castShadow = true; g.add(b);
+    var hip = new THREE.Mesh(new THREE.CylinderGeometry(.32, .26, .42, 12), M(0x232936, .85));
+    hip.position.y = .2; hip.castShadow = true; g.add(hip);
+    var hd = new THREE.Mesh(new THREE.SphereGeometry(.24, 18, 14), skinM);
+    hd.position.y = 1.16; hd.castShadow = true; g.add(hd);
+    var cap = new THREE.Mesh(new THREE.SphereGeometry(.245, 18, 10, 0, Math.PI * 2, 0, Math.PI * .55), M(hair, .95));
+    cap.position.y = 1.17; g.add(cap);
+    var ns = new THREE.Mesh(new THREE.BoxGeometry(.08, .06, .06), skinM);
+    ns.position.set(0, 1.14, .23); g.add(ns);
+    var ring = new THREE.Mesh(new THREE.RingGeometry(.3, .42, 20),
+      new THREE.MeshBasicMaterial({ color: c, transparent: true, opacity: .16, side: THREE.DoubleSide }));
+    ring.rotation.x = -Math.PI / 2; ring.position.y = .02; g.add(ring);
+    g.userData.body = b; return g;
+  }
+  var player = person(0xff4d5e, 0x3a3226);
+  player.position.set(0, 0, 6.6); scene.add(player);
+  var objs = AGENTS.map(function (a) {
+    var g = person(a.color, a.hair);
+    g.position.set(a.home[0], 0, a.home[1]);
+    g.userData.phase = Math.random() * 6.28;
+    scene.add(g); return g;
+  });
+
+  /* ── 라벨 · 칩 · 직원 목록 ── */
+  var labels = document.getElementById('ofLabels');
+  var chips = document.getElementById('ofChips');
+  var staff = document.getElementById('ofStaff');
+  var target = new THREE.Vector3(0, 0, 6.6);
+
+  ZONES.forEach(function (z) {
+    var b = document.createElement('button');
+    b.className = 'of-chip'; b.type = 'button'; b.textContent = z.name;
+    b.setAttribute('aria-pressed', 'false');
+    b.addEventListener('click', function () { target.set(z.cx, 0, z.cz + 1.2); });
+    z.chip = b; chips.appendChild(b);
+    var tag = document.createElement('div');
+    tag.className = 'of-zone'; tag.textContent = z.name;
+    labels.appendChild(tag); z.tag = tag;
+  });
+
+  AGENTS.forEach(function (a, i) {
+    var row = document.createElement('button');
+    row.className = 'of-staff'; row.type = 'button';
+    row.innerHTML = '<i class="of-dot"></i><span><b>' + a.name + '</b> · ' + a.role + '</span>';
+    row.addEventListener('click', function () {
+      target.set(objs[i].position.x, 0, objs[i].position.z + 1.4);
+      say(i, lineFor(i));
+    });
+    a.dotEl = row.querySelector('.of-dot');
+    a.dotEl.style.background = '#' + a.color.toString(16).padStart(6, '0');
+    staff.appendChild(row);
+    var nt = document.createElement('div');
+    nt.className = 'of-name'; nt.textContent = a.name;
+    nt.style.color = '#' + a.color.toString(16).padStart(6, '0');
+    labels.appendChild(nt); a.nameEl = nt;
+    var bb = document.createElement('div');
+    bb.className = 'of-bubble'; bb.hidden = true;
+    labels.appendChild(bb); a.bubbleEl = bb; a.bubbleUntil = 0;
+  });
+
+  function say(i, text) {
+    if (!text) return;
+    var a = AGENTS[i];
+    a.bubbleEl.textContent = text;
+    a.bubbleEl.hidden = false;
+    a.bubbleUntil = performance.now() + 4600;
+  }
+
+  /* ── 실데이터로 대사 만들기 ── */
+  function nf(n) { return (n == null) ? '—' : Math.round(n).toLocaleString('ko-KR'); }
+  function lineFor(i) {
+    var d = window.lastData;
+    if (!d) return '자료를 기다리는 중입니다';
+    var P = d.pnl || {}, ps = d.positions || [], pk = d.picks || [], sec = d.sectors || [];
+    switch (i) {
+      case 0:
+        if (!pk.length) return (d.scan_state === 'today') ? '오늘 조건검색에 걸린 종목이 없습니다' : '15:20 스캔을 기다리고 있습니다';
+        return '오늘 픽 ' + pk.length + '종목 · 1등 ' + (pk[0].name || '') + ' ' + (pk[0].score || 0) + '점입니다';
+      case 1:
+        if (sec.length) return '가장 센 테마는 ' + sec[0].name + ' ' + (sec[0].chg >= 0 ? '+' : '') + sec[0].chg + '% 입니다';
+        return '테마 수급을 모으는 중입니다';
+      case 2:
+        return '익절 +' + (d.tp != null ? d.tp : '—') + '% · 손절 ' + (d.sl != null ? d.sl : '—') + '% 로 지키고 있습니다';
+      case 3:
+        return (d.enabled ? '자동매매 가동 중입니다' : '자동매매가 멈춰 있습니다') +
+               (d.is_mock ? ' (모의)' : ' (실전)');
+      case 4:
+        if (!ps.length) return '보유 종목이 없습니다. 대기 중입니다';
+        return '보유 ' + ps.length + '종목 감시 중 · 평가손익 ' + (P.unrealized >= 0 ? '+' : '') + nf(P.unrealized) + '원';
+      case 5:
+        return '전략자산 ' + nf(d.equity) + '원 · 오늘 ' + ((P.total >= 0 ? '+' : '') + nf(P.total)) + '원입니다';
+    }
+    return '';
+  }
+
+  /* ── HUD ── */
+  var elEq = document.getElementById('ofEq'), elEqLab = document.getElementById('ofEqLab');
+  var elPnl = document.getElementById('ofPnl'), elClock = document.getElementById('ofClock');
+  var elMode = document.getElementById('ofMode');
+  var tickText = document.getElementById('ofTickText'), tickTime = document.getElementById('ofTickTime');
+  elMode.addEventListener('click', function () { openZone('chief'); });
+
+  function sync(d) {
+    if (!d) return;
+    var P = d.pnl || {};
+    elEqLab.textContent = '전략자산' + (d.account_mask ? ' · ' + d.account_mask : '');
+    elEq.textContent = nf(d.equity) + '원';
+    var tot = P.total;
+    elPnl.textContent = (tot == null) ? '—' : ((tot >= 0 ? '+' : '') + nf(tot) + '원 · ' + ((P.acct_ret >= 0 ? '+' : '') + (P.acct_ret != null ? P.acct_ret.toFixed(2) : '0.00')) + '%');
+    elPnl.style.color = (tot >= 0) ? '#FF8590' : '#7CB0F8';
+    elMode.textContent = d.is_mock ? '모의' : '실전';
+    elMode.dataset.m = d.is_mock ? 'paper' : 'live';
+    elClock.textContent = d.hm || '';
+    if (myScreen) myScreen.material.color.setHex((P.total >= 0) ? 0x2fcf9e : 0x3e8bf5);
+    if (trScreen) trScreen.material.color.setHex((P.unrealized >= 0) ? 0xff4d5e : 0x3e8bf5);
+    if (scScreen) scScreen.material.color.setHex((d.picks || []).length ? 0xff4d5e : 0x2a3040);
+    AGENTS.forEach(function (a, i) { a.dotEl.style.opacity = d.conn ? '1' : '.3'; });
+    if (d.stage) { tickText.textContent = d.stage; tickTime.textContent = d.hm || ''; }
+  }
+
+  // 기존 render 를 감싸 데이터가 올 때마다 사무실도 갱신한다
+  if (typeof window.render === 'function') {
+    var _orig = window.render;
+    window.render = function (d) {
+      _orig(d);
+      try { sync(d); } catch (e) {}
+      if (first) { first = false; bootDone(); }
+    };
+  }
+  var first = true;
+  function bootDone() {
+    boot.style.display = 'none';
+    say(3, lineFor(3));
+    setTimeout(function () { say(0, lineFor(0)); }, 2600);
+  }
+
+  /* ── 입력 ── */
+  function layout() {
+    var w = office.clientWidth || window.innerWidth, h = office.clientHeight || window.innerHeight;
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h; camDist = w < 520 ? 30 : 25;
+    camera.updateProjectionMatrix();
+  }
+  window.layout = layout;
+  window.addEventListener('resize', layout);
+
+  var drag = false, moved = 0, lastX = 0;
+  canvas.addEventListener('pointerdown', function (e) { drag = true; moved = 0; lastX = e.clientX; canvas.setPointerCapture(e.pointerId); });
+  canvas.addEventListener('pointermove', function (e) {
+    if (!drag) return;
+    var dx = e.clientX - lastX; lastX = e.clientX; moved += Math.abs(dx);
+    if (moved > 6) camYaw -= dx * 0.006;
+  });
+  canvas.addEventListener('pointerup', function (e) {
+    drag = false;
+    if (moved > 6) return;
+    var rect = canvas.getBoundingClientRect();
+    var ray = new THREE.Raycaster();
+    ray.setFromCamera(new THREE.Vector2(((e.clientX - rect.left) / rect.width) * 2 - 1,
+      -((e.clientY - rect.top) / rect.height) * 2 + 1), camera);
+    var hit = ray.intersectObject(floor);
+    if (hit.length) target.set(Math.max(-W / 2 + 1, Math.min(W / 2 - 1, hit[0].point.x)), 0,
+      Math.max(-D / 2 + 1, Math.min(D / 2 - 1, hit[0].point.z)));
+  });
+  canvas.addEventListener('wheel', function (e) {
+    e.preventDefault(); camDist = Math.max(14, Math.min(40, camDist + e.deltaY * 0.02));
+  }, { passive: false });
+  var keys = {};
+  window.addEventListener('keydown', function (e) {
+    if (!office.classList.contains('on')) return;
+    var k = (e.key || '').toLowerCase(); keys[k] = true;
+    if (k === 'e') { e.preventDefault(); openZone(cur.id); }
+    if (k === 'escape') closeSheet();
+  });
+  window.addEventListener('keyup', function (e) { keys[(e.key || '').toLowerCase()] = false; });
+
+  /* ── 루프 ── */
+  var cur = ZONES[4], tmp = new THREE.Vector3(), lastT = performance.now();
+  var nextChat = 6000, pp = { x: 0, y: 0, v: true };
+  function proj(v) {
+    tmp.copy(v).project(camera);
+    var w = office.clientWidth || window.innerWidth, h = office.clientHeight || window.innerHeight;
+    pp.x = (tmp.x * .5 + .5) * w; pp.y = (-tmp.y * .5 + .5) * h; pp.v = tmp.z < 1;
+  }
+  function place(el, v, base) {
+    proj(v);
+    el.style.transform = base + ' translate(' + pp.x.toFixed(1) + 'px,' + pp.y.toFixed(1) + 'px)';
+    el.style.opacity = pp.v ? '1' : '0';
+  }
+
+  function frame(now) {
+    requestAnimationFrame(frame);
+    var dt = Math.min(64, now - lastT); lastT = now;
+    if (!office.classList.contains('on')) return;
+
+    nextChat -= dt;
+    if (nextChat <= 0) { nextChat = 7000 + Math.random() * 6000; var i = Math.floor(Math.random() * 6); say(i, lineFor(i)); }
+
+    var kx = (keys['d'] || keys['arrowright'] ? 1 : 0) - (keys['a'] || keys['arrowleft'] ? 1 : 0);
+    var kz = (keys['s'] || keys['arrowdown'] ? 1 : 0) - (keys['w'] || keys['arrowup'] ? 1 : 0);
+    if (kx || kz) {
+      var s = Math.sin(camYaw), c = Math.cos(camYaw);
+      target.x = Math.max(-W / 2 + 1, Math.min(W / 2 - 1, player.position.x + (kx * c - kz * s) * .9));
+      target.z = Math.max(-D / 2 + 1, Math.min(D / 2 - 1, player.position.z + (kx * s + kz * c) * .9));
+    }
+    var dx = target.x - player.position.x, dz = target.z - player.position.z;
+    var dist = Math.sqrt(dx * dx + dz * dz);
+    if (dist > .08) {
+      var st = Math.min(dist, .052 * dt / 16);
+      player.position.x += dx / dist * st; player.position.z += dz / dist * st;
+      var wy = Math.atan2(dx, dz);
+      player.rotation.y += (((wy - player.rotation.y + Math.PI * 3) % (Math.PI * 2)) - Math.PI) * .18;
+      if (!reduced) player.userData.body.position.y = .55 + Math.abs(Math.sin(now * .012)) * .045;
+    } else if (!reduced) {
+      player.userData.body.position.y = .55 + Math.sin(now * .0022) * .012;
+    }
+
+    var z = zoneAt(player.position.x, player.position.z);
+    if (z !== cur) {
+      cur = z;
+      ZONES.forEach(function (q) {
+        q.chip.setAttribute('aria-pressed', String(q === z));
+        q.tag.classList.toggle('here', q === z);
+        zoneMat[q.id].opacity = q === z ? .13 : .04;
+      });
+      document.getElementById('ofPromptTitle').textContent = z.name;
+      document.getElementById('ofPromptDesc').textContent = z.desc;
+      document.getElementById('ofPromptBtn').textContent = z.action;
+      if (openId && openId !== z.id) closeSheet();
+    }
+    if (!reduced) zoneMat[z.id].opacity = .10 + Math.sin(now * .0035) * .045;
+
+    objs.forEach(function (g, i) {
+      if (!reduced) g.userData.body.position.y = .55 + Math.sin(now * .0021 + g.userData.phase) * .016;
+      if (g.position.distanceTo(player.position) < 4.2) {
+        var tp = Math.atan2(player.position.x - g.position.x, player.position.z - g.position.z);
+        g.rotation.y += (((tp - g.rotation.y + Math.PI * 3) % (Math.PI * 2)) - Math.PI) * .06;
+      }
+    });
+
+    camTarget.lerp(new THREE.Vector3(player.position.x * .55, 0, player.position.z * .55 + 1.5), .05);
+    camera.position.set(camTarget.x + Math.sin(camYaw) * camDist, camDist * .78, camTarget.z + Math.cos(camYaw) * camDist);
+    camera.lookAt(camTarget.x, 1.2, camTarget.z);
+
+    ZONES.forEach(function (q) { tmp.set(q.cx, 2.4, q.cz); place(q.tag, tmp, 'translate(-50%,-50%)'); });
+    objs.forEach(function (g, i) {
+      var a = AGENTS[i];
+      tmp.set(g.position.x, 1.62, g.position.z);
+      place(a.nameEl, tmp, 'translate(-50%,-100%)');
+      if (a.bubbleUntil > now) {
+        tmp.set(g.position.x, 2.16, g.position.z);
+        a.bubbleEl.hidden = false;
+        place(a.bubbleEl, tmp, 'translate(-50%,-100%)');
+      } else if (!a.bubbleEl.hidden) { a.bubbleEl.hidden = true; }
+    });
+
+    renderer.render(scene, camera);
+  }
+
+  /* ── 시작 ── */
+  layout();
+  ZONES.forEach(function (q) {
+    q.chip.setAttribute('aria-pressed', String(q === cur));
+    q.tag.classList.toggle('here', q === cur);
+  });
+  document.getElementById('ofPromptTitle').textContent = cur.name;
+  document.getElementById('ofPromptDesc').textContent = cur.desc;
+  document.getElementById('ofPromptBtn').textContent = cur.action;
+  var saved = null;
+  try { saved = localStorage.getItem(LS); } catch (e) {}
+  setView(saved === 'list' ? 'list' : 'office');
+  if (window.lastData) { sync(window.lastData); first = false; bootDone(); }
+  else { setTimeout(function () { if (first) { first = false; bootDone(); } }, 6000); }
+  requestAnimationFrame(frame);
+})();
+</script>
+
