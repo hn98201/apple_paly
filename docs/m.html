@@ -482,6 +482,20 @@ body.office-on{overflow:hidden}
  font-variant-numeric:tabular-nums;overflow:hidden;text-overflow:ellipsis}
 .of-bi b.up{color:#FF8590}.of-bi b.dn{color:#7CB0F8}
 .of-bv{font-size:11.5px;color:#98A0AE}
+.of-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:10px}
+.of-fi{display:flex;flex-direction:column;gap:4px;min-width:0}
+.of-fi span{font-size:9.5px;color:#98A0AE}
+.of-fi i{font-style:normal;color:#636a80}
+.of-fi input{width:100%;min-height:42px;border-radius:10px;border:1px solid #2A303C;background:#0B0D11;
+ color:#ECEEF2;font-family:var(--mono,ui-monospace,monospace);font-size:14px;font-weight:600;
+ padding:0 10px;font-variant-numeric:tabular-nums}
+.of-fi input:focus{outline:2px solid #FF4D5E;outline-offset:1px;border-color:#FF4D5E}
+.of-fdiff{font-size:11px;color:#FF8590;line-height:1.55;margin-bottom:9px;min-height:17px}
+.of-cmd{font-family:var(--mono,ui-monospace,monospace);font-size:10.5px;color:#98A0AE;word-break:break-all}
+.of-fbtn{width:100%;min-height:44px;border:none;border-radius:12px;background:#FF4D5E;color:#0B0D11;
+ font-family:inherit;font-size:13px;font-weight:700;cursor:pointer}
+.of-fbtn:disabled{background:#1B1F28;color:#636a80;cursor:default}
+.of-fnote{font-size:10px;color:#636a80;line-height:1.6;margin-top:8px}
 .of-min{display:flex;flex-direction:column;gap:0;max-height:300px;overflow-y:auto;-webkit-overflow-scrolling:touch}
 .of-mrow{display:flex;gap:8px;padding:7px 0;border-bottom:1px solid #1F242E;font-size:11px;align-items:baseline}
 .of-mrow:last-child{border-bottom:none}
@@ -1245,6 +1259,65 @@ body.office-on{overflow:hidden}
     return h + '</div></div>';
   }
 
+  /* ── 설정 폼 (2026-09-18) ──
+     ★관리자 계좌에만 듣는 값만 둔다. theme_bonus_max 는 픽의 score 를 바꿔
+       클라이언트가 받는 종목까지 달라지므로 넣지 않았다. */
+  var BOT = 'yeonherk_bot';
+  var FIELDS = [
+    { k: 'tp',   arg: 'tp',     lab: '익절',     unit: '%',   get: function (d) { return d.tp; },           step: '0.1' },
+    { k: 'sl',   arg: 'sl',     lab: '손절',     unit: '%',   get: function (d) { return d.sl; },           step: '0.1' },
+    { k: 'prin', arg: 'prin',   lab: '원금',     unit: '만원', get: function (d) { return Math.round((d.principal || 0) / 10000); }, step: '10' },
+    { k: 'buf',  arg: 'buf',    lab: '현금버퍼', unit: '원',   get: function (d) { return d.cash_buffer; },  step: '10000' },
+    { k: 'div',  arg: 'div',    lab: '분할수',   unit: '개',   get: function (d) { return d.size_div; },     step: '1' }
+  ];
+  function cfgForm(d) {
+    var h = '<div class="of-brief"><div class="of-bk">설정 바꾸기 · 관리자 계좌에만 적용</div><div class="of-form">';
+    FIELDS.forEach(function (f) {
+      var v = f.get(d);
+      h += '<label class="of-fi"><span>' + f.lab + ' <i>' + f.unit + '</i></span>' +
+           '<input id="ofc_' + f.k + '" type="number" step="' + f.step + '" inputmode="decimal" placeholder="현재값 없음" value="' +
+           (v == null ? '' : v) + '" data-v0="' + (v == null ? '' : v) + '"></label>';
+    });
+    h += '</div><div class="of-fdiff" id="ofcDiff">고칠 값을 바꾸면 여기에 표시됩니다</div>' +
+         '<button type="button" class="of-fbtn" id="ofcSend" disabled>텔레그램으로 저장</button>' +
+         '<div class="of-fnote">보내면 봇이 확인하고 관리자 프로그램이 적용합니다. ' +
+         '관리자가 꺼져 있으면 다음 기동 때 반영됩니다.<br>' +
+         '종목당 상한·최소 종목수·수수료는 텔레그램에서 <b>/cfg</b> 로 보고 <b>/set</b> 으로 바꿉니다.</div></div>';
+    return h;
+  }
+  function wireCfg() {
+    var diffEl = document.getElementById('ofcDiff'), btn = document.getElementById('ofcSend');
+    if (!diffEl || !btn) return;
+    function calc() {
+      var parts = [], txt = [];
+      FIELDS.forEach(function (f) {
+        var el = document.getElementById('ofc_' + f.k);
+        if (!el) return;
+        var v0 = el.dataset.v0, v = String(el.value).trim();
+        if (v === '' || isNaN(Number(v))) return;
+        // ★숫자로 견준다 — 문자열로 보면 -3 과 -3.0 이 달라져 안 바뀐 값도 보낸다
+        if (v0 !== '' && Number(v) === Number(v0)) return;
+        parts.push(f.arg + '=' + v);
+        txt.push(f.lab + ' ' + (v0 === '' ? '—' : v0) + ' → ' + v + f.unit);
+      });
+      btn.disabled = !parts.length;
+      diffEl.innerHTML = parts.length ? txt.join('<br>') : '고칠 값을 바꾸면 여기에 표시됩니다';
+      btn.dataset.cmd = parts.length ? ('/set ' + parts.join(' ')) : '';
+    }
+    FIELDS.forEach(function (f) {
+      var el = document.getElementById('ofc_' + f.k);
+      if (el) { el.addEventListener('input', calc); el.addEventListener('change', calc); }
+    });
+    btn.addEventListener('click', function () {
+      var cmd = btn.dataset.cmd;
+      if (!cmd) return;
+      minute('사장님', '설정 변경 요청 — ' + cmd.replace('/set ', ''), 'ev');
+      window.open('https://t.me/' + BOT + '?text=' + encodeURIComponent(cmd), '_blank');
+      diffEl.innerHTML = '텔레그램에서 <b>전송</b>을 눌러 주세요.<br><span class="of-cmd">' + esc(cmd) + '</span>';
+    });
+    calc();
+  }
+
   /* ── 부서 브리핑: 그 부서가 지금 보고 있는 화면 ── */
   function brief(id) {
     var d = window.lastData;
@@ -1279,7 +1352,7 @@ body.office-on{overflow:hidden}
         ['익절 / 손절', '+' + d.tp + '% / ' + d.sl + '%'],
         ['원금', nf(d.principal) + '원'],
         ['종목당 / 최대', nf(d.invest) + '원 · ' + (d.af || 0) + '종목'],
-        ['현재 단계', d.stage || '—']]);
+        ['현재 단계', d.stage || '—']]) + cfgForm(d);
     }
     if (id === 'trading') {
       var tr = d.trades || [];
@@ -1319,6 +1392,7 @@ body.office-on{overflow:hidden}
     document.getElementById('ofSheetTitle').textContent = z.name;
     document.getElementById('ofSheetSub').textContent = (window.lastData && lastData.hm) || '';
     sheetBody.innerHTML = brief(id);
+    if (id === 'chief') { try { wireCfg(); } catch (e) {} }
     z.secs.forEach(function (sid) {
       var el = document.getElementById(sid);
       if (!el) return;
@@ -1715,7 +1789,21 @@ body.office-on{overflow:hidden}
     AGENTS.forEach(function (a, i) { a.dotEl.style.opacity = d.conn ? '1' : '.3'; });
     if (d.stage) { tickText.textContent = d.stage; tickTime.textContent = d.hm || ''; }
     try { react(d); } catch (e) {}
-    if (openId) { try { var bb = sheetBody.querySelector('.of-brief'); if (bb) { var tmpd = document.createElement('div'); tmpd.innerHTML = brief(openId); var nb = tmpd.querySelector('.of-brief'); if (nb) bb.replaceWith(nb); } } catch (e) {} }
+    if (openId) {
+      try {
+        // ★설정 폼에 손대고 있는 중이면 갈아끼우지 않는다 — 입력값이 날아간다
+        var typing = document.activeElement && /^ofc_/.test(document.activeElement.id || '');
+        if (!typing) {
+          var bb = sheetBody.querySelector('.of-brief');
+          if (bb) {
+            var tmpd = document.createElement('div');
+            tmpd.innerHTML = brief(openId);
+            var nb = tmpd.querySelector('.of-brief');
+            if (nb) { bb.replaceWith(nb); if (openId === 'chief') wireCfg(); }
+          }
+        }
+      } catch (e) {}
+    }
   }
 
   // 기존 render 를 감싸 데이터가 올 때마다 사무실도 갱신한다
