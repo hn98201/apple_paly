@@ -436,8 +436,13 @@ body.office-on{overflow:hidden}
 #ofTicker .of-dot{animation:ofPulse 1.8s ease-in-out infinite}
 #ofTicker span{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #ofTicker time{font-family:var(--mono,ui-monospace,monospace);font-size:10px;flex:0 0 auto}
-#ofPrompt{display:flex;align-items:center;gap:12px;background:rgba(20,23,30,.94);
- border:1px solid #2A303C;border-radius:16px;padding:12px 13px}
+#ofPrompt{display:flex;flex-direction:column;gap:9px;background:rgba(20,23,30,.94);
+ border:1px solid #2A303C;border-radius:16px;padding:11px 12px}
+#ofPrompt .prow{display:flex;align-items:center;gap:12px}
+/* ★버튼 3개는 따로 한 줄에 — 한 줄에 다 넣으니 글자가 겹쳐 읽을 수 없었다 */
+#ofPrompt .brow{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+#ofPrompt .brow .of-act{width:100%;min-height:40px;padding:0 6px;font-size:12px;
+ white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #ofPrompt .who{display:flex;flex-direction:column;gap:4px;flex:1 1 auto;min-width:0}
 #ofPrompt .who b{font-size:14px;font-weight:700;color:#ECEEF2}
 #ofPrompt .who span{font-size:11px;color:#98A0AE;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -448,7 +453,7 @@ body.office-on{overflow:hidden}
 #ofHint{font-size:10px;color:#98A0AE;text-align:center;line-height:1.5}
 
 /* 회의 배너 — 지금 무슨 회의를 몇 번째 발언까지 했는지 */
-#ofMeet{position:absolute;right:12px;top:calc(96px + env(safe-area-inset-top,0px));width:min(232px,52vw);
+#ofMeet{position:absolute;right:12px;top:calc(120px + env(safe-area-inset-top,0px));width:min(224px,50vw);
  background:rgba(20,23,30,.95);border:1px solid #2fcf9e;border-radius:14px;padding:10px 11px;
  display:flex;flex-direction:column;gap:7px;z-index:4;
  box-shadow:0 14px 34px -18px rgba(0,0,0,.9)}
@@ -462,9 +467,8 @@ body.office-on{overflow:hidden}
 #ofMeetAgenda{font-size:11.5px;line-height:1.5;color:#ECEEF2}
 #ofMeet .of-mp{height:4px;border-radius:3px;background:#20262f;overflow:hidden}
 #ofMeet .of-mp i{display:block;height:100%;width:0;background:#2fcf9e;transition:width 400ms ease}
-#ofMeetLog,#ofMeetRep{min-height:32px;border:none;border-radius:9px;background:#20262f;color:#ECEEF2;
+#ofMeetLog{min-height:32px;border:none;border-radius:9px;background:#20262f;color:#ECEEF2;
  font-family:inherit;font-size:10.5px;font-weight:600;cursor:pointer}
-#ofMeetRep{background:#2fcf9e;color:#06140f}
 @media (max-height:620px){#ofMeetLog{display:none}}
 
 /* 전광판 큰 그래프 */
@@ -564,16 +568,20 @@ body.office-on{overflow:hidden}
       <div id="ofMeetAgenda">—</div>
       <div class="of-mp"><i id="ofMeetBar"></i></div>
       <button type="button" id="ofMeetLog">회의록 보기</button>
-      <button type="button" id="ofMeetRep">분석 보고서</button>
     </div>
 
     <div id="ofBottom">
       <div id="ofTicker"><i class="of-dot"></i><span id="ofTickText">사무실 가동 중</span><time id="ofTickTime">—</time></div>
       <div id="ofPrompt">
-        <div class="who"><b id="ofPromptTitle">내 자리</b><span id="ofPromptDesc">—</span></div>
-        <button class="of-act of-act2" id="ofAnalBtn" type="button">분석</button>
-        <button class="of-act of-act2" id="ofMeetBtn" type="button">회의</button>
-        <button class="of-act" id="ofPromptBtn" type="button">열기</button>
+        <div class="prow">
+          <div class="who"><b id="ofPromptTitle">내 자리</b><span id="ofPromptDesc">—</span></div>
+          <button class="of-act" id="ofPromptBtn" type="button">열기</button>
+        </div>
+        <div class="brow">
+          <button class="of-act of-act2" id="ofAnalBtn" type="button">📊 분석회의</button>
+          <button class="of-act of-act2" id="ofMeetBtn" type="button">🗣 루틴회의</button>
+          <button class="of-act of-act2" id="ofRepBtn" type="button">📄 보고서</button>
+        </div>
       </div>
       <div id="ofHint">바닥을 누르면 걸어갑니다 · 부서를 누르면 걸어가서 엽니다 · 드래그 좌우·상하 회전 · 휠 줌</div>
     </div>
@@ -1229,12 +1237,14 @@ body.office-on{overflow:hidden}
   /* ★팀 넷 (2026-09-19) — 사용자가 정한 구성.
      번호가 고정이다: 0 전략 · 1 테마 · 2 트레이딩 · 3 총괄.
      아래 코드 곳곳이 이 번호를 쓴다. 순서를 바꾸면 대사가 엉뚱한 팀에 붙는다. */
-  var A_STRAT = 0, A_THEME = 1, A_TRADE = 2, A_CHIEF = 3;
+  var A_STRAT = 0, A_THEME = 1, A_TRADE = 2, A_BT = 3, A_LEARN = 4, A_CHIEF = 5;
   var AGENTS = [
-    { id:'strat', name:'전략팀',   role:'익절·손절·기대값', color:0xff4d5e, hair:0x5b2730, home:[-9.6,-5.6] },
-    { id:'theme', name:'테마팀',   role:'테마·수급 분석',   color:0x3e8bf5, hair:0x1f3a5c, home:[-7.2,-3.0] },
-    { id:'trade', name:'트레이딩팀', role:'체결·보유 관리',  color:0xb03744, hair:0x2a2e38, home:[-9.8,4.2] },
-    { id:'chief', name:'총괄팀',   role:'조율·의결·보고',   color:0x8b93a5, hair:0x767d8c, home:[10.4,-5.2] }
+    { id:'strat', name:'전략팀',   role:'익절·손절·기대값',  color:0xff4d5e, hair:0x5b2730, home:[-9.6,-5.6] },
+    { id:'theme', name:'테마팀',   role:'테마·수급 분석',    color:0x3e8bf5, hair:0x1f3a5c, home:[-7.2,-3.0] },
+    { id:'trade', name:'트레이딩팀', role:'체결·보유 관리',   color:0xb03744, hair:0x2a2e38, home:[-9.8,4.2] },
+    { id:'bt',    name:'백테팀',   role:'실제 경로 재시뮬',  color:0xffce5a, hair:0x6a5a2a, home:[9.6,5.4] },
+    { id:'learn', name:'학습팀',   role:'종목 특징 누적학습', color:0x2fcf9e, hair:0x2a4a3c, home:[6.2,-6.4] },
+    { id:'chief', name:'총괄팀',   role:'조율·의결·보고',    color:0x8b93a5, hair:0x767d8c, home:[10.4,-5.2] }
   ];
 
   /* ── 화면 전환 (사무실 ↔ 기존 목록) ── */
@@ -1416,14 +1426,14 @@ body.office-on{overflow:hidden}
     }
     if (id === 'report') {
       var A = LASTA || ANALYZE();
-      var TN = ['전략팀', '테마팀', '트레이딩팀', '총괄팀'];
+      var TN = ['전략팀', '테마팀', '트레이딩팀', '백테팀', '학습팀', '총괄팀'];
       var h = '<div class="of-brief"><div class="of-bk">총괄팀 보고 · ' + esc(A.VERDICT) + '</div><div class="of-bg">' +
         [['청산 (전체 원장)', (A.n || 0) + '건 · ' + (A.days || 0) + '일'],
          ['승률', A.n ? (A.wr * 100).toFixed(0) + '%' : '—', A.wr >= .5 ? 'up' : 'dn'],
          ['1회 평균', A.n ? pct(A.exp) : '—', (A.exp > 0) ? 'up' : 'dn'],
          ['손익비 (최근 ' + (A.recent || 0) + '건)', A.rr ? A.rr.toFixed(2) : '—', (A.rr && A.rr >= 1) ? 'up' : 'dn'],
          ['누적 수익률', pct(A.ret), (A.ret >= 0) ? 'up' : 'dn'],
-         ['MDD', pct(A.mdd, 1), 'dn']]
+         ['MDD', mddTxt(A.mdd), 'dn']]
         .map(function (r) { return '<div class="of-bi"><span>' + r[0] + '</span><b class="' + (r[2] || '') + '">' + r[1] + '</b></div>'; }).join('') +
         '</div></div>';
 
@@ -1437,7 +1447,7 @@ body.office-on{overflow:hidden}
           (A.slReal != null ? pct(A.slReal) : '—') + ' (설정 ' + A.sl + '%)</div></div>';
       }
 
-      [A_STRAT, A_THEME, A_TRADE].forEach(function (tm) {
+      [A_STRAT, A_THEME, A_TRADE, A_BT, A_LEARN].forEach(function (tm) {
         var ff = A.F.filter(function (x) { return x.team === tm; });
         if (!ff.length) return;
         h += '<div class="of-brief"><div class="of-bk">' + TN[tm] + ' 보고</div><div class="of-min">';
@@ -1601,9 +1611,9 @@ body.office-on{overflow:hidden}
 
   scene = new THREE.Scene();
   scene.background = new THREE.Color(0x0b0d11);
-  scene.fog = new THREE.Fog(0x0b0d11, 34, 64);
+  scene.fog = new THREE.Fog(0x0b0d11, 44, 88);            // ★멀리서 봐도 안개에 먹히지 않게
   camera = new THREE.PerspectiveCamera(36, 1, 0.1, 200);
-  var camYaw = Math.PI * 0.25, camDist = 26, camTarget = new THREE.Vector3(0, 0, 3);
+  var camYaw = Math.PI * 0.25, camDist = 34, camTarget = new THREE.Vector3(0, 0, 3);
   // ★상하 시점(2026-09-18). 0.66 rad 이 예전 고정 높이(=camDist x 0.78)와 같다 — 기본 화면이 바뀌지 않게
   var camPitch = 0.66, CAM_K = Math.cos(0.66);
 
@@ -1645,9 +1655,10 @@ body.office-on{overflow:hidden}
   });
 
   var wallM = M(0x1a1e27, .95, .02), trimM = M(0x2e3644, .6, .2);
-  box(W + 1, 3.6, .5, wallM, 0, 1.8, -D / 2 - .25);
+  // ★뒷벽만 5.6 으로 올렸다(2026-09-19) — 대형 전광판을 걸려면 자리가 필요하다
+  box(W + 1, 5.6, .5, wallM, 0, 2.8, -D / 2 - .25);
   box(.5, 3.6, D + 1, wallM, -W / 2 - .25, 1.8, 0);
-  box(W + 1, .16, .56, trimM, 0, 3.62, -D / 2 - .25);
+  box(W + 1, .16, .56, trimM, 0, 5.62, -D / 2 - .25);
   box(.56, .16, D + 1, trimM, -W / 2 - .25, 3.62, 0);
 
   var glassM = new THREE.MeshStandardMaterial({ color: 0x9dc4e6, transparent: true, opacity: .1, roughness: .1, metalness: .1 });
@@ -1745,16 +1756,19 @@ body.office-on{overflow:hidden}
   /* ── 전광판: 뒷벽 LED (2026-09-18) ──
      보유 종목과 수익률이 흐른다. 장중엔 status 가 30초마다 갱신되므로 사실상 실시간이다. */
   var ledCv = document.createElement('canvas');
-  ledCv.width = 1760; ledCv.height = 160;      // 22 x 2.0 (11:1) — 왼쪽 수익률 그래프 + 오른쪽 티커 2줄
+  ledCv.width = 2200; ledCv.height = 440;      // 22 x 4.4 (5:1) — 증권사 로비형 대형 전광판
   var ledCtx = ledCv.getContext('2d');
   var ledTex = new THREE.CanvasTexture(ledCv);
   ledTex.wrapS = THREE.RepeatWrapping; ledTex.minFilter = THREE.LinearFilter;
-  var ledPanel = new THREE.Mesh(new THREE.PlaneGeometry(22, 2.0),
+  /* ★뒷벽 전체를 전광판으로. 벽이 3.6 높이라 4.4 를 다 못 쓰므로 벽을 같이 올린다
+     (아래 wallUp 참고). 증권사 로비의 대형 시황판을 생각하면 된다. */
+  var ledPanel = new THREE.Mesh(new THREE.PlaneGeometry(22, 4.4),
     new THREE.MeshBasicMaterial({ map: ledTex, transparent: true }));
-  ledPanel.position.set(0, 2.45, -8.68); scene.add(ledPanel);
-  box(22.5, 0.12, 0.18, M(0x39414f, .5, .35), 0, 3.55, -8.66);
-  box(22.5, 0.12, 0.18, M(0x39414f, .5, .35), 0, 1.35, -8.66);
-  var ledOff = 0, ledOff2 = 0, LED_GW = 520;      // LED_GW = 그래프 칸 폭(캔버스 픽셀)
+  ledPanel.position.set(0, 2.85, -8.68); scene.add(ledPanel);
+  box(22.6, 0.14, 0.2, M(0x39414f, .5, .35), 0, 5.12, -8.66);
+  box(22.6, 0.14, 0.2, M(0x39414f, .5, .35), 0, 0.62, -8.66);
+  var ledOff = 0, ledOff2 = 0, LED_GW = 700;      // LED_GW = 그래프 칸 폭(캔버스 픽셀)
+  var ledPage = 0, ledPageAt = 0;                 // 오른쪽 면이 몇 초마다 바뀐다
   /* 1줄 — 보유 종목 수익률(없으면 지금 단계) */
   function ledLine1() {
     var d = window.lastData;
@@ -1778,23 +1792,26 @@ body.office-on{overflow:hidden}
   /* 왼쪽 칸 — 수익률 곡선(누적·MDD). 자산곡선은 관리자 _equity_stats 한 곳에서 온다 */
   function drawLedChart(cx, cw, ch) {
     var d = window.lastData || {}, S = statsNow(d), cv = S.curve || [];
-    var col = ((S.ret == null ? 0 : S.ret) >= 0) ? '#ff6b78' : '#6aa3f8';
+    var col = ((S.total == null ? 0 : S.total) >= 0) ? '#ff6b78' : '#6aa3f8';
     ledCtx.fillStyle = '#0e1219'; ledCtx.fillRect(cx, 0, cw, ch);
     ledCtx.textBaseline = 'alphabetic'; ledCtx.textAlign = 'left';
-    ledCtx.font = '700 34px "IBM Plex Mono", ui-monospace, monospace';
-    ledCtx.fillStyle = '#7a8291'; ledCtx.fillText('누적', cx + 14, 38);
-    ledCtx.fillStyle = col; ledCtx.fillText(pct(S.ret), cx + 90, 38);
-    ledCtx.font = '600 22px "IBM Plex Mono", ui-monospace, monospace';
+    ledCtx.font = '700 46px "IBM Plex Mono", ui-monospace, monospace';
+    ledCtx.fillStyle = '#7a8291'; ledCtx.fillText('누적 수익률', cx + 20, 54);
+    ledCtx.font = '700 72px "IBM Plex Mono", ui-monospace, monospace';
+    ledCtx.fillStyle = col; ledCtx.fillText(pct(S.total), cx + 20, 128);
+    ledCtx.font = '600 32px "IBM Plex Mono", ui-monospace, monospace';
     ledCtx.fillStyle = '#6b7280';
-    ledCtx.fillText('MDD ' + pct(S.mdd, 1) + ' · ' + (cv.length > 1 ? (cv.length - 1) + '거래' : '거래없음'), cx + 262, 36);
-    var gx = cx + 14, gy = 52, gw = cw - 28, gh = ch - 62;
+    ledCtx.fillText('MDD ' + (S.mdd == null ? '—' : '-' + Math.abs(S.mdd).toFixed(1) + '%') +
+                    '   승률 ' + (S.win != null ? S.win.toFixed(0) + '%' : '—') +
+                    '   ' + (S.n || 0) + '건', cx + 20, 170);
+    var gx = cx + 20, gy = 196, gw = cw - 40, gh = ch - gy - 30;
     ledCtx.strokeStyle = '#1b2029'; ledCtx.lineWidth = 2;
     ledCtx.beginPath(); ledCtx.moveTo(gx, gy + gh); ledCtx.lineTo(gx + gw, gy + gh); ledCtx.stroke();
     if (cv.length > 1) {
       var lo = Math.min.apply(null, cv), hi = Math.max.apply(null, cv);
       if (hi - lo < 1) hi = lo + 1;
-      var zy = gy + gh - (0 - lo) / (hi - lo) * gh;              // 0% 기준선
-      ledCtx.setLineDash([6, 6]); ledCtx.strokeStyle = '#2a3140';
+      var zy = gy + gh - (0 - lo) / (hi - lo) * gh;
+      ledCtx.setLineDash([8, 8]); ledCtx.strokeStyle = '#2a3140';
       ledCtx.beginPath(); ledCtx.moveTo(gx, zy); ledCtx.lineTo(gx + gw, zy); ledCtx.stroke();
       ledCtx.setLineDash([]);
       ledCtx.beginPath();
@@ -1802,39 +1819,117 @@ body.office-on{overflow:hidden}
         var x = gx + i / (cv.length - 1) * gw, y = gy + gh - (cv[i] - lo) / (hi - lo) * gh;
         if (i) ledCtx.lineTo(x, y); else ledCtx.moveTo(x, y);
       }
-      ledCtx.strokeStyle = col; ledCtx.lineWidth = 3; ledCtx.lineJoin = 'round'; ledCtx.stroke();
+      ledCtx.strokeStyle = col; ledCtx.lineWidth = 5; ledCtx.lineJoin = 'round'; ledCtx.stroke();
       ledCtx.lineTo(gx + gw, zy); ledCtx.lineTo(gx, zy); ledCtx.closePath();
-      ledCtx.globalAlpha = .16; ledCtx.fillStyle = col; ledCtx.fill(); ledCtx.globalAlpha = 1;
+      ledCtx.globalAlpha = .17; ledCtx.fillStyle = col; ledCtx.fill(); ledCtx.globalAlpha = 1;
       var ly = gy + gh - (cv[cv.length - 1] - lo) / (hi - lo) * gh;
-      ledCtx.beginPath(); ledCtx.arc(gx + gw, ly, 5, 0, 6.3); ledCtx.fillStyle = col; ledCtx.fill();
+      ledCtx.beginPath(); ledCtx.arc(gx + gw, ly, 8, 0, 6.3); ledCtx.fillStyle = col; ledCtx.fill();
     } else {
-      ledCtx.font = '600 22px "IBM Plex Mono", ui-monospace, monospace';
-      ledCtx.fillStyle = '#464d5b'; ledCtx.fillText('청산이 쌓이면 곡선이 그려집니다', gx, gy + gh / 2 + 8);
+      ledCtx.font = '600 30px "IBM Plex Mono", ui-monospace, monospace';
+      ledCtx.fillStyle = '#464d5b'; ledCtx.fillText('청산이 쌓이면 곡선이 그려집니다', gx, gy + gh / 2);
     }
-    ledCtx.fillStyle = '#20262f'; ledCtx.fillRect(cx + cw, 8, 3, ch - 16);
+    ledCtx.fillStyle = '#20262f'; ledCtx.fillRect(cx + cw, 16, 4, ch - 32);
   }
+
+  /* 오른쪽 면 — 증권사 로비처럼 몇 초마다 넘어간다 */
+  function ledPages() {
+    var d = window.lastData || {}, P2 = d.pnl || {}, ps = d.positions || [],
+        pk = d.picks || [], sec = d.sectors || [], acc = d.acct || {}, fx = d.fx || {},
+        st = d.study || {}, tm = d.thememap || {};
+    var pg = [];
+
+    pg.push({ t: '보유 종목', rows: ps.length
+      ? ps.map(function (p) {
+          return [p.name, nf(p.cur) + '원', pct(p.ret), (p.ret >= 0 ? 1 : -1)];
+        })
+      : [['보유 없음', '', (d.stage || '대기'), 0]] });
+
+    pg.push({ t: '원금 · 자산', rows: [
+      ['원금', '', nf(d.principal) + '원', 0],
+      ['전략자산', '', nf(d.equity) + '원', (d.equity >= d.principal ? 1 : -1)],
+      ['계좌 실자산', '', acc.assets ? nf(acc.assets) + '원' : '—', 0],
+      ['주문가능', '', acc.orderable ? nf(acc.orderable) + '원' : '—', 0],
+      ['오늘 손익', '', ((P2.total >= 0 ? '+' : '') + nf(P2.total)) + '원', (P2.total >= 0 ? 1 : -1)],
+      ['종목당 / 최대', '', nf(d.invest) + '원 · ' + (d.af || 0) + '종목', 0]] });
+
+    var mrows = [];
+    if (fx.usd) mrows.push(['원/달러', fx.at || '', fx.usd.toFixed(2) + ' (' + pct(fx.chg, 2) + ')', (fx.chg >= 0 ? 1 : -1)]);
+    mrows.push(['익절 / 손절', '', '+' + d.tp + '% / ' + d.sl + '%', 0]);
+    mrows.push(['매매 모드', '', d.is_mock ? '모의투자' : '실전', d.is_mock ? 0 : 1]);
+    mrows.push(['자동매매', '', d.enabled ? '가동' : '정지', d.enabled ? 1 : -1]);
+    if (st.meta) mrows.push(['학습 표본', st.meta.from + '~', (st.meta.rows || 0) + '종목', 0]);
+    pg.push({ t: '시황 · 설정', rows: mrows });
+
+    pg.push({ t: '오늘 캐치한 종목', rows: pk.length
+      ? pk.slice(0, 6).map(function (p) {
+          return [p.name + (p.theme ? ' · ' + p.theme : ''), (p.score || 0) + '점', p.disp || '', (p.disp === '매수' || p.disp === '선정') ? 1 : 0];
+        })
+      : [['오늘 픽 없음', '', (d.scan_state === 'today' ? '조건검색 0종목' : '15:20 스캔 대기'), 0]] });
+
+    pg.push({ t: '테마 · 이슈', rows: sec.length
+      ? sec.slice(0, 6).map(function (s) {
+          return [s.name, '상승 ' + s.up + '/' + s.total, pct(s.chg, 1), (s.chg >= 0 ? 1 : -1)];
+        })
+      : [[(tm.summary ? tm.summary.slice(0, 40) : '테마 수집 전'), '', '', 0]] });
+
+    if (st.cur || st.best) {
+      var rs = [];
+      if (st.cur) rs.push(['지금 설정 +' + st.cur.tp + '/' + st.cur.sl, st.cur.n + '건', pct(st.cur.sum) + ' 누적', (st.cur.sum >= 0 ? 1 : -1)]);
+      if (st.best) rs.push(['표본 최적 +' + st.best.tp + '/' + st.best.sl, '승률 ' + st.best.win + '%', pct(st.best.sum), 1]);
+      (st.feat || []).slice(0, 4).forEach(function (f) {
+        rs.push([f.label + ' 유리구간', f.best.lo + '~' + (f.best.hi == null ? '∞' : f.best.hi) + (f.unit || ''),
+                 pct(f.best.avg) + ' (' + f.best.n + '건)', (f.best.avg >= 0 ? 1 : -1)]);
+      });
+      pg.push({ t: '학습 결과', rows: rs });
+    }
+    return pg;
+  }
+
+  function drawLedPage(cx, cw, ch, now) {
+    var pgs = ledPages();
+    if (now - ledPageAt > 6500) { ledPageAt = now; ledPage = (ledPage + 1) % pgs.length; }
+    var p = pgs[ledPage % pgs.length];
+    ledCtx.textAlign = 'left'; ledCtx.textBaseline = 'alphabetic';
+    ledCtx.font = '700 38px "IBM Plex Mono", ui-monospace, monospace';
+    ledCtx.fillStyle = '#FFCE5A'; ledCtx.fillText(p.t, cx + 24, 52);
+    // 면 표시 점
+    for (var k = 0; k < pgs.length; k++) {
+      ledCtx.beginPath(); ledCtx.arc(cw + cx - 30 - k * 26, 40, 7, 0, 6.3);
+      ledCtx.fillStyle = (k === ledPage % pgs.length) ? '#FFCE5A' : '#333a46'; ledCtx.fill();
+    }
+    var y = 108, lh = Math.min(56, (ch - 120) / Math.max(1, p.rows.length));
+    ledCtx.font = '600 34px "IBM Plex Mono", ui-monospace, monospace';
+    p.rows.forEach(function (r) {
+      ledCtx.fillStyle = '#ECEEF2'; ledCtx.textAlign = 'left';
+      ledCtx.fillText(String(r[0]).slice(0, 18), cx + 24, y);
+      if (r[1]) { ledCtx.fillStyle = '#6b7280'; ledCtx.fillText(String(r[1]), cx + cw * 0.52, y); }
+      ledCtx.textAlign = 'right';
+      ledCtx.fillStyle = r[3] > 0 ? '#ff6b78' : (r[3] < 0 ? '#6aa3f8' : '#98A0AE');
+      ledCtx.fillText(String(r[2]), cx + cw - 24, y);
+      y += lh;
+    });
+    ledCtx.textAlign = 'left';
+  }
+
   function drawLed() {
     var d = window.lastData || {}, S = statsNow(d);
-    var w = ledCv.width, h = ledCv.height;
+    var w = ledCv.width, h = ledCv.height, now = performance.now();
     ledCtx.clearRect(0, 0, w, h);
     ledCtx.fillStyle = '#0a0c10'; ledCtx.fillRect(0, 0, w, h);
     drawLedChart(0, LED_GW, h);
-    var x0 = LED_GW + 12;
+    drawLedPage(LED_GW + 6, w - LED_GW - 6, h - 58, now);
+    // 맨 아래 한 줄은 계속 흐른다 — 로비 전광판의 그 줄
     ledCtx.save();
-    ledCtx.beginPath(); ledCtx.rect(x0, 0, w - x0, h); ledCtx.clip();
-    ledCtx.textAlign = 'left'; ledCtx.textBaseline = 'middle';
-    ledCtx.font = '600 44px "IBM Plex Mono", ui-monospace, monospace';
-    var s1 = ledLine1(), t1 = ledCtx.measureText(s1).width || 1;
-    ledOff = (ledOff + 1.5) % t1;
-    ledCtx.fillStyle = ((S.ret == null ? 0 : S.ret) >= 0) ? '#ff6b78' : '#6aa3f8';
-    for (var x = x0 - ledOff; x < w; x += t1) ledCtx.fillText(s1, x, h * .30);
-    ledCtx.font = '600 38px "IBM Plex Mono", ui-monospace, monospace';
-    var s2 = ledLine2(), t2 = ledCtx.measureText(s2).width || 1;
-    ledOff2 = (ledOff2 + 1.05) % t2;
-    ledCtx.fillStyle = '#8b93a5';
-    for (var x2 = x0 - ledOff2; x2 < w; x2 += t2) ledCtx.fillText(s2, x2, h * .74);
+    ledCtx.beginPath(); ledCtx.rect(LED_GW + 6, h - 54, w - LED_GW - 6, 54); ledCtx.clip();
+    ledCtx.fillStyle = '#10141b'; ledCtx.fillRect(LED_GW + 6, h - 54, w, 54);
+    ledCtx.font = '600 32px "IBM Plex Mono", ui-monospace, monospace';
+    ledCtx.textBaseline = 'middle';
+    var s1 = ledLine1() + ledLine2(), t1 = ledCtx.measureText(s1).width || 1;
+    ledOff = (ledOff + 1.8) % t1;
+    ledCtx.fillStyle = ((S.total == null ? 0 : S.total) >= 0) ? '#ff6b78' : '#6aa3f8';
+    for (var x = LED_GW + 6 - ledOff; x < w; x += t1) ledCtx.fillText(s1, x, h - 27);
     ledCtx.restore();
-    ledCtx.fillStyle = 'rgba(11,13,17,.5)';
+    ledCtx.fillStyle = 'rgba(11,13,17,.42)';
     for (var y = 0; y < h; y += 4) ledCtx.fillRect(0, y, w, 1);   // 주사선
     ledTex.needsUpdate = true;
   }
@@ -1936,6 +2031,20 @@ body.office-on{overflow:hidden}
       return '테마 수급을 모으는 중입니다';
     }
     if (i === A_TRADE) return traderLine();
+    if (i === A_BT) {
+      var st = (window.lastData || {}).study || {};
+      if (st.cur) return '실제 경로 재시뮬 ' + st.meta.rows + '종목 — 지금 설정으로 누적 ' + pct(st.cur.sum) +
+                         ' · MDD ' + mddTxt(st.cur.mdd) + ' 입니다';
+      return '학습 자료를 기다리고 있습니다 (평일 20:40 갱신)';
+    }
+    if (i === A_LEARN) {
+      var st2 = (window.lastData || {}).study || {};
+      if (st2.feat && st2.feat.length) {
+        var f0 = st2.feat[0];
+        return f0.label + ' 이 성적을 가장 크게 갈랐습니다 — 구간 차 ' + f0.spread + '%p';
+      }
+      return '아직 배울 표본이 부족합니다';
+    }
     if (i === A_CHIEF) return (d.enabled ? '자동매매 가동 중' : '자동매매 정지') + (d.is_mock ? ' (모의)' : ' (실전)') +
            ' · 전략자산 ' + nf(d.equity) + '원 · 오늘 ' + ((P.total >= 0 ? '+' : '') + nf(P.total)) + '원';
     return '';
@@ -1981,6 +2090,8 @@ body.office-on{overflow:hidden}
     return s || {};
   }
   function pct(v, dp) { return (v == null) ? '—' : ((v >= 0 ? '+' : '') + Number(v).toFixed(dp == null ? 2 : dp) + '%'); }
+  // 낙폭은 부호가 하나뿐이다 — 0 에 '+' 를 붙이지 않는다
+  function mddTxt(v) { return (v == null) ? '—' : (Number(v) ? '-' + Math.abs(Number(v)).toFixed(1) + '%' : '0.0%'); }
 
   /* 체결팀장(엑스) 대사 — 루틴 그대로 말한다 */
   function traderLine() {
@@ -2039,7 +2150,8 @@ body.office-on{overflow:hidden}
     A.wr = (S.win != null) ? Number(S.win) / 100 : 0;
     A.exp = (S.avg_ret != null) ? Number(S.avg_ret) : null;   // 1회 평균 = 기대값(수수료 반영)
     A.ret = (S.total != null) ? Number(S.total) : null;       // 누적 수익률
-    A.mdd = (S.mdd != null) ? -Math.abs(Number(S.mdd)) : null;
+    // ★-0 은 JS 에서 >=0 이라 '+0.0%' 로 찍힌다. 0 은 그냥 0 으로 둔다
+    A.mdd = (S.mdd != null) ? (Number(S.mdd) ? -Math.abs(Number(S.mdd)) : 0) : null;
     A.best = (S.best != null) ? Number(S.best) : null;
     A.worst = (S.worst != null) ? Number(S.worst) : null;
     A.days = Number(S.days) || 0;
@@ -2112,7 +2224,7 @@ body.office-on{overflow:hidden}
       }
       if (A.mdd != null) {
         f(A_STRAT, Math.abs(A.mdd) > 20 ? 'bad' : 'good',
-          '누적 ' + pct(A.ret) + ' · MDD ' + pct(A.mdd, 1) +
+          '누적 ' + pct(A.ret) + ' · MDD ' + mddTxt(A.mdd) +
           (A.best != null ? ' · 최고 ' + pct(A.best) + ' / 최저 ' + pct(A.worst) : ''),
           Math.abs(A.mdd) > 20 ? '고점 대비 낙폭이 큽니다. 종목당 금액을 먼저 보세요'
                                : '낙폭이 통제 범위 안입니다');
@@ -2202,14 +2314,89 @@ body.office-on{overflow:hidden}
     if (r.pend_upper) f(A_TRADE, 'flat', '상한가로 못 산 ' + r.pend_upper + '종목이 다음 거래일 시가 예약입니다', '');
     if (r.sell_stuck) f(A_TRADE, 'bad', '매도 잠금(sell_stuck)이 걸려 있습니다', '풀리기 전까지 신규 주문이 막힙니다');
 
-    /* ── ④ 총괄팀: 팀 결론이 엇갈릴 때만 조율한다 ── */
+    /* ── ④ 백테팀: 실제로 잡았던 종목의 실제 다음날 경로로 다시 돌린다 ── */
+    var st = d.study || {};
+    A.study = st;
+    if (!st.meta || !st.meta.rows) {
+      f(A_BT, 'flat', '재시뮬 자료가 아직 없습니다', 'PC 가 평일 20:40 에 학습분석을 돌려 보내 줍니다');
+    } else {
+      var m = st.meta;
+      f(A_BT, 'flat', '표본 ' + m.rows + '종목 · ' + m.batches + '일 (' + m.from + '~' + m.to + ')',
+        '실제로 잡았던 종목의 **다음날 15초 틱 경로**로 다시 돌렸습니다. 가공 자료가 아닙니다');
+      if (st.cur) {
+        f(A_BT, st.cur.sum >= 0 ? 'good' : 'bad',
+          '지금 설정(+' + st.cur.tp + '/' + st.cur.sl + ') → 누적 ' + pct(st.cur.sum) +
+          ' · 1회 ' + pct(st.cur.avg) + ' · 승률 ' + st.cur.win + '% · MDD ' + pct(st.cur.mdd, 1),
+          '익절 ' + st.cur.tpn + ' · 손절 ' + st.cur.sln + ' · 종가청산 ' + st.cur.etc + '건');
+      }
+      if (st.best && st.cur) {
+        var gain = st.best.sum - st.cur.sum;
+        if (gain > 3 && (st.best.tp !== st.cur.tp || st.best.sl !== st.cur.sl)) {
+          f(A_BT, 'bad',
+            '이 표본에서는 +' + st.best.tp + '/' + st.best.sl + ' 가 ' + pct(gain) + ' 더 낫습니다',
+            '승률 ' + st.best.win + '% · MDD ' + mddTxt(st.best.mdd) +
+            '. 다만 표본 ' + m.rows + '종목으로 설정을 바꾸는 건 성급합니다');
+        } else {
+          f(A_BT, 'good', '지금 설정이 이 표본에서 사실상 최적입니다',
+            '최적(+' + st.best.tp + '/' + st.best.sl + ')과 차이가 ' + pct(gain) + ' 뿐입니다 — 바꿀 이유가 없습니다');
+        }
+      }
+      if (m.rows < 40) {
+        f(A_BT, 'flat', '표본 ' + m.rows + '종목은 아직 적습니다 — 결론을 고정하지 않겠습니다',
+          '거래일이 쌓일수록 이 재시뮬이 세집니다');
+      }
+    }
+
+    /* ── ⑤ 학습팀: 어떤 특징의 종목이 다음날 좋았나 ── */
+    if (!st.feat || !st.feat.length) {
+      f(A_LEARN, 'flat', '특징별 성적을 낼 표본이 아직 부족합니다', '구간마다 3건은 모여야 셉니다');
+    } else {
+      st.feat.slice(0, 4).forEach(function (x, i) {
+        var bb = x.best, ww = x.worst;
+        f(A_LEARN, i === 0 ? 'good' : 'flat',
+          x.label + ' — ' + bb.lo + '~' + (bb.hi == null ? '∞' : bb.hi) + (x.unit || '') +
+          ' 구간이 ' + pct(bb.avg) + ' (' + bb.n + '건, 승률 ' + bb.win + '%)',
+          '가장 나쁜 구간 ' + ww.lo + '~' + (ww.hi == null ? '∞' : ww.hi) + (x.unit || '') +
+          ' 은 ' + pct(ww.avg) + ' — 차이 ' + x.spread + '%p');
+      });
+      if (st.theme && st.theme.length) {
+        var tb = st.theme[0];
+        f(A_LEARN, 'good', '테마별로는 ' + tb.name + ' 가 ' + pct(tb.avg) + ' (' + tb.n + '건) 로 앞섭니다', '');
+      } else if (st.theme_note) {
+        f(A_LEARN, 'flat', '테마별 성적은 아직 못 냅니다', st.theme_note);
+      }
+      var lv = st.live || {};
+      if (lv.mock && lv.mock.n && lv.acct && lv.acct.n) {
+        var dgap = (lv.acct.avg - lv.mock.avg);
+        f(A_LEARN, Math.abs(dgap) < 1 ? 'good' : 'bad',
+          '모의 ' + lv.mock.n + '건 ' + pct(lv.mock.avg) + ' vs 실전 ' + lv.acct.n + '건 ' + pct(lv.acct.avg),
+          Math.abs(dgap) < 1 ? '두 쪽이 비슷합니다 — 전략이 실전에서도 같게 돕니다'
+                             : '차이가 ' + pct(dgap) + ' 입니다. 슬리피지나 체결 차이를 봐야 합니다');
+      } else if (lv.mock && lv.mock.n) {
+        f(A_LEARN, 'flat', '모의 ' + lv.mock.n + '건 ' + pct(lv.mock.avg) + ' · MDD ' + mddTxt(lv.mock.mdd) +
+          ' / 실전은 ' + ((lv.acct && lv.acct.n) || 0) + '건뿐입니다',
+          '실전 표본이 쌓여야 모의와 견줄 수 있습니다');
+      }
+      // 재시뮬 MDD 와 실제 원장 MDD 가 크게 다르면 짚는다
+      if (st.cur && lv.mock && lv.mock.n >= 10 && Math.abs(lv.mock.mdd) - Math.abs(st.cur.mdd) > 8) {
+        f(A_LEARN, 'bad',
+          '재시뮬 MDD ' + mddTxt(st.cur.mdd) + ' 인데 실제 원장은 ' + mddTxt(lv.mock.mdd) + ' 입니다',
+          '재시뮬은 상위 ' + (st.meta.af || 3) + '종목만 봅니다. 실제로는 더 많은 종목을 담아 낙폭이 큽니다');
+      }
+    }
+
+    /* ── ⑥ 총괄팀: 팀 결론이 엇갈릴 때만 조율한다 ── */
     var bad = A.F.filter(function (x) { return x.tone === 'bad'; });
     var good = A.F.filter(function (x) { return x.tone === 'good'; });
     A.bad = bad.length; A.good = good.length;
+    // ★손익절만 보지 않는다 — 기대값·MDD·표본·자금까지 놓고 판정한다
+    var deepMdd = (A.mdd != null && Math.abs(A.mdd) > 20);
+    var thin = (A.n < 10) || !(st.meta && st.meta.rows >= 20);
     A.verdict = (!A.n) ? 'nodata'
-      : (A.exp > 0 && bad.length <= 1) ? 'keep'
-      : (A.exp > 0 && bad.length > 1) ? 'watch'
+      : (A.exp > 0 && bad.length <= 1 && !deepMdd) ? 'keep'
+      : (A.exp > 0 && (bad.length > 1 || deepMdd)) ? 'watch'
       : 'fix';
+    A.thin = thin; A.deepMdd = deepMdd;
     A.VERDICT = { nodata: '판단 보류 — 근거 부족', keep: '현행 유지', watch: '유지하되 지켜본다', fix: '손볼 곳이 있다' }[A.verdict];
     return A;
   }
@@ -2223,7 +2410,7 @@ body.office-on{overflow:hidden}
     var cut = pk.filter(function (p) { return p.disp === '상한가' || p.disp === '투자금부족'; });
     /* ★옛 6명 번호로 쓰인 대본을 팀 넷으로 통역한다.
        0 전략·1 리서치·2 리스크·3 본부장·4 체결·5 회계  →  전략·테마·전략·총괄·트레이딩·총괄 */
-    var MAP6 = [A_STRAT, A_THEME, A_STRAT, A_CHIEF, A_TRADE, A_CHIEF];
+    var MAP6 = [A_STRAT, A_THEME, A_STRAT, A_CHIEF, A_TRADE, A_CHIEF];   // 옛 대본 번호 → 팀
     function add(i, s) { if (s) L.push([MAP6[i], s]); }
     function money(v) { return nf(v) + '원'; }
     function themeTop(k) {
@@ -2368,6 +2555,7 @@ body.office-on{overflow:hidden}
        숫자가 달라지면 발언도, 의결도 달라진다. */
   function APLAN() {
     var A = ANALYZE(), d = window.lastData || {}, L = [];
+    var st = A.study || {};          // ★ANALYZE 안의 지역변수라 여기서 다시 잡아야 한다
     function add(i, s) { if (s) L.push([i, s]); }
     function of(team) { return A.F.filter(function (x) { return x.team === team; }); }
 
@@ -2427,8 +2615,31 @@ body.office-on{overflow:hidden}
       add(A_CHIEF, '근거가 없으면 결정도 없습니다. 오늘은 여기까지 합니다');
     }
 
+    /* 백테팀 · 학습팀 */
+    add(A_BT, '백테팀입니다. 실제로 잡았던 종목의 다음날 경로로 다시 돌려 봤습니다');
+    of(A_BT).forEach(function (x) { add(A_BT, x.t); if (x.why) add(A_BT, '  근거 — ' + x.why); });
+    add(A_LEARN, '학습팀입니다. 어떤 종목이 다음날 좋았는지 특징으로 갈라 봤습니다');
+    of(A_LEARN).forEach(function (x) { add(A_LEARN, x.t); if (x.why) add(A_LEARN, '  근거 — ' + x.why); });
+
+    /* 백테 ↔ 전략 조율 */
+    if (A.study && A.study.cur && A.n && A.exp != null) {
+      var simAvg = A.study.cur.avg, realAvg = A.exp;
+      if (Math.abs(simAvg - realAvg) > 1.5) {
+        add(A_CHIEF, '재시뮬은 1회 ' + pct(simAvg) + ' 인데 실제 원장은 ' + pct(realAvg) + ' 입니다. 왜 벌어집니까');
+        add(A_BT, '재시뮬은 상위 ' + (A.study.meta.af || 3) + '종목만, 지정가 미체결도 없다고 봅니다. 실제보다 좋게 나옵니다');
+        add(A_TRADE, '실제로는 미체결과 슬리피지가 있습니다. 그 차이가 여기 들어 있습니다');
+      }
+    }
+    if (A.thin) {
+      add(A_CHIEF, '표본이 얇다는 말이 두 팀에서 나왔습니다. 그럼 오늘은 바꾸지 않습니다');
+      add(A_LEARN, '맞습니다. 지금 숫자로 설정을 흔들면 다음 달에 또 흔들게 됩니다. 쌓고 다시 봅시다');
+    }
+
     /* ── 의결 ── */
-    add(A_CHIEF, '정리하겠습니다. 의결 — ' + A.VERDICT);
+    add(A_CHIEF, '정리하겠습니다. 승률 ' + (A.n ? (A.wr * 100).toFixed(0) + '%' : '—') +
+                 ' · 1회 ' + pct(A.exp) + ' · MDD ' + mddTxt(A.mdd) +
+                 ' · 학습표본 ' + ((A.study && A.study.meta && A.study.meta.rows) || 0) + '종목');
+    add(A_CHIEF, '의결 — ' + A.VERDICT);
     var todo = [];
     if (A.verdict === 'fix') {
       if (A.otherRate >= 0.5) todo.push('익절·손절 폭을 좁혀 하루 안에 닿게 할지 PC 백테로 검증');
@@ -2441,6 +2652,18 @@ body.office-on{overflow:hidden}
     }
     if (A.themeMoved === 0) todo.push('테마 최대가점 재검토');
     if (!d.real_on && A.held) todo.push('실시간 감시 켜기');
+    // ★총괄팀은 전체 구도를 본다 — 숫자가 말하는 개선점을 그대로 적는다
+    if (A.deepMdd) todo.push('MDD ' + mddTxt(A.mdd) + ' — 종목당 금액을 줄여 낙폭부터 잡기');
+    if (st.feat && st.feat.length) {
+      var f0 = st.feat[0];
+      todo.push('진입 필터에 ' + f0.label + ' 반영 검토 — ' + f0.best.lo + '~' +
+                (f0.best.hi == null ? '∞' : f0.best.hi) + (f0.unit || '') +
+                ' 구간이 ' + f0.spread + '%p 유리');
+    }
+    if (st.best && st.cur && st.best.sum - st.cur.sum > 3)
+      todo.push('익절/손절 +' + st.best.tp + '/' + st.best.sl + ' 를 PC 백테로 재검증 (표본 더 쌓은 뒤)');
+    if (A.thin) todo.push('표본이 얇다 — 지금은 설정을 바꾸지 말고 데이터를 더 모은다');
+    if (st.theme_note) todo.push('테마 수집 복구분이 쌓이면 테마별 성적 재확인');
     A.todo = todo;
     todo.forEach(function (x, i) { add(A_CHIEF, '  ' + (i + 1) + '. ' + x); });
     add(A_CHIEF, '사장님께 보고 올리겠습니다. 보고서 띄웁니다');
@@ -2554,7 +2777,7 @@ body.office-on{overflow:hidden}
     objs.forEach(function (g, i) { g.userData.mt = seatOf(i); g.userData.face = [0, -4.6]; });
     walkTo(0, -1.7, null);                                  // 나는 원탁 앞에 서서 본다
     camSave = { y: camYaw, p: camPitch, d: camDist };
-    camGoto(0, 0.42, 15);                                   // 정면(전광판이 뒤에 보이게) · 눈높이 쪽으로
+    camGoto(0, 0.40, 19);                                   // 정면(전광판이 뒤에 보이게) · 눈높이 쪽으로
     meetEl.hidden = false;
     document.getElementById('ofMeetAgenda').textContent = p.agenda;
     document.getElementById('ofMeetPh').textContent = p.phLab || '';
@@ -2616,7 +2839,7 @@ body.office-on{overflow:hidden}
   meetBtn.addEventListener('click', function () { startMeeting('routine'); });
   document.getElementById('ofMeetEnd').addEventListener('click', function () { endMeeting(false); });
   document.getElementById('ofMeetLog').addEventListener('click', function () { openZone('meeting'); });
-  document.getElementById('ofMeetRep').addEventListener('click', function () { openZone('report'); });
+  document.getElementById('ofRepBtn').addEventListener('click', function () { openZone('report'); });
 
   /* ── HUD ── */
   var elEq = document.getElementById('ofEq'), elEqLab = document.getElementById('ofEqLab');
@@ -2680,7 +2903,7 @@ body.office-on{overflow:hidden}
   function layout() {
     var w = office.clientWidth || window.innerWidth, h = office.clientHeight || window.innerHeight;
     renderer.setSize(w, h, false);
-    camera.aspect = w / h; camDist = w < 520 ? 30 : 25;
+    camera.aspect = w / h; camDist = w < 520 ? 38 : 32;   // ★더 멀리서(2026-09-19 요청)
     camera.updateProjectionMatrix();
   }
   window.layout = layout;
@@ -2723,7 +2946,7 @@ body.office-on{overflow:hidden}
   });
   canvas.addEventListener('wheel', function (e) {
     e.preventDefault(); camWant = null;
-    camDist = Math.max(12, Math.min(40, camDist + e.deltaY * 0.02));
+    camDist = Math.max(12, Math.min(56, camDist + e.deltaY * 0.02));
   }, { passive: false });
   var keys = {};
   window.addEventListener('keydown', function (e) {
