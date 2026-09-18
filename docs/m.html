@@ -1477,7 +1477,7 @@ body.office-on{overflow:hidden}
         (d.is_mock ? '모의' : '실전') + ' · 원금 ' + nf(d.principal) + '원 기준)</div>' +
         '<canvas id="ofBoardCv" class="of-bcv" width="860" height="320"></canvas><div class="of-bg">' +
         [['누적 수익률', pct(S.ret), (S.ret >= 0 ? 'up' : 'dn')],
-         ['MDD', pct(S.mdd, 1), 'dn'],
+         ['MDD', mddTxt(S.mdd), 'dn'],
          ['청산 건수', (S.curve ? Math.max(0, S.curve.length - 1) : 0) + '건'],
          ['평균 1건', pct(S.avg)],
          ['전략자산', nf(d.equity) + '원'],
@@ -1556,7 +1556,7 @@ body.office-on{overflow:hidden}
     g.fillText('1건', mx, h - 10);
     g.textAlign = 'right'; g.fillText((cv.length - 1) + '건', mx + gw, h - 10);
     g.textAlign = 'center'; g.fillStyle = col; g.font = '600 11px ui-monospace, monospace';
-    g.fillText('누적 ' + pct(S.ret) + ' · MDD ' + pct(S.mdd, 1), mx + gw / 2, h - 10);
+    g.fillText('누적 ' + pct(S.ret) + ' · MDD ' + mddTxt(S.mdd), mx + gw / 2, h - 10);
   }
 
   function openZone(id) {
@@ -2326,7 +2326,7 @@ body.office-on{overflow:hidden}
       if (st.cur) {
         f(A_BT, st.cur.sum >= 0 ? 'good' : 'bad',
           '지금 설정(+' + st.cur.tp + '/' + st.cur.sl + ') → 누적 ' + pct(st.cur.sum) +
-          ' · 1회 ' + pct(st.cur.avg) + ' · 승률 ' + st.cur.win + '% · MDD ' + pct(st.cur.mdd, 1),
+          ' · 1회 ' + pct(st.cur.avg) + ' · 승률 ' + st.cur.win + '% · MDD ' + mddTxt(st.cur.mdd),
           '익절 ' + st.cur.tpn + ' · 손절 ' + st.cur.sln + ' · 종가청산 ' + st.cur.etc + '건');
       }
       if (st.best && st.cur) {
@@ -2453,7 +2453,7 @@ body.office-on{overflow:hidden}
         add(4, traderLine());
         add(4, '미체결이 남으면 ' + rhm('convert', '15:28') + ' 에 ' + (r.fill_mode || '시장가 전환') + ' 하고 ' +
                rhm('recon', '15:31') + ' 에 실잔고로 맞춥니다');
-        add(5, '원금 ' + money(d.principal) + ' 기준 지금 누적 ' + pct(S.ret) + ' · MDD ' + pct(S.mdd, 1) + ' 입니다');
+        add(5, '원금 ' + money(d.principal) + ' 기준 지금 누적 ' + pct(S.ret) + ' · MDD ' + mddTxt(S.mdd) + ' 입니다');
         add(2, '손익절은 익절 ' + pct(d.tp, 1) + ' 손절 ' + pct(d.sl, 1) + ' 그대로 갑니다. 수수료 미포함 등락률입니다');
         add(3, '결론 — ' + (sel.length ? sel.length + '종목 매수' : '매수 보류') + ' · 익절 ' + pct(d.tp, 1) +
                ' 손절 ' + pct(d.sl, 1) + '. 이상입니다');
@@ -2517,7 +2517,7 @@ body.office-on{overflow:hidden}
       /* ── 휴장: 지난 성적과 다음 거래일 준비 ── */
       agenda = '휴장 점검 — 지난 성적과 다음 거래일 준비';
       add(3, '휴장일입니다. 주문은 없고 점검만 합니다');
-      add(5, '원금 ' + money(d.principal) + ' 기준 누적 ' + pct(S.ret) + ' · MDD ' + pct(S.mdd, 1) +
+      add(5, '원금 ' + money(d.principal) + ' 기준 누적 ' + pct(S.ret) + ' · MDD ' + mddTxt(S.mdd) +
              ' · 청산 ' + (S.curve ? Math.max(0, S.curve.length - 1) : 0) + '건입니다');
       if (tr.length) tr.slice(0, 4).forEach(function (x) {
         add(4, (x.date || '') + ' ' + (x.name || '') + ' ' + pct(x.ret) + ' · ' + money(x.pl) + (x.reason ? ' (' + x.reason + ')' : ''));
@@ -2532,7 +2532,7 @@ body.office-on{overflow:hidden}
       /* ── 하루 마감 리뷰 ── */
       agenda = '마감 리뷰 — 오늘 결과와 내일 계획';
       add(3, '오늘 마감 리뷰 하겠습니다');
-      add(5, '오늘 실현손익 ' + money(P.realized) + ' · 누적 ' + pct(S.ret) + ' · MDD ' + pct(S.mdd, 1) + ' 입니다');
+      add(5, '오늘 실현손익 ' + money(P.realized) + ' · 누적 ' + pct(S.ret) + ' · MDD ' + mddTxt(S.mdd) + ' 입니다');
       if (tr.length) tr.slice(0, 5).forEach(function (x) {
         add(4, (x.name || '') + ' ' + pct(x.ret) + ' · ' + money(x.pl) + (x.reason ? ' (' + x.reason + ')' : '') + (x.time ? ' ' + x.time : ''));
       }); else add(4, '오늘 청산 기록은 없습니다');
