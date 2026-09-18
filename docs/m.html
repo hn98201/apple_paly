@@ -465,12 +465,29 @@ body.office-on{overflow:hidden}
 #ofToggle{position:absolute;right:12px;bottom:calc(150px + env(safe-area-inset-bottom,0px));
  z-index:6;min-height:36px;padding:0 13px;border-radius:999px;border:1px solid #2A303C;
  background:rgba(20,23,30,.9);color:#ECEEF2;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer}
+/* ★시트가 열리면 [목록] 버튼을 감춘다 — 시트(z5) 위로 떠서 내용을 가렸다 */
+#ofSheet.open ~ #ofToggle{display:none}
 #ofBoot{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
  flex-direction:column;gap:10px;background:#0B0D11;font-size:12px;color:#98A0AE;z-index:9}
 #ofBoot b{color:#ECEEF2;font-size:14px}
 #ofBack{position:fixed;right:12px;bottom:calc(14px + env(safe-area-inset-bottom,0px));z-index:30;
  min-height:40px;padding:0 15px;border-radius:999px;border:1px solid var(--line,#2A303C);
  background:rgba(20,23,30,.94);color:var(--fg,#ECEEF2);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer}
+.of-brief{background:#1B1F28;border:1px solid #2A303C;border-radius:12px;padding:12px 13px;margin-bottom:12px}
+.of-bk{font-size:10px;font-weight:700;letter-spacing:.06em;color:#98A0AE;margin-bottom:9px}
+.of-bg{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.of-bi{background:#14171E;border-radius:9px;padding:8px 9px;display:flex;flex-direction:column;gap:3px;min-width:0}
+.of-bi span{font-size:9.5px;color:#98A0AE}
+.of-bi b{font-family:var(--mono,ui-monospace,monospace);font-size:12.5px;font-weight:600;color:#ECEEF2;
+ font-variant-numeric:tabular-nums;overflow:hidden;text-overflow:ellipsis}
+.of-bi b.up{color:#FF8590}.of-bi b.dn{color:#7CB0F8}
+.of-bv{font-size:11.5px;color:#98A0AE}
+.of-min{display:flex;flex-direction:column;gap:0;max-height:300px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.of-mrow{display:flex;gap:8px;padding:7px 0;border-bottom:1px solid #1F242E;font-size:11px;align-items:baseline}
+.of-mrow:last-child{border-bottom:none}
+.of-mt{font-family:var(--mono,ui-monospace,monospace);font-size:9.5px;color:#636a80;flex:0 0 34px}
+.of-mw{font-weight:600;color:#ECEEF2;flex:0 0 auto;font-size:10.5px}
+.of-mx{color:#98A0AE;flex:1 1 auto;min-width:0;line-height:1.45}
 @keyframes ofPulse{0%,100%{opacity:1}50%{opacity:.3}}
 @media (prefers-reduced-motion:reduce){#ofTicker .of-dot{animation:none}#ofSheet{transition:none}}
 @media (max-width:430px){#ofStaff{max-width:138px}.of-val{font-size:16px}}
@@ -1206,6 +1223,94 @@ body.office-on{overflow:hidden}
   }
   document.getElementById('ofSheetClose').addEventListener('click', closeSheet);
 
+  /* ── 회의록: 발언·사건을 쌓아 둔다(기기에 저장) ── */
+  var MIN_KEY = 'ofminutes', MINUTES = [];
+  try { MINUTES = JSON.parse(localStorage.getItem(MIN_KEY) || '[]'); } catch (e) { MINUTES = []; }
+  function minute(who, text, kind) {
+    if (!text) return;
+    var last = MINUTES[0];
+    if (last && last.who === who && last.text === text) return;   // 같은 말 연속 기록 방지
+    MINUTES.unshift({ t: (window.lastData && lastData.hm) || '', who: who, text: text, kind: kind || '' });
+    if (MINUTES.length > 120) MINUTES.length = 120;
+    try { localStorage.setItem(MIN_KEY, JSON.stringify(MINUTES)); } catch (e) {}
+  }
+  function minutesHtml() {
+    if (!MINUTES.length) return '<div class="of-brief"><div class="of-bk">회의록</div>' +
+      '<div class="of-bv">아직 기록이 없습니다. 사무실을 켜 두면 쌓입니다.</div></div>';
+    var h = '<div class="of-brief"><div class="of-bk">회의록 · 최근 ' + Math.min(MINUTES.length, 40) + '건</div><div class="of-min">';
+    MINUTES.slice(0, 40).forEach(function (m) {
+      h += '<div class="of-mrow"><span class="of-mt">' + (m.t || '--:--') + '</span>' +
+           '<span class="of-mw">' + m.who + '</span><span class="of-mx">' + esc(m.text) + '</span></div>';
+    });
+    return h + '</div></div>';
+  }
+
+  /* ── 부서 브리핑: 그 부서가 지금 보고 있는 화면 ── */
+  function brief(id) {
+    var d = window.lastData;
+    if (!d) return '';
+    var P2 = d.pnl || {}, ps = d.positions || [], pk = d.picks || [], sec = d.sectors || [];
+    function B(title, rows, extra) {
+      var h = '<div class="of-brief"><div class="of-bk">' + title + '</div><div class="of-bg">';
+      rows.forEach(function (r) { h += '<div class="of-bi"><span>' + r[0] + '</span><b class="' + (r[2] || '') + '">' + r[1] + '</b></div>'; });
+      return h + '</div>' + (extra || '') + '</div>';
+    }
+    if (id === 'strategy') {
+      var top = pk.length ? (pk[0].name + ' ' + (pk[0].score || 0) + '점') : '—';
+      var st = sec.length ? (sec[0].name + ' ' + (sec[0].chg >= 0 ? '+' : '') + sec[0].chg + '%') : '수집 전';
+      return B('전략실 화면 · 시그마', [
+        ['오늘 픽', pk.length ? pk.length + '종목' : (d.scan_state === 'today' ? '0종목' : '스캔 전')],
+        ['1등 매력도', top],
+        ['가장 센 테마', st],
+        ['테마 최대가점', '+' + (d.theme_bonus_max != null ? d.theme_bonus_max : 25)],
+        ['유통비율 상한', (d.float_max || 70) + '%'],
+        ['상한가', d.exclude_upper ? '제외' : '포함']]);
+    }
+    if (id === 'meeting') {
+      return B('리서치실 화면 · 애널리', [
+        ['판정 대상', pk.length + '종목'],
+        ['테마 수집', sec.length ? sec.length + '개' : '없음'],
+        ['조건검색', d.cond_ok || '—', (d.cond_ok === '실패' ? 'dn' : '')]]) + minutesHtml();
+    }
+    if (id === 'chief') {
+      return B('본부장실 화면 · 오케스트라', [
+        ['매매 모드', d.is_mock ? '모의투자' : '실전', d.is_mock ? '' : 'up'],
+        ['자동매매', d.enabled ? '가동' : '정지', d.enabled ? 'up' : 'dn'],
+        ['익절 / 손절', '+' + d.tp + '% / ' + d.sl + '%'],
+        ['원금', nf(d.principal) + '원'],
+        ['종목당 / 최대', nf(d.invest) + '원 · ' + (d.af || 0) + '종목'],
+        ['현재 단계', d.stage || '—']]);
+    }
+    if (id === 'trading') {
+      var tr = d.trades || [];
+      var todayPl = tr.reduce(function (s, x) { return s + (x.pl || 0); }, 0);
+      return B('트레이딩 화면 · 엑스', [
+        ['오늘 청산', tr.length + '건'],
+        ['실현손익', (todayPl >= 0 ? '+' : '') + nf(todayPl) + '원', todayPl >= 0 ? 'up' : 'dn'],
+        ['보유', ps.length + '종목'],
+        ['평가손익', (P2.unrealized >= 0 ? '+' : '') + nf(P2.unrealized) + '원', P2.unrealized >= 0 ? 'up' : 'dn']]);
+    }
+    if (id === 'desk') {
+      var acc = d.acct || {};
+      return B('내 화면 · 레저', [
+        ['전략자산', nf(d.equity) + '원'],
+        ['오늘 손익', (P2.total >= 0 ? '+' : '') + nf(P2.total) + '원', P2.total >= 0 ? 'up' : 'dn'],
+        ['계좌 실자산', acc.assets ? nf(acc.assets) + '원' : '—'],
+        ['주문가능', acc.orderable ? nf(acc.orderable) + '원' : '—'],
+        ['조회 시각', acc.asof || '—', acc.stale ? 'dn' : '']]);
+    }
+    if (id === 'records') {
+      var cl = d.clients || [];
+      var on = cl.filter(function (c) { return c.state === '온라인'; }).length;
+      return B('서버실 화면 · 가드', [
+        ['클라이언트', cl.length + '대 · 온라인 ' + on, on ? 'up' : 'dn'],
+        ['키움 접속', d.conn ? '정상' : '끊김', d.conn ? 'up' : 'dn'],
+        ['실시간 감시', d.real_on ? '켜짐' : '꺼짐', d.real_on ? 'up' : ''],
+        ['갱신', d.ts || '—']]);
+    }
+    return '';
+  }
+
   function openZone(id) {
     var z = ZONES.filter(function (q) { return q.id === id; })[0];
     if (!z) return;
@@ -1213,7 +1318,7 @@ body.office-on{overflow:hidden}
     openId = id;
     document.getElementById('ofSheetTitle').textContent = z.name;
     document.getElementById('ofSheetSub').textContent = (window.lastData && lastData.hm) || '';
-    sheetBody.innerHTML = '';
+    sheetBody.innerHTML = brief(id);
     z.secs.forEach(function (sid) {
       var el = document.getElementById(sid);
       if (!el) return;
@@ -1221,7 +1326,7 @@ body.office-on{overflow:hidden}
       el.hidden = false;
       sheetBody.appendChild(el);
     });
-    if (!sheetBody.children.length) {
+    if (!sheetBody.querySelector('.sec,.hero,#paneResearch,#paneClients,#paneIr,.of-brief')) {
       sheetBody.appendChild(Object.assign(document.createElement('div'),
         { className: 'empty', textContent: '표시할 자료가 아직 없습니다' }));
     }
@@ -1392,6 +1497,50 @@ body.office-on{overflow:hidden}
   }
   plant(12.2, 8.0);
 
+  /* ── 전광판: 뒷벽 LED (2026-09-18) ──
+     보유 종목과 수익률이 흐른다. 장중엔 status 가 30초마다 갱신되므로 사실상 실시간이다. */
+  var ledCv = document.createElement('canvas');
+  ledCv.width = 1400; ledCv.height = 120;
+  var ledCtx = ledCv.getContext('2d');
+  var ledTex = new THREE.CanvasTexture(ledCv);
+  ledTex.wrapS = THREE.RepeatWrapping; ledTex.minFilter = THREE.LinearFilter;
+  var ledPanel = new THREE.Mesh(new THREE.PlaneGeometry(17, 1.45),
+    new THREE.MeshBasicMaterial({ map: ledTex, transparent: true }));
+  ledPanel.position.set(0, 2.72, -8.68); scene.add(ledPanel);
+  box(17.5, 0.12, 0.18, M(0x39414f, .5, .35), 0, 3.52, -8.66);
+  box(17.5, 0.12, 0.18, M(0x39414f, .5, .35), 0, 1.94, -8.66);
+  var ledOff = 0;
+  function ledText() {
+    var d = window.lastData;
+    if (!d) return '  자료를 기다리는 중입니다  ';
+    var ps = (d.positions || []), P2 = d.pnl || {}, out = [];
+    ps.forEach(function (p) {
+      out.push(p.name + ' ' + ((p.ret >= 0 ? '+' : '') + (p.ret == null ? 0 : p.ret).toFixed(2)) + '%');
+    });
+    if (!out.length) out.push((d.stage || '대기 중'));
+    out.push('전략자산 ' + nf(d.equity) + '원');
+    out.push('오늘 ' + ((P2.total >= 0 ? '+' : '') + nf(P2.total)) + '원');
+    out.push(d.is_mock ? '모의투자' : '실전');
+    return '   ' + out.join('   ·   ') + '   ';
+  }
+  function drawLed() {
+    var d = window.lastData || {}, P2 = d.pnl || {};
+    var w = ledCv.width, h = ledCv.height;
+    ledCtx.clearRect(0, 0, w, h);
+    ledCtx.fillStyle = '#0a0c10'; ledCtx.fillRect(0, 0, w, h);
+    ledCtx.font = '600 52px "IBM Plex Mono", ui-monospace, monospace';
+    ledCtx.textBaseline = 'middle';
+    var s = ledText();
+    var tw = ledCtx.measureText(s).width || 1;
+    ledOff = (ledOff + 1.6) % tw;
+    ledCtx.fillStyle = (P2.total >= 0) ? '#ff6b78' : '#6aa3f8';
+    for (var x = -ledOff; x < w; x += tw) ledCtx.fillText(s, x, h / 2 + 2);
+    ledCtx.fillStyle = 'rgba(11,13,17,.55)';
+    for (var y = 0; y < h; y += 4) ledCtx.fillRect(0, y, w, 1);   // 주사선
+    ledTex.needsUpdate = true;
+  }
+  drawLed();
+
   var skinM = M(0xe0b992, .9);
   function person(c, hair) {
     var g = new THREE.Group();
@@ -1491,6 +1640,57 @@ body.office-on{overflow:hidden}
     return '';
   }
 
+  /* ── 회의: 한 명이 말하면 다른 한 명이 받는다 ── */
+  var TALK = [
+    [0, 1, '테마 쪽 어떻습니까'],
+    [1, 2, '이 종목 위험도 봐 주세요'],
+    [2, 3, '한도 안쪽입니다. 올릴까요'],
+    [3, 4, '집행 준비하세요'],
+    [4, 5, '체결분 정산 부탁합니다'],
+    [5, 0, '오늘 자산 공유했습니다']
+  ];
+  var lastTalk = -1;
+  function converse() {
+    var k = Math.floor(Math.random() * TALK.length);
+    if (k === lastTalk) k = (k + 1) % TALK.length;
+    lastTalk = k;
+    var a = TALK[k][0], b = TALK[k][1];
+    var l1 = lineFor(a);
+    say(a, l1); minute(AGENTS[a].name, l1);
+    setTimeout(function () {
+      var l2 = lineFor(b);
+      say(b, l2); minute(AGENTS[b].name, l2);
+    }, 2100);
+  }
+
+  /* ── 사건이 생기면 바로 반응한다 ── */
+  var seen = { stage: null, trades: -1, picks: -1, enabled: null };
+  function react(d) {
+    if (!d) return;
+    if (d.stage && d.stage !== seen.stage) {
+      if (seen.stage !== null) { say(3, '단계 전환 — ' + d.stage); minute('오케스트라', '단계 전환 — ' + d.stage, 'ev'); }
+      seen.stage = d.stage;
+    }
+    var nt = (d.trades || []).length;
+    if (seen.trades >= 0 && nt > seen.trades) {
+      var f = (d.trades || [])[0] || {};
+      var m = '체결 — ' + (f.name || '') + ' ' + ((f.ret >= 0 ? '+' : '') + (f.ret || 0) + '%') + ' (' + (f.reason || '') + ')';
+      say(4, m); minute('엑스', m, 'ev');
+    }
+    seen.trades = nt;
+    var np = (d.picks || []).length;
+    if (seen.picks >= 0 && np !== seen.picks && np > 0) {
+      var m2 = '픽 갱신 — ' + np + '종목 수신했습니다';
+      say(0, m2); minute('시그마', m2, 'ev');
+    }
+    seen.picks = np;
+    if (seen.enabled !== null && d.enabled !== seen.enabled) {
+      var m3 = d.enabled ? '자동매매를 켰습니다' : '자동매매가 멈췄습니다';
+      say(3, m3); minute('오케스트라', m3, 'ev');
+    }
+    seen.enabled = d.enabled;
+  }
+
   /* ── HUD ── */
   var elEq = document.getElementById('ofEq'), elEqLab = document.getElementById('ofEqLab');
   var elPnl = document.getElementById('ofPnl'), elClock = document.getElementById('ofClock');
@@ -1514,6 +1714,8 @@ body.office-on{overflow:hidden}
     if (scScreen) scScreen.material.color.setHex((d.picks || []).length ? 0xff4d5e : 0x2a3040);
     AGENTS.forEach(function (a, i) { a.dotEl.style.opacity = d.conn ? '1' : '.3'; });
     if (d.stage) { tickText.textContent = d.stage; tickTime.textContent = d.hm || ''; }
+    try { react(d); } catch (e) {}
+    if (openId) { try { var bb = sheetBody.querySelector('.of-brief'); if (bb) { var tmpd = document.createElement('div'); tmpd.innerHTML = brief(openId); var nb = tmpd.querySelector('.of-brief'); if (nb) bb.replaceWith(nb); } } catch (e) {} }
   }
 
   // 기존 render 를 감싸 데이터가 올 때마다 사무실도 갱신한다
@@ -1556,9 +1758,18 @@ body.office-on{overflow:hidden}
     var ray = new THREE.Raycaster();
     ray.setFromCamera(new THREE.Vector2(((e.clientX - rect.left) / rect.width) * 2 - 1,
       -((e.clientY - rect.top) / rect.height) * 2 + 1), camera);
-    var hit = ray.intersectObject(floor);
-    if (hit.length) target.set(Math.max(-W / 2 + 1, Math.min(W / 2 - 1, hit[0].point.x)), 0,
-      Math.max(-D / 2 + 1, Math.min(D / 2 - 1, hit[0].point.z)));
+    // ★바닥이면 걸어가고, 가구(책상·모니터·전광판)면 그 부서 화면을 연다
+    var all = ray.intersectObjects(scene.children, true);
+    if (!all.length) return;
+    var pt = all[0].point;
+    target.set(Math.max(-W / 2 + 1, Math.min(W / 2 - 1, pt.x)), 0,
+               Math.max(-D / 2 + 1, Math.min(D / 2 - 1, pt.z)));
+    var isFloor = (all[0].object === floor);
+    if (!isFloor) {
+      if (all[0].object === ledPanel) { openZone('desk'); return; }
+      var zz = zoneAt(pt.x, Math.max(-D / 2 + 1, Math.min(D / 2 - 1, pt.z)));
+      if (zz) openZone(zz.id);
+    }
   });
   canvas.addEventListener('wheel', function (e) {
     e.preventDefault(); camDist = Math.max(14, Math.min(40, camDist + e.deltaY * 0.02));
@@ -1592,7 +1803,7 @@ body.office-on{overflow:hidden}
     if (!office.classList.contains('on')) return;
 
     nextChat -= dt;
-    if (nextChat <= 0) { nextChat = 7000 + Math.random() * 6000; var i = Math.floor(Math.random() * 6); say(i, lineFor(i)); }
+    if (nextChat <= 0) { nextChat = 5200 + Math.random() * 4200; converse(); }
 
     var kx = (keys['d'] || keys['arrowright'] ? 1 : 0) - (keys['a'] || keys['arrowleft'] ? 1 : 0);
     var kz = (keys['s'] || keys['arrowdown'] ? 1 : 0) - (keys['w'] || keys['arrowup'] ? 1 : 0);
@@ -1652,6 +1863,7 @@ body.office-on{overflow:hidden}
       } else if (!a.bubbleEl.hidden) { a.bubbleEl.hidden = true; }
     });
 
+    if (!reduced) drawLed();
     renderer.render(scene, camera);
   }
 
