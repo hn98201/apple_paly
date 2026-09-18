@@ -1267,8 +1267,9 @@ body.office-on{overflow:hidden}
     { k: 'tp',   arg: 'tp',     lab: '익절',     unit: '%',   get: function (d) { return d.tp; },           step: '0.1' },
     { k: 'sl',   arg: 'sl',     lab: '손절',     unit: '%',   get: function (d) { return d.sl; },           step: '0.1' },
     { k: 'prin', arg: 'prin',   lab: '원금',     unit: '만원', get: function (d) { return Math.round((d.principal || 0) / 10000); }, step: '10' },
-    { k: 'buf',  arg: 'buf',    lab: '현금버퍼', unit: '원',   get: function (d) { return d.cash_buffer; },  step: '10000' },
-    { k: 'div',  arg: 'div',    lab: '분할수',   unit: '개',   get: function (d) { return d.size_div; },     step: '1' }
+    { k: 'buf',  arg: 'buf',    lab: '현금버퍼', unit: '원',   get: function (d) { return d.cash_buffer; },  step: '10000' }
+    // ★분할수(size_div)는 뺐다 — 사이징이 자동이라 최소 종목수가 먼저 걸려
+    //   2~6 어느 값이든 결과가 같다. 폼에 두면 실수만 부른다.
   ];
   function cfgForm(d) {
     var h = '<div class="of-brief"><div class="of-bk">설정 바꾸기 · 관리자 계좌에만 적용</div><div class="of-form">';
