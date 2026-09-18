@@ -442,7 +442,31 @@ body.office-on{overflow:hidden}
 #ofPrompt .who span{font-size:11px;color:#98A0AE;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .of-act{flex:0 0 auto;min-height:44px;padding:0 16px;border:none;border-radius:12px;
  background:#FF4D5E;color:#0B0D11;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer}
-#ofHint{font-size:10px;color:#98A0AE;text-align:center}
+.of-act2{background:#1B1F28;color:#ECEEF2;border:1px solid #39414f;padding:0 13px}
+.of-act2.on{background:#2fcf9e;color:#06140f;border-color:#2fcf9e}
+#ofHint{font-size:10px;color:#98A0AE;text-align:center;line-height:1.5}
+
+/* 회의 배너 — 지금 무슨 회의를 몇 번째 발언까지 했는지 */
+#ofMeet{position:absolute;right:12px;top:calc(96px + env(safe-area-inset-top,0px));width:min(232px,52vw);
+ background:rgba(20,23,30,.95);border:1px solid #2fcf9e;border-radius:14px;padding:10px 11px;
+ display:flex;flex-direction:column;gap:7px;z-index:4;
+ box-shadow:0 14px 34px -18px rgba(0,0,0,.9)}
+#ofMeet .of-mh{display:flex;align-items:center;gap:6px}
+#ofMeet .of-mh .of-dot{background:#2fcf9e;animation:ofPulse 1.6s ease-in-out infinite}
+#ofMeet .of-mh b{font-size:11px;font-weight:700;color:#2fcf9e;flex:0 0 auto}
+#ofMeet .of-mh span{font-size:10px;color:#98A0AE;flex:1 1 auto;min-width:0;
+ overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#ofMeet .of-mh button{flex:0 0 auto;min-height:26px;padding:0 9px;border:1px solid #39414f;
+ border-radius:8px;background:#14171E;color:#98A0AE;font-family:inherit;font-size:10px;cursor:pointer}
+#ofMeetAgenda{font-size:11.5px;line-height:1.5;color:#ECEEF2}
+#ofMeet .of-mp{height:4px;border-radius:3px;background:#20262f;overflow:hidden}
+#ofMeet .of-mp i{display:block;height:100%;width:0;background:#2fcf9e;transition:width 400ms ease}
+#ofMeetLog{min-height:32px;border:none;border-radius:9px;background:#20262f;color:#ECEEF2;
+ font-family:inherit;font-size:10.5px;font-weight:600;cursor:pointer}
+@media (max-height:620px){#ofMeetLog{display:none}}
+
+/* 전광판 큰 그래프 */
+.of-bcv{width:100%;height:auto;display:block;border-radius:10px;background:#0d1016;margin-bottom:10px}
 
 #ofSheet{position:absolute;left:0;right:0;bottom:0;max-height:82%;background:#14171E;
  border-top:1px solid #2A303C;border-radius:20px 20px 0 0;display:flex;flex-direction:column;
@@ -530,13 +554,24 @@ body.office-on{overflow:hidden}
 
     <div id="ofStaff"></div>
 
+    <div id="ofMeet" hidden>
+      <div class="of-mh">
+        <i class="of-dot"></i><b>회의 중</b><span id="ofMeetPh">—</span>
+        <button type="button" id="ofMeetEnd" aria-label="회의 종료">종료</button>
+      </div>
+      <div id="ofMeetAgenda">—</div>
+      <div class="of-mp"><i id="ofMeetBar"></i></div>
+      <button type="button" id="ofMeetLog">회의록 보기</button>
+    </div>
+
     <div id="ofBottom">
       <div id="ofTicker"><i class="of-dot"></i><span id="ofTickText">사무실 가동 중</span><time id="ofTickTime">—</time></div>
       <div id="ofPrompt">
         <div class="who"><b id="ofPromptTitle">내 자리</b><span id="ofPromptDesc">—</span></div>
+        <button class="of-act of-act2" id="ofMeetBtn" type="button">회의</button>
         <button class="of-act" id="ofPromptBtn" type="button">열기</button>
       </div>
-      <div id="ofHint">바닥을 누르면 걸어갑니다 · 드래그 회전 · 휠 줌 · E 열기</div>
+      <div id="ofHint">바닥을 누르면 걸어갑니다 · 부서를 누르면 걸어가서 엽니다 · 드래그 좌우·상하 회전 · 휠 줌</div>
     </div>
   </div>
 
@@ -1373,6 +1408,30 @@ body.office-on{overflow:hidden}
         ['주문가능', acc.orderable ? nf(acc.orderable) + '원' : '—'],
         ['조회 시각', acc.asof || '—', acc.stale ? 'dn' : '']]);
     }
+    if (id === 'board') {
+      // ★전광판을 크게 — 3D 판은 멀어서 작다. 여기서 제대로 본다
+      var S = statsNow(d);
+      var hb = '<div class="of-brief"><div class="of-bk">전광판 · 수익률 곡선 (' +
+        (d.is_mock ? '모의' : '실전') + ' · 원금 ' + nf(d.principal) + '원 기준)</div>' +
+        '<canvas id="ofBoardCv" class="of-bcv" width="860" height="320"></canvas><div class="of-bg">' +
+        [['누적 수익률', pct(S.ret), (S.ret >= 0 ? 'up' : 'dn')],
+         ['MDD', pct(S.mdd, 1), 'dn'],
+         ['청산 건수', (S.curve ? Math.max(0, S.curve.length - 1) : 0) + '건'],
+         ['평균 1건', pct(S.avg)],
+         ['전략자산', nf(d.equity) + '원'],
+         ['오늘 손익', (P2.total >= 0 ? '+' : '') + nf(P2.total) + '원', P2.total >= 0 ? 'up' : 'dn']]
+        .map(function (r) { return '<div class="of-bi"><span>' + r[0] + '</span><b class="' + (r[2] || '') + '">' + r[1] + '</b></div>'; }).join('') +
+        '</div></div>';
+      if (ps.length) {
+        hb += '<div class="of-brief"><div class="of-bk">전광판에 흐르는 보유 ' + ps.length + '종목</div><div class="of-bg">';
+        ps.forEach(function (p) {
+          hb += '<div class="of-bi"><span>' + esc(p.name || '') + ' ' + nf(p.qty) + '주</span><b class="' +
+                (p.ret >= 0 ? 'up' : 'dn') + '">' + pct(p.ret) + ' · ' + nf(p.pl) + '원</b></div>';
+        });
+        hb += '</div></div>';
+      }
+      return hb;
+    }
     if (id === 'records') {
       var cl = d.clients || [];
       var on = cl.filter(function (c) { return c.state === '온라인'; }).length;
@@ -1385,8 +1444,58 @@ body.office-on{overflow:hidden}
     return '';
   }
 
+  // ★전광판은 구역이 아니다 — 가상 항목으로 시트만 연다(zoneAt 인덱스를 깨지 않게)
+  var VZONE = { board: { id: 'board', name: '전광판 · 수익률', desc: '', action: '', secs: [] } };
+  function drawBoard() {
+    var cvEl = document.getElementById('ofBoardCv');
+    if (!cvEl) return;
+    var d = window.lastData || {}, S = statsNow(d), cv = S.curve || [];
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    var w = cvEl.clientWidth || 860, h = 320;
+    cvEl.width = Math.round(w * dpr); cvEl.height = Math.round(h * dpr);
+    var g = cvEl.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    var col = ((S.ret == null ? 0 : S.ret) >= 0) ? '#FF4D5E' : '#3E8BF5';
+    g.fillStyle = '#0d1016'; g.fillRect(0, 0, w, h);
+    var mx = 44, my = 22, gw = w - mx - 16, gh = h - my - 30;
+    if (cv.length < 2) {
+      g.fillStyle = '#636a80'; g.font = '13px system-ui, sans-serif'; g.textAlign = 'center';
+      g.fillText('청산 기록이 2건 이상 쌓이면 곡선이 그려집니다', w / 2, h / 2);
+      return;
+    }
+    var lo = Math.min.apply(null, cv), hi = Math.max.apply(null, cv);
+    if (hi - lo < 1) { hi = lo + 1; }
+    var pad = (hi - lo) * .12; lo -= pad; hi += pad;
+    function X(i) { return mx + i / (cv.length - 1) * gw; }
+    function Y(v) { return my + gh - (v - lo) / (hi - lo) * gh; }
+    // 가로 격자 + 눈금(%): 실제로 곡선이 닿는 값만 적는다
+    g.font = '10px ui-monospace, monospace'; g.textAlign = 'right'; g.textBaseline = 'middle';
+    for (var k = 0; k <= 4; k++) {
+      var v = lo + (hi - lo) * k / 4, y = Y(v);
+      g.strokeStyle = '#1b2029'; g.lineWidth = 1;
+      g.beginPath(); g.moveTo(mx, y); g.lineTo(mx + gw, y); g.stroke();
+      g.fillStyle = '#636a80'; g.fillText(v.toFixed(1) + '%', mx - 6, y);
+    }
+    if (lo < 0 && hi > 0) {                       // 0% 기준선
+      g.setLineDash([5, 5]); g.strokeStyle = '#39414f';
+      g.beginPath(); g.moveTo(mx, Y(0)); g.lineTo(mx + gw, Y(0)); g.stroke(); g.setLineDash([]);
+    }
+    g.beginPath();
+    for (var i = 0; i < cv.length; i++) { if (i) g.lineTo(X(i), Y(cv[i])); else g.moveTo(X(i), Y(cv[i])); }
+    g.strokeStyle = col; g.lineWidth = 2.4; g.lineJoin = 'round'; g.stroke();
+    var zb = Y(Math.max(lo, Math.min(hi, 0)));
+    g.lineTo(X(cv.length - 1), zb); g.lineTo(X(0), zb); g.closePath();
+    g.globalAlpha = .14; g.fillStyle = col; g.fill(); g.globalAlpha = 1;
+    g.beginPath(); g.arc(X(cv.length - 1), Y(cv[cv.length - 1]), 4, 0, 6.3); g.fillStyle = col; g.fill();
+    g.textAlign = 'left'; g.textBaseline = 'alphabetic';
+    g.fillStyle = '#636a80'; g.font = '10px ui-monospace, monospace';
+    g.fillText('1건', mx, h - 10);
+    g.textAlign = 'right'; g.fillText((cv.length - 1) + '건', mx + gw, h - 10);
+    g.textAlign = 'center'; g.fillStyle = col; g.font = '600 11px ui-monospace, monospace';
+    g.fillText('누적 ' + pct(S.ret) + ' · MDD ' + pct(S.mdd, 1), mx + gw / 2, h - 10);
+  }
+
   function openZone(id) {
-    var z = ZONES.filter(function (q) { return q.id === id; })[0];
+    var z = ZONES.filter(function (q) { return q.id === id; })[0] || VZONE[id];
     if (!z) return;
     if (openId) restoreAll();
     openId = id;
@@ -1394,6 +1503,7 @@ body.office-on{overflow:hidden}
     document.getElementById('ofSheetSub').textContent = (window.lastData && lastData.hm) || '';
     sheetBody.innerHTML = brief(id);
     if (id === 'chief') { try { wireCfg(); } catch (e) {} }
+    if (id === 'board') { try { drawBoard(); } catch (e) {} }
     z.secs.forEach(function (sid) {
       var el = document.getElementById(sid);
       if (!el) return;
@@ -1436,6 +1546,8 @@ body.office-on{overflow:hidden}
   scene.fog = new THREE.Fog(0x0b0d11, 34, 64);
   camera = new THREE.PerspectiveCamera(36, 1, 0.1, 200);
   var camYaw = Math.PI * 0.25, camDist = 26, camTarget = new THREE.Vector3(0, 0, 3);
+  // ★상하 시점(2026-09-18). 0.66 rad 이 예전 고정 높이(=camDist x 0.78)와 같다 — 기본 화면이 바뀌지 않게
+  var camPitch = 0.66, CAM_K = Math.cos(0.66);
 
   scene.add(new THREE.HemisphereLight(0x8aa0c0, 0x0b0d11, 0.5));
   var key = new THREE.DirectionalLight(0xdfe6f5, 0.85);
@@ -1548,7 +1660,7 @@ body.office-on{overflow:hidden}
   var tb = new THREE.Mesh(new THREE.CylinderGeometry(.28, .5, .7, 16), legM);
   tb.position.set(0, .35, -4.6); scene.add(tb);
   for (var a = 0; a < 6; a++) chair(Math.cos(a / 6 * Math.PI * 2) * 2.7, -4.6 + Math.sin(a / 6 * Math.PI * 2) * 2.7);
-  mon(0, 1.75, -8.55, 2.6, 1.5, 0, 0x3e8bf5);
+  /* ★회의실 뒷벽 모니터는 없앴다 — 바로 뒤의 전광판이 가려졌고, 전광판이 발표화면을 겸한다 */
 
   desk(9.4, -5.6, 2.8, 1.2, -.2); chair(9.2, -4.4);
   mon(9.4, 1.12, -6.1, 1.0, .6, -.2, 0x8b93a5);
@@ -1575,42 +1687,96 @@ body.office-on{overflow:hidden}
   /* ── 전광판: 뒷벽 LED (2026-09-18) ──
      보유 종목과 수익률이 흐른다. 장중엔 status 가 30초마다 갱신되므로 사실상 실시간이다. */
   var ledCv = document.createElement('canvas');
-  ledCv.width = 1400; ledCv.height = 120;
+  ledCv.width = 1760; ledCv.height = 160;      // 22 x 2.0 (11:1) — 왼쪽 수익률 그래프 + 오른쪽 티커 2줄
   var ledCtx = ledCv.getContext('2d');
   var ledTex = new THREE.CanvasTexture(ledCv);
   ledTex.wrapS = THREE.RepeatWrapping; ledTex.minFilter = THREE.LinearFilter;
-  var ledPanel = new THREE.Mesh(new THREE.PlaneGeometry(17, 1.45),
+  var ledPanel = new THREE.Mesh(new THREE.PlaneGeometry(22, 2.0),
     new THREE.MeshBasicMaterial({ map: ledTex, transparent: true }));
-  ledPanel.position.set(0, 2.72, -8.68); scene.add(ledPanel);
-  box(17.5, 0.12, 0.18, M(0x39414f, .5, .35), 0, 3.52, -8.66);
-  box(17.5, 0.12, 0.18, M(0x39414f, .5, .35), 0, 1.94, -8.66);
-  var ledOff = 0;
-  function ledText() {
+  ledPanel.position.set(0, 2.45, -8.68); scene.add(ledPanel);
+  box(22.5, 0.12, 0.18, M(0x39414f, .5, .35), 0, 3.55, -8.66);
+  box(22.5, 0.12, 0.18, M(0x39414f, .5, .35), 0, 1.35, -8.66);
+  var ledOff = 0, ledOff2 = 0, LED_GW = 520;      // LED_GW = 그래프 칸 폭(캔버스 픽셀)
+  /* 1줄 — 보유 종목 수익률(없으면 지금 단계) */
+  function ledLine1() {
     var d = window.lastData;
-    if (!d) return '  자료를 기다리는 중입니다  ';
-    var ps = (d.positions || []), P2 = d.pnl || {}, out = [];
-    ps.forEach(function (p) {
-      out.push(p.name + ' ' + ((p.ret >= 0 ? '+' : '') + (p.ret == null ? 0 : p.ret).toFixed(2)) + '%');
-    });
-    if (!out.length) out.push((d.stage || '대기 중'));
-    out.push('전략자산 ' + nf(d.equity) + '원');
-    out.push('오늘 ' + ((P2.total >= 0 ? '+' : '') + nf(P2.total)) + '원');
-    out.push(d.is_mock ? '모의투자' : '실전');
+    if (!d) return '   자료를 기다리는 중입니다   ';
+    var ps = d.positions || [], out = [];
+    ps.forEach(function (p) { out.push(p.name + ' ' + pct(p.ret)); });
+    if (!out.length) out.push(d.stage || '보유 없음 · 대기 중');
     return '   ' + out.join('   ·   ') + '   ';
   }
+  /* 2줄 — 자산·오늘손익·단계·모드 */
+  function ledLine2() {
+    var d = window.lastData;
+    if (!d) return '   ';
+    var P2 = d.pnl || {}, out = ['전략자산 ' + nf(d.equity) + '원'];
+    out.push('오늘 ' + ((P2.total >= 0 ? '+' : '') + nf(P2.total)) + '원');
+    out.push((typeof PHASE_LAB !== 'undefined' && PHASE_LAB[phaseNow()]) || '');   // ★첫 drawLed 가 정의보다 먼저 돈다
+    out.push(d.is_mock ? '모의투자' : '실전');
+    if (d.hm) out.push(d.hm + ' 기준');
+    return '   ' + out.join('   ·   ') + '   ';
+  }
+  /* 왼쪽 칸 — 수익률 곡선(누적·MDD). 자산곡선은 관리자 _equity_stats 한 곳에서 온다 */
+  function drawLedChart(cx, cw, ch) {
+    var d = window.lastData || {}, S = statsNow(d), cv = S.curve || [];
+    var col = ((S.ret == null ? 0 : S.ret) >= 0) ? '#ff6b78' : '#6aa3f8';
+    ledCtx.fillStyle = '#0e1219'; ledCtx.fillRect(cx, 0, cw, ch);
+    ledCtx.textBaseline = 'alphabetic'; ledCtx.textAlign = 'left';
+    ledCtx.font = '700 34px "IBM Plex Mono", ui-monospace, monospace';
+    ledCtx.fillStyle = '#7a8291'; ledCtx.fillText('누적', cx + 14, 38);
+    ledCtx.fillStyle = col; ledCtx.fillText(pct(S.ret), cx + 90, 38);
+    ledCtx.font = '600 22px "IBM Plex Mono", ui-monospace, monospace';
+    ledCtx.fillStyle = '#6b7280';
+    ledCtx.fillText('MDD ' + pct(S.mdd, 1) + ' · ' + (cv.length > 1 ? (cv.length - 1) + '거래' : '거래없음'), cx + 262, 36);
+    var gx = cx + 14, gy = 52, gw = cw - 28, gh = ch - 62;
+    ledCtx.strokeStyle = '#1b2029'; ledCtx.lineWidth = 2;
+    ledCtx.beginPath(); ledCtx.moveTo(gx, gy + gh); ledCtx.lineTo(gx + gw, gy + gh); ledCtx.stroke();
+    if (cv.length > 1) {
+      var lo = Math.min.apply(null, cv), hi = Math.max.apply(null, cv);
+      if (hi - lo < 1) hi = lo + 1;
+      var zy = gy + gh - (0 - lo) / (hi - lo) * gh;              // 0% 기준선
+      ledCtx.setLineDash([6, 6]); ledCtx.strokeStyle = '#2a3140';
+      ledCtx.beginPath(); ledCtx.moveTo(gx, zy); ledCtx.lineTo(gx + gw, zy); ledCtx.stroke();
+      ledCtx.setLineDash([]);
+      ledCtx.beginPath();
+      for (var i = 0; i < cv.length; i++) {
+        var x = gx + i / (cv.length - 1) * gw, y = gy + gh - (cv[i] - lo) / (hi - lo) * gh;
+        if (i) ledCtx.lineTo(x, y); else ledCtx.moveTo(x, y);
+      }
+      ledCtx.strokeStyle = col; ledCtx.lineWidth = 3; ledCtx.lineJoin = 'round'; ledCtx.stroke();
+      ledCtx.lineTo(gx + gw, zy); ledCtx.lineTo(gx, zy); ledCtx.closePath();
+      ledCtx.globalAlpha = .16; ledCtx.fillStyle = col; ledCtx.fill(); ledCtx.globalAlpha = 1;
+      var ly = gy + gh - (cv[cv.length - 1] - lo) / (hi - lo) * gh;
+      ledCtx.beginPath(); ledCtx.arc(gx + gw, ly, 5, 0, 6.3); ledCtx.fillStyle = col; ledCtx.fill();
+    } else {
+      ledCtx.font = '600 22px "IBM Plex Mono", ui-monospace, monospace';
+      ledCtx.fillStyle = '#464d5b'; ledCtx.fillText('청산이 쌓이면 곡선이 그려집니다', gx, gy + gh / 2 + 8);
+    }
+    ledCtx.fillStyle = '#20262f'; ledCtx.fillRect(cx + cw, 8, 3, ch - 16);
+  }
   function drawLed() {
-    var d = window.lastData || {}, P2 = d.pnl || {};
+    var d = window.lastData || {}, S = statsNow(d);
     var w = ledCv.width, h = ledCv.height;
     ledCtx.clearRect(0, 0, w, h);
     ledCtx.fillStyle = '#0a0c10'; ledCtx.fillRect(0, 0, w, h);
-    ledCtx.font = '600 52px "IBM Plex Mono", ui-monospace, monospace';
-    ledCtx.textBaseline = 'middle';
-    var s = ledText();
-    var tw = ledCtx.measureText(s).width || 1;
-    ledOff = (ledOff + 1.6) % tw;
-    ledCtx.fillStyle = (P2.total >= 0) ? '#ff6b78' : '#6aa3f8';
-    for (var x = -ledOff; x < w; x += tw) ledCtx.fillText(s, x, h / 2 + 2);
-    ledCtx.fillStyle = 'rgba(11,13,17,.55)';
+    drawLedChart(0, LED_GW, h);
+    var x0 = LED_GW + 12;
+    ledCtx.save();
+    ledCtx.beginPath(); ledCtx.rect(x0, 0, w - x0, h); ledCtx.clip();
+    ledCtx.textAlign = 'left'; ledCtx.textBaseline = 'middle';
+    ledCtx.font = '600 44px "IBM Plex Mono", ui-monospace, monospace';
+    var s1 = ledLine1(), t1 = ledCtx.measureText(s1).width || 1;
+    ledOff = (ledOff + 1.5) % t1;
+    ledCtx.fillStyle = ((S.ret == null ? 0 : S.ret) >= 0) ? '#ff6b78' : '#6aa3f8';
+    for (var x = x0 - ledOff; x < w; x += t1) ledCtx.fillText(s1, x, h * .30);
+    ledCtx.font = '600 38px "IBM Plex Mono", ui-monospace, monospace';
+    var s2 = ledLine2(), t2 = ledCtx.measureText(s2).width || 1;
+    ledOff2 = (ledOff2 + 1.05) % t2;
+    ledCtx.fillStyle = '#8b93a5';
+    for (var x2 = x0 - ledOff2; x2 < w; x2 += t2) ledCtx.fillText(s2, x2, h * .74);
+    ledCtx.restore();
+    ledCtx.fillStyle = 'rgba(11,13,17,.5)';
     for (var y = 0; y < h; y += 4) ledCtx.fillRect(0, y, w, 1);   // 주사선
     ledTex.needsUpdate = true;
   }
@@ -1653,7 +1819,7 @@ body.office-on{overflow:hidden}
     var b = document.createElement('button');
     b.className = 'of-chip'; b.type = 'button'; b.textContent = z.name;
     b.setAttribute('aria-pressed', 'false');
-    b.addEventListener('click', function () { target.set(z.cx, 0, z.cz + 1.2); });
+    b.addEventListener('click', function () { walkTo(z.cx, z.cz + 1.5, z.id); });   // ★걸어가서 열린다
     z.chip = b; chips.appendChild(b);
     var tag = document.createElement('div');
     tag.className = 'of-zone'; tag.textContent = z.name;
@@ -1665,7 +1831,7 @@ body.office-on{overflow:hidden}
     row.className = 'of-staff'; row.type = 'button';
     row.innerHTML = '<i class="of-dot"></i><span><b>' + a.name + '</b> · ' + a.role + '</span>';
     row.addEventListener('click', function () {
-      target.set(objs[i].position.x, 0, objs[i].position.z + 1.4);
+      walkTo(objs[i].position.x, objs[i].position.z + 1.4, null);
       say(i, lineFor(i));
     });
     a.dotEl = row.querySelector('.of-dot');
@@ -1680,12 +1846,12 @@ body.office-on{overflow:hidden}
     labels.appendChild(bb); a.bubbleEl = bb; a.bubbleUntil = 0;
   });
 
-  function say(i, text) {
+  function say(i, text, ms) {
     if (!text) return;
     var a = AGENTS[i];
     a.bubbleEl.textContent = text;
     a.bubbleEl.hidden = false;
-    a.bubbleUntil = performance.now() + 4600;
+    a.bubbleUntil = performance.now() + (ms || 4600);
   }
 
   /* ── 실데이터로 대사 만들기 ── */
@@ -1707,12 +1873,227 @@ body.office-on{overflow:hidden}
         return (d.enabled ? '자동매매 가동 중입니다' : '자동매매가 멈춰 있습니다') +
                (d.is_mock ? ' (모의)' : ' (실전)');
       case 4:
-        if (!ps.length) return '보유 종목이 없습니다. 대기 중입니다';
-        return '보유 ' + ps.length + '종목 감시 중 · 평가손익 ' + (P.unrealized >= 0 ? '+' : '') + nf(P.unrealized) + '원';
+        return traderLine();          // ★루틴(발주·미체결·보정)을 그대로 말한다
       case 5:
         return '전략자산 ' + nf(d.equity) + '원 · 오늘 ' + ((P.total >= 0 ? '+' : '') + nf(P.total)) + '원입니다';
     }
     return '';
+  }
+
+  /* ═════════ 루틴 단계 (2026-09-18) ═════════
+     회의 안건과 대사의 기준이다. 관리자가 보내는 routine 을 먼저 쓰고,
+     없으면(옛 status.json) 시각만으로 판단해 화면이 죽지 않게 한다.
+     ★시각을 여기에 박지 않는다 — 실계좌는 애프터마켓(20:00) 기준이라 모드마다 다르다. */
+  function nowHM() {
+    var t = new Date(), p = function (x) { return (x < 10 ? '0' : '') + x; };
+    return p(t.getHours()) + ':' + p(t.getMinutes());
+  }
+  function RT() { return (window.lastData && lastData.routine) || null; }
+  function rhm(k, dflt) { var r = RT(); return (r && r.hm && r.hm[k]) || dflt; }
+  function phaseNow() {
+    var h = nowHM(), wd = new Date().getDay();
+    if (wd === 0 || wd === 6) return 'holiday';
+    if (h < rhm('premkt', '08:30')) return 'pre';
+    if (h < rhm('open', '09:00')) return 'premarket';
+    if (h < '09:30') return 'morning';                  // ★아침 대응 회의
+    if (h < rhm('closeout', '15:19')) return 'manage';
+    if (h < rhm('scan', '15:20')) return 'closeout';
+    if (h < rhm('buy', '15:25')) return 'scan';         // ★후보종목 심의
+    if (h < rhm('convert', '15:28')) return 'buy';
+    if (h < rhm('recon', '15:31')) return 'convert';
+    if (h < rhm('aftp', '16:00')) return 'recon';
+    if (h < rhm('aftp_end', '20:00')) return 'after';
+    return 'night';
+  }
+  var PHASE_LAB = {
+    pre: '개장 전', premarket: '장전 접속 대기', morning: '장 초반 대응', manage: '보유 관리 · 손익절',
+    closeout: '종가청산', scan: '스캔 후 후보 심의', buy: '지정가 매수 집행', convert: '미체결 처리',
+    recon: '체결 보정 · 정산', after: '애프터마켓', night: '하루 마감', holiday: '휴장'
+  };
+  function statsNow(d) {
+    var s = (d && d.stats) || null;
+    try {
+      var m = (d.is_mock === false) ? 'acct' : 'mock';
+      if (window.statMode) m = window.statMode;
+      if (d.stats_mode && d.stats_mode[m]) s = d.stats_mode[m];
+    } catch (e) {}
+    return s || {};
+  }
+  function pct(v, dp) { return (v == null) ? '—' : ((v >= 0 ? '+' : '') + Number(v).toFixed(dp == null ? 2 : dp) + '%'); }
+
+  /* 체결팀장(엑스) 대사 — 루틴 그대로 말한다 */
+  function traderLine() {
+    var d = window.lastData || {}, r = RT() || {}, ps = d.positions || [];
+    var ph = phaseNow(), fill = r.fill_mode || '시장가 전환';
+    if (ph === 'scan') return '발주 대기입니다 — ' + rhm('buy', '15:25') + ' 에 지정가로 넣습니다';
+    if (ph === 'buy') return r.bought
+      ? ('지정가 ' + ps.length + '종목 발주했습니다 · 미체결은 ' + rhm('convert', '15:28') + ' ' + fill + '입니다')
+      : (rhm('buy', '15:25') + ' 지정가 발주 준비 중입니다');
+    if (ph === 'convert') return r.converted
+      ? ('미체결분 ' + fill + ' 끝냈습니다 · 보유 ' + ps.length + '종목')
+      : ('미체결 확인 중입니다 — ' + fill + ' 들어갑니다');
+    if (ph === 'recon') return r.recon_done
+      ? ('실잔고 체결보정 끝 · 보유 ' + ps.length + '종목입니다')
+      : (rhm('recon', '15:31') + ' 실잔고와 맞춰 보겠습니다');
+    if (ph === 'closeout') return ps.length
+      ? ('보유 ' + ps.length + '종목 종가청산 넣고 있습니다')
+      : '청산할 보유가 없습니다';
+    if (ph === 'manage' || ph === 'morning') {
+      if (!ps.length) return '보유가 없습니다 · ' + rhm('scan', '15:20') + ' 스캔까지 대기합니다';
+      return '보유 ' + ps.length + '종목 감시 중 · 익절 ' + pct(d.tp, 1) + ' 손절 ' + pct(d.sl, 1) +
+             (d.real_on ? ' 실시간으로 봅니다' : ' (실시간 감시 꺼짐)');
+    }
+    if (ph === 'after') return r.aftp_live
+      ? ('애프터마켓 익절 지정가 걸어 뒀습니다 · ' + rhm('aftp_end', '20:00') + ' 에 소멸합니다')
+      : '애프터마켓은 쓰지 않습니다 — 다음날 정규장에서 처리합니다';
+    if (ph === 'premarket') return '장전 접속 점검 중입니다 · 보유 ' + ps.length + '종목';
+    if (ph === 'pre') return rhm('open', '09:00') + ' 개장까지 대기합니다';
+    if (ph === 'holiday') return '휴장입니다. 주문 없습니다';
+    return '오늘 매매는 끝났습니다 · 보유 ' + ps.length + '종목 넘깁니다';
+  }
+
+  /* ═════════ 회의 대본 — 단계에 맞는 안건으로 짠다 ═════════ */
+  function MPLAN() {
+    var d = window.lastData || {}, r = RT() || {}, S = statsNow(d);
+    var ps = d.positions || [], pk = d.picks || [], sec = d.sectors || [], tr = d.trades || [];
+    var P = d.pnl || {}, ph = phaseNow(), L = [];
+    var sel = pk.filter(function (p) { return p.disp === '선정' || p.disp === '매수'; });
+    var cut = pk.filter(function (p) { return p.disp === '상한가' || p.disp === '투자금부족'; });
+    function add(i, s) { if (s) L.push([i, s]); }
+    function money(v) { return nf(v) + '원'; }
+    function themeTop(k) {
+      var s = sec.filter(function (x) { return x.chg > 0; }).slice(0, k || 2);
+      return s.length ? s.map(function (x) { return x.name + ' ' + pct(x.chg, 1); }).join(', ') : '';
+    }
+    var agenda, phLab = PHASE_LAB[ph] || '';
+
+    if (ph === 'scan' || ph === 'closeout' || (ph === 'buy' && !r.bought)) {
+      /* ── 후보종목 심의: 15:20 스캔 → 15:25 발주 전에 무엇을 살지 정한다 ── */
+      agenda = rhm('scan', '15:20') + ' 스캔 후보 심의 — ' + rhm('buy', '15:25') + ' 발주 전 최종 확정';
+      add(3, '자리 잡으시죠. ' + rhm('buy', '15:25') + ' 발주까지 시간이 없습니다. 후보부터 봅시다');
+      if (!pk.length) {
+        add(0, r.scanned ? '조건검색에 걸린 종목이 없습니다. 오늘은 매수 없습니다'
+                         : rhm('scan', '15:20') + ' 스캔이 아직 안 돌았습니다. 후보가 비어 있습니다');
+        add(2, '후보가 없으면 리스크도 없습니다. 현금으로 넘어갑니다');
+        add(3, '결론 — 오늘 신규매수 없음. 보유만 관리합니다');
+      } else {
+        add(0, '후보 ' + pk.length + '종목 올라왔습니다. 매력도 순으로 보고합니다');
+        pk.slice(0, 5).forEach(function (p, i) {
+          var b = [(i + 1) + '순위 ' + (p.name || '')];
+          if (p.score != null) b.push('매력도 ' + p.score + '점' + (p.grade && p.grade !== '?' ? '(' + p.grade + ')' : ''));
+          if (p.theme) b.push('테마 ' + p.theme + (p.theme_bonus ? ' 가점 +' + p.theme_bonus : ''));
+          if (p.turnover) b.push('유통 ' + p.turnover + '%');
+          if (p.chg) b.push('당일 ' + pct(p.chg, 1));
+          add(0, b.join(' · '));
+        });
+        var tt = themeTop(3);
+        add(1, tt ? ('테마 수급은 ' + tt + ' 가 셉니다. 최대가점은 +' + (d.theme_bonus_max != null ? d.theme_bonus_max : 25) + ' 입니다')
+                  : '테마 수급이 아직 안 모였습니다. 가점 없이 매력도만으로 봅니다');
+        var tset = {};
+        sec.slice(0, 3).forEach(function (x) { tset[x.name] = 1; });
+        var hit = pk.filter(function (p) { return p.theme && tset[p.theme]; });
+        if (hit.length) add(1, '강세 테마에 걸친 후보는 ' + hit.slice(0, 3).map(function (p) { return p.name; }).join(', ') + ' 입니다');
+        add(2, '게이트는 유통비율 ' + (d.float_max || 70) + '% 이하' + (d.exclude_upper ? ' · 상한가 제외' : ' · 상한가 포함') + ' 입니다');
+        if (cut.length) add(2, '걸러진 것은 ' + cut.slice(0, 4).map(function (p) { return p.name + '(' + p.disp + ')'; }).join(', ') + ' 입니다');
+        add(3, '전략자산 ' + money(d.equity) + ' · 종목당 ' + money(d.invest) + ' · 최대 ' + (d.af || 0) + '종목까지 들어갑니다');
+        add(3, sel.length ? ('그래서 오늘 들어갈 것은 ' + sel.slice(0, 5).map(function (p) { return p.name; }).join(', ') + ' — ' + sel.length + '종목입니다')
+                          : '사이징을 통과한 종목이 없습니다. 자산이 부족합니다');
+        add(4, traderLine());
+        add(4, '미체결이 남으면 ' + rhm('convert', '15:28') + ' 에 ' + (r.fill_mode || '시장가 전환') + ' 하고 ' +
+               rhm('recon', '15:31') + ' 에 실잔고로 맞춥니다');
+        add(5, '원금 ' + money(d.principal) + ' 기준 지금 누적 ' + pct(S.ret) + ' · MDD ' + pct(S.mdd, 1) + ' 입니다');
+        add(2, '손익절은 익절 ' + pct(d.tp, 1) + ' 손절 ' + pct(d.sl, 1) + ' 그대로 갑니다. 수수료 미포함 등락률입니다');
+        add(3, '결론 — ' + (sel.length ? sel.length + '종목 매수' : '매수 보류') + ' · 익절 ' + pct(d.tp, 1) +
+               ' 손절 ' + pct(d.sl, 1) + '. 이상입니다');
+      }
+    } else if (ph === 'morning' || ph === 'premarket' || ph === 'pre') {
+      /* ── 아침 대응 회의: 어제 산 것을 오늘 어떻게 가져갈지 ── */
+      agenda = '보유 대응 회의 — 어제 매수분을 오늘 어떻게 가져갈지';
+      add(3, '개장 대응 회의 시작합니다. 보유부터 봅시다');
+      if (!ps.length) {
+        add(4, '보유가 없습니다. 어제 매수가 없었거나 이미 청산됐습니다');
+        add(0, rhm('scan', '15:20') + ' 스캔까지는 새로 살 것이 없습니다');
+        add(3, '결론 — 오늘은 관망. ' + rhm('scan', '15:20') + ' 스캔에서 다시 봅니다');
+      } else {
+        add(4, '보유 ' + ps.length + '종목입니다. 평가손익 ' + money(P.unrealized) + ' 입니다');
+        ps.slice(0, 5).forEach(function (p) {
+          var tp = d.tp, sl = d.sl, ret = p.ret || 0;
+          var togo = (tp != null) ? (tp - ret).toFixed(2) : '—';
+          var todn = (sl != null) ? (ret - sl).toFixed(2) : '—';
+          add(4, (p.name || '') + ' 매수 ' + nf(p.buy) + ' → 현재 ' + nf(p.cur) + ' ' + pct(ret) +
+                 ' · 익절까지 ' + togo + '%p · 손절까지 ' + todn + '%p');
+        });
+        add(2, '손절 ' + pct(d.sl, 1) + ' 닿으면 즉시 시장가입니다. 갭컷은 ' +
+               (d.gapcut ? pct(d.gapcut, 1) : '꺼져 있습니다') + (d.gapcut ? ' 입니다' : ''));
+        add(2, d.real_on ? '실시간 감시 켜져 있습니다. 체결가 기준으로 봅니다'
+                         : '⚠️ 실시간 감시가 꺼져 있습니다. 주기 조회로만 봅니다');
+        var tt2 = themeTop(2);
+        add(1, tt2 ? ('어제 테마 흐름은 ' + tt2 + ' 였습니다. 오늘도 유효한지 보겠습니다')
+                   : '테마 자료는 오후에 다시 모입니다');
+        add(5, '전략자산 ' + money(d.equity) + ' · 누적 ' + pct(S.ret) + ' 입니다');
+        add(3, '결론 — 손익절선 유지. 장중 임의 개입 없음. 안 닿으면 ' +
+               rhm('closeout', '15:19') + ' 종가청산으로 넘깁니다');
+      }
+    } else if (ph === 'buy' || ph === 'convert' || ph === 'recon') {
+      /* ── 집행 점검 ── */
+      agenda = '매수 집행 점검 — 발주 · 미체결 · 체결보정';
+      add(3, '집행 상황 점검합니다');
+      add(4, traderLine());
+      if (ps.length) ps.slice(0, 5).forEach(function (p) {
+        add(4, (p.name || '') + ' ' + nf(p.qty) + '주 @' + nf(p.buy) + (p.upper ? ' (상한가 · 다음날 시가 예약)' : ''));
+      });
+      if (r.pend_upper) add(2, '상한가로 못 산 ' + r.pend_upper + '종목은 다음 거래일 시가에 들어갑니다');
+      add(2, '익절 ' + pct(d.tp, 1) + ' 손절 ' + pct(d.sl, 1) + ' 로 내일 관리합니다');
+      add(5, '체결이 확정되면 원장에 올립니다. 지금 전략자산 ' + money(d.equity) + ' 입니다');
+      add(1, '오늘 스캔 ' + pk.length + '종목 판정은 ' + rhm('post', '15:35') + ' 리서치에서 채점합니다');
+      add(3, '결론 — ' + rhm('recon', '15:31') + ' 보정까지 지켜보고 마감합니다');
+    } else if (ph === 'manage') {
+      /* ── 장중 보유 관리 ── */
+      agenda = '장중 보유 관리 — 손익절선과 오늘 스캔 준비';
+      add(3, '장중 점검입니다');
+      add(4, traderLine());
+      ps.slice(0, 5).forEach(function (p) {
+        add(4, (p.name || '') + ' ' + pct(p.ret) + ' · 평가 ' + money(p.pl));
+      });
+      add(2, '익절 ' + pct(d.tp, 1) + ' 손절 ' + pct(d.sl, 1) + ' · 안 닿으면 ' + rhm('closeout', '15:19') + ' 종가청산입니다');
+      add(0, r.picks_today ? ('오늘 픽은 이미 ' + pk.length + '종목 올라와 있습니다')
+                           : (rhm('scan', '15:20') + ' 스캔을 준비하고 있습니다'));
+      add(1, themeTop(2) ? ('테마는 ' + themeTop(2) + ' 가 앞서갑니다') : '테마 수급은 13시부터 모입니다');
+      add(5, '오늘 실현 ' + money(P.realized) + ' · 평가 ' + money(P.unrealized) + ' 입니다');
+      add(3, '결론 — 선은 그대로. ' + rhm('scan', '15:20') + ' 스캔에서 다시 모입니다');
+    } else if (ph === 'holiday') {
+      /* ── 휴장: 지난 성적과 다음 거래일 준비 ── */
+      agenda = '휴장 점검 — 지난 성적과 다음 거래일 준비';
+      add(3, '휴장일입니다. 주문은 없고 점검만 합니다');
+      add(5, '원금 ' + money(d.principal) + ' 기준 누적 ' + pct(S.ret) + ' · MDD ' + pct(S.mdd, 1) +
+             ' · 청산 ' + (S.curve ? Math.max(0, S.curve.length - 1) : 0) + '건입니다');
+      if (tr.length) tr.slice(0, 4).forEach(function (x) {
+        add(4, (x.date || '') + ' ' + (x.name || '') + ' ' + pct(x.ret) + ' · ' + money(x.pl) + (x.reason ? ' (' + x.reason + ')' : ''));
+      });
+      add(2, '설정은 익절 ' + pct(d.tp, 1) + ' 손절 ' + pct(d.sl, 1) + ' · 유통 ' + (d.float_max || 70) + '% 이하' +
+             (d.exclude_upper ? ' · 상한가 제외' : '') + ' 입니다');
+      add(0, '다음 거래일 ' + rhm('scan', '15:20') + ' 스캔부터 다시 돕니다');
+      add(1, '테마 수급은 장이 열려야 모입니다');
+      add(4, ps.length ? ('넘어온 보유가 ' + ps.length + '종목 있습니다. 다음 개장 때 봅니다') : '넘어온 보유는 없습니다');
+      add(3, '결론 — 설정 그대로. 다음 평일 ' + rhm('start', '08:25') + ' 재기동입니다');
+    } else {
+      /* ── 하루 마감 리뷰 ── */
+      agenda = '마감 리뷰 — 오늘 결과와 내일 계획';
+      add(3, '오늘 마감 리뷰 하겠습니다');
+      add(5, '오늘 실현손익 ' + money(P.realized) + ' · 누적 ' + pct(S.ret) + ' · MDD ' + pct(S.mdd, 1) + ' 입니다');
+      if (tr.length) tr.slice(0, 5).forEach(function (x) {
+        add(4, (x.name || '') + ' ' + pct(x.ret) + ' · ' + money(x.pl) + (x.reason ? ' (' + x.reason + ')' : '') + (x.time ? ' ' + x.time : ''));
+      }); else add(4, '오늘 청산 기록은 없습니다');
+      add(4, traderLine());
+      add(2, ph === 'after'
+        ? ('애프터마켓은 ' + rhm('aftp_end', '20:00') + ' 까지입니다. 시장가가 없어 지정가로만 움직입니다')
+        : ('내일 ' + rhm('open', '09:00') + ' 부터 익절 ' + pct(d.tp, 1) + ' 손절 ' + pct(d.sl, 1) + ' 로 봅니다'));
+      add(0, r.picks_today ? ('오늘 픽 ' + pk.length + '종목은 클라이언트에도 배포됐습니다')
+                           : '오늘 배포된 픽이 없습니다');
+      add(1, '리서치 채점은 ' + rhm('post', '15:35') + ' 에 올라갑니다');
+      add(3, '결론 — 내일 ' + rhm('start', '08:25') + ' 재기동, ' + rhm('open', '09:00') + ' 개장 대응입니다');
+    }
+    return { agenda: agenda, ph: ph, phLab: phLab, lines: L };
   }
 
   /* ── 회의: 한 명이 말하면 다른 한 명이 받는다 ── */
@@ -1766,6 +2147,110 @@ body.office-on{overflow:hidden}
     seen.enabled = d.enabled;
   }
 
+  /* ═════════ 걸어가서 열기 (2026-09-18) ═════════
+     예전엔 부서를 누르면 그 자리에서 화면이 바로 떴다. 이제는 걸어가 **멈춘 뒤** 열린다.
+     ★못 가는 자리를 찍었을 때 영원히 안 열리면 안 되니 9초 뒤에는 포기한다. */
+  // 받침에 맞춘 조사 — '본부장실 으로' 같은 말이 안 나오게 (받침 없음/ㄹ 이면 '로')
+  function eulo(s) {
+    var c = (s || '').charCodeAt((s || ' ').length - 1) - 0xAC00;
+    if (c < 0 || c > 11171) return s + '로';
+    var j = c % 28;
+    return s + ((j === 0 || j === 8) ? '로' : '으로');
+  }
+  function clampX(x) { return Math.max(-W / 2 + 1, Math.min(W / 2 - 1, x)); }
+  function clampZ(z) { return Math.max(-D / 2 + 1, Math.min(D / 2 - 1, z)); }
+  var goOpen = null, goUntil = 0;
+  function walkTo(x, z, openAfter) {
+    target.set(clampX(x), 0, clampZ(z));
+    goOpen = openAfter || null;
+    goUntil = performance.now() + 9000;
+    if (goOpen) {
+      var zz = ZONES.filter(function (q) { return q.id === goOpen; })[0];
+      tickText.textContent = eulo(zz ? zz.name : '전광판') + ' 걸어갑니다…';
+    }
+  }
+
+  /* ═════════ 회의 — 전원이 리서치실로 모인다 ═════════ */
+  var MT = { on: false, plan: null, i: -1, next: 0, agenda: '', ph: '' };
+  var camSave = null, camWant = null;
+  function camGoto(y, p, dd) { camWant = { y: y, p: p, d: dd }; }
+  function seatOf(i) {                       // 원탁(0,-4.6) 의자 반경 2.7 — 살짝 안쪽에 앉힌다
+    var a = i / 6 * Math.PI * 2;
+    return [Math.cos(a) * 2.45, -4.6 + Math.sin(a) * 2.45];
+  }
+  function seated() {
+    for (var i = 0; i < objs.length; i++) {
+      var s = seatOf(i);
+      if (Math.abs(objs[i].position.x - s[0]) > .4 || Math.abs(objs[i].position.z - s[1]) > .4) return false;
+    }
+    return true;
+  }
+  var meetEl = document.getElementById('ofMeet');
+  var meetBtn = document.getElementById('ofMeetBtn');
+  var meetBar = document.getElementById('ofMeetBar');
+  function setMeetProg() {
+    var tot = (MT.plan && MT.plan.lines.length) || 1;
+    meetBar.style.width = Math.max(0, Math.min(100, (MT.i + 1) / tot * 100)) + '%';
+  }
+  function startMeeting() {
+    if (MT.on) { endMeeting(false); return; }
+    var p = MPLAN();
+    if (!p.lines.length) { tickText.textContent = '지금은 회의할 안건이 없습니다'; return; }
+    MT.on = true; MT.plan = p; MT.i = -1; MT.agenda = p.agenda; MT.ph = p.ph;
+    MT.next = performance.now() + 900;
+    objs.forEach(function (g, i) { g.userData.mt = seatOf(i); g.userData.face = [0, -4.6]; });
+    walkTo(0, -1.7, null);                                  // 나는 원탁 앞에 서서 본다
+    camSave = { y: camYaw, p: camPitch, d: camDist };
+    camGoto(0, 0.42, 15);                                   // 정면(전광판이 뒤에 보이게) · 눈높이 쪽으로
+    meetEl.hidden = false;
+    document.getElementById('ofMeetAgenda').textContent = p.agenda;
+    document.getElementById('ofMeetPh').textContent = p.phLab || '';
+    meetBtn.textContent = '회의 종료'; meetBtn.classList.add('on');
+    minute('사회', '회의 시작 — ' + p.agenda, 'ev');
+    setMeetProg();
+  }
+  function endMeeting(quiet) {
+    if (!MT.on) return;
+    MT.on = false;
+    objs.forEach(function (g, i) { g.userData.mt = AGENTS[i].home.slice(); g.userData.face = null; });
+    if (camSave) { camGoto(camSave.y, camSave.p, camSave.d); camSave = null; }
+    meetEl.hidden = true;
+    meetBtn.textContent = '회의'; meetBtn.classList.remove('on');
+    if (!quiet) minute('사회', '회의 종료 — ' + MT.agenda, 'ev');
+  }
+  function stepMeeting(now) {
+    if (!MT.on || now < MT.next) return;
+    if (!seated()) { MT.next = now + 350; return; }          // 다 앉을 때까지 시작하지 않는다
+    MT.i++;
+    if (MT.i >= MT.plan.lines.length) { endMeeting(false); return; }
+    var ln = MT.plan.lines[MT.i], ms = Math.min(7200, 2500 + ln[1].length * 46);
+    say(ln[0], ln[1], ms + 500);
+    minute(AGENTS[ln[0]].name, ln[1]);
+    MT.next = now + ms;
+    setMeetProg();
+  }
+  /* ★스스로 모이는 시각 (2026-09-18)
+       · 15:20 스캔이 끝나면 15:25 발주 전에 후보 심의를 연다
+       · 다음날 09:00 에는 보유 대응 회의를 연다
+     하루 한 번만이다(기기에 기록). 사무실을 보고 있을 때만 — 뒤에서 혼자 돌지 않는다. */
+  var AUTO_KEY = 'ofautomeet';
+  function autoMeet() {
+    if (MT.on || !office.classList.contains('on')) return;
+    var ph = phaseNow();
+    if (ph !== 'scan' && ph !== 'morning') return;
+    if (ph === 'scan' && !(RT() || {}).scanned && !(window.lastData && (lastData.picks || []).length)) return;  // 스캔 전이면 기다린다
+    var key = (new Date()).toDateString() + '|' + ph, had = '';
+    try { had = localStorage.getItem(AUTO_KEY) || ''; } catch (e) {}
+    if (had === key) return;
+    try { localStorage.setItem(AUTO_KEY, key); } catch (e) {}
+    startMeeting();
+  }
+  setInterval(autoMeet, 20000);
+
+  meetBtn.addEventListener('click', startMeeting);
+  document.getElementById('ofMeetEnd').addEventListener('click', function () { endMeeting(false); });
+  document.getElementById('ofMeetLog').addEventListener('click', function () { openZone('meeting'); });
+
   /* ── HUD ── */
   var elEq = document.getElementById('ofEq'), elEqLab = document.getElementById('ofEqLab');
   var elPnl = document.getElementById('ofPnl'), elClock = document.getElementById('ofClock');
@@ -1800,7 +2285,7 @@ body.office-on{overflow:hidden}
             var tmpd = document.createElement('div');
             tmpd.innerHTML = brief(openId);
             var nb = tmpd.querySelector('.of-brief');
-            if (nb) { bb.replaceWith(nb); if (openId === 'chief') wireCfg(); }
+            if (nb) { bb.replaceWith(nb); if (openId === 'chief') wireCfg(); if (openId === 'board') drawBoard(); }
           }
         }
       } catch (e) {}
@@ -1833,12 +2318,21 @@ body.office-on{overflow:hidden}
   window.layout = layout;
   window.addEventListener('resize', layout);
 
-  var drag = false, moved = 0, lastX = 0;
-  canvas.addEventListener('pointerdown', function (e) { drag = true; moved = 0; lastX = e.clientX; canvas.setPointerCapture(e.pointerId); });
+  var drag = false, moved = 0, lastX = 0, lastY = 0;
+  canvas.addEventListener('pointerdown', function (e) {
+    drag = true; moved = 0; lastX = e.clientX; lastY = e.clientY; canvas.setPointerCapture(e.pointerId);
+  });
   canvas.addEventListener('pointermove', function (e) {
     if (!drag) return;
-    var dx = e.clientX - lastX; lastX = e.clientX; moved += Math.abs(dx);
-    if (moved > 6) camYaw -= dx * 0.006;
+    var dx = e.clientX - lastX, dy = e.clientY - lastY;
+    lastX = e.clientX; lastY = e.clientY;
+    moved += Math.abs(dx) + Math.abs(dy);
+    if (moved > 6) {
+      camWant = null;                                   // 손으로 돌리면 자동 시점이동은 접는다
+      camYaw -= dx * 0.006;
+      // ★상하(2026-09-18) — 9도~76도. 더 낮추면 바닥이 보이고 더 올리면 천장 밖으로 나간다
+      camPitch = Math.max(0.16, Math.min(1.32, camPitch - dy * 0.005));
+    }
   });
   canvas.addEventListener('pointerup', function (e) {
     drag = false;
@@ -1851,24 +2345,24 @@ body.office-on{overflow:hidden}
     var all = ray.intersectObjects(scene.children, true);
     if (!all.length) return;
     var pt = all[0].point;
-    target.set(Math.max(-W / 2 + 1, Math.min(W / 2 - 1, pt.x)), 0,
-               Math.max(-D / 2 + 1, Math.min(D / 2 - 1, pt.z)));
-    var isFloor = (all[0].object === floor);
-    if (!isFloor) {
-      if (all[0].object === ledPanel) { openZone('desk'); return; }
-      var zz = zoneAt(pt.x, Math.max(-D / 2 + 1, Math.min(D / 2 - 1, pt.z)));
-      if (zz) openZone(zz.id);
-    }
+    // ★바닥이면 거기로 걷는다. 가구·전광판이면 **그 앞까지 걸어가 멈춘 뒤** 화면이 열린다
+    if (all[0].object === ledPanel) { walkTo(0, -1.9, 'board'); return; }
+    if (all[0].object === floor) { walkTo(pt.x, pt.z, null); return; }
+    var zz = zoneAt(clampX(pt.x), clampZ(pt.z));
+    if (zz) walkTo(zz.cx, zz.cz + 1.5, zz.id);
+    else walkTo(pt.x, pt.z, null);
   });
   canvas.addEventListener('wheel', function (e) {
-    e.preventDefault(); camDist = Math.max(14, Math.min(40, camDist + e.deltaY * 0.02));
+    e.preventDefault(); camWant = null;
+    camDist = Math.max(12, Math.min(40, camDist + e.deltaY * 0.02));
   }, { passive: false });
   var keys = {};
   window.addEventListener('keydown', function (e) {
     if (!office.classList.contains('on')) return;
     var k = (e.key || '').toLowerCase(); keys[k] = true;
     if (k === 'e') { e.preventDefault(); openZone(cur.id); }
-    if (k === 'escape') closeSheet();
+    if (k === 'm') { e.preventDefault(); startMeeting(); }
+    if (k === 'escape') { if (MT.on) endMeeting(false); else closeSheet(); }
   });
   window.addEventListener('keyup', function (e) { keys[(e.key || '').toLowerCase()] = false; });
 
@@ -1891,12 +2385,23 @@ body.office-on{overflow:hidden}
     var dt = Math.min(64, now - lastT); lastT = now;
     if (!office.classList.contains('on')) return;
 
-    nextChat -= dt;
-    if (nextChat <= 0) { nextChat = 5200 + Math.random() * 4200; converse(); }
+    if (MT.on) { stepMeeting(now); }                 // ★회의 중에는 잡담을 멈춘다
+    else {
+      nextChat -= dt;
+      if (nextChat <= 0) { nextChat = 5200 + Math.random() * 4200; converse(); }
+    }
+    if (camWant) {                                   // 자동 시점이동(회의 시작·종료)
+      camYaw += (camWant.y - camYaw) * .07;
+      camPitch += (camWant.p - camPitch) * .07;
+      camDist += (camWant.d - camDist) * .07;
+      if (Math.abs(camWant.y - camYaw) < .008 && Math.abs(camWant.p - camPitch) < .008
+          && Math.abs(camWant.d - camDist) < .15) camWant = null;
+    }
 
     var kx = (keys['d'] || keys['arrowright'] ? 1 : 0) - (keys['a'] || keys['arrowleft'] ? 1 : 0);
     var kz = (keys['s'] || keys['arrowdown'] ? 1 : 0) - (keys['w'] || keys['arrowup'] ? 1 : 0);
     if (kx || kz) {
+      goOpen = null;                                  // 직접 걸으면 '도착하면 열기'는 취소
       var s = Math.sin(camYaw), c = Math.cos(camYaw);
       target.x = Math.max(-W / 2 + 1, Math.min(W / 2 - 1, player.position.x + (kx * c - kz * s) * .9));
       target.z = Math.max(-D / 2 + 1, Math.min(D / 2 - 1, player.position.z + (kx * s + kz * c) * .9));
@@ -1911,6 +2416,11 @@ body.office-on{overflow:hidden}
       if (!reduced) player.userData.body.position.y = .55 + Math.abs(Math.sin(now * .012)) * .045;
     } else if (!reduced) {
       player.userData.body.position.y = .55 + Math.sin(now * .0022) * .012;
+    }
+    // ★도착했으면 그 자리에서 화면을 연다(9초 안에 못 가면 포기)
+    if (goOpen) {
+      if (now > goUntil) goOpen = null;
+      else if (dist <= .14) { var _g = goOpen; goOpen = null; openZone(_g); }
     }
 
     var z = zoneAt(player.position.x, player.position.z);
@@ -1929,15 +2439,35 @@ body.office-on{overflow:hidden}
     if (!reduced) zoneMat[z.id].opacity = .10 + Math.sin(now * .0035) * .045;
 
     objs.forEach(function (g, i) {
+      var mt = g.userData.mt;                          // ★회의 소집·복귀 — 직원도 걸어서 이동한다
+      if (mt) {
+        var ax = mt[0] - g.position.x, az = mt[1] - g.position.z;
+        var ad = Math.sqrt(ax * ax + az * az);
+        if (ad > .1) {
+          var stp = Math.min(ad, .044 * dt / 16);
+          g.position.x += ax / ad * stp; g.position.z += az / ad * stp;
+          var wy2 = Math.atan2(ax, az);
+          g.rotation.y += (((wy2 - g.rotation.y + Math.PI * 3) % (Math.PI * 2)) - Math.PI) * .17;
+          if (!reduced) g.userData.body.position.y = .55 + Math.abs(Math.sin(now * .013 + g.userData.phase)) * .045;
+          return;
+        }
+        if (!MT.on) { g.userData.mt = null; }           // 자리로 돌아왔으면 놓아준다
+      }
       if (!reduced) g.userData.body.position.y = .55 + Math.sin(now * .0021 + g.userData.phase) * .016;
-      if (g.position.distanceTo(player.position) < 4.2) {
+      var fc2 = g.userData.face;                       // 회의 중엔 원탁을 본다
+      if (fc2) {
+        var tf = Math.atan2(fc2[0] - g.position.x, fc2[1] - g.position.z);
+        g.rotation.y += (((tf - g.rotation.y + Math.PI * 3) % (Math.PI * 2)) - Math.PI) * .12;
+      } else if (g.position.distanceTo(player.position) < 4.2) {
         var tp = Math.atan2(player.position.x - g.position.x, player.position.z - g.position.z);
         g.rotation.y += (((tp - g.rotation.y + Math.PI * 3) % (Math.PI * 2)) - Math.PI) * .06;
       }
     });
 
     camTarget.lerp(new THREE.Vector3(player.position.x * .55, 0, player.position.z * .55 + 1.5), .05);
-    camera.position.set(camTarget.x + Math.sin(camYaw) * camDist, camDist * .78, camTarget.z + Math.cos(camYaw) * camDist);
+    // ★구면좌표 — camPitch 로 상하까지 돈다. 0.66 rad 이면 예전 식과 완전히 같은 위치가 나온다
+    var _r = camDist / CAM_K, _hr = Math.cos(camPitch) * _r, _hy = Math.sin(camPitch) * _r;
+    camera.position.set(camTarget.x + Math.sin(camYaw) * _hr, Math.max(1.3, _hy), camTarget.z + Math.cos(camYaw) * _hr);
     camera.lookAt(camTarget.x, 1.2, camTarget.z);
 
     ZONES.forEach(function (q) { tmp.set(q.cx, 2.4, q.cz); place(q.tag, tmp, 'translate(-50%,-50%)'); });
