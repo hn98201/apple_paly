@@ -1677,7 +1677,7 @@ body.office-on{overflow:hidden}
   scene = new THREE.Scene();
   // ★흰 사무실 (2026-09-19) — 어두우면 글자와 종목이 안 보인다는 지적
   scene.background = new THREE.Color(0xEDF1F6);
-  scene.fog = new THREE.Fog(0xEDF1F6, 56, 118);
+  scene.fog = new THREE.Fog(0xEDF1F6, 62, 150);
   camera = new THREE.PerspectiveCamera(36, 1, 0.1, 200);
   var camYaw = Math.PI * 0.25, camDist = 34, camTarget = new THREE.Vector3(0, 0, 3);
   // ★상하 시점(2026-09-18). 0.66 rad 이 예전 고정 높이(=camDist x 0.78)와 같다 — 기본 화면이 바뀌지 않게
@@ -1866,8 +1866,9 @@ body.office-on{overflow:hidden}
   /* ★뒷벽 전체를 전광판으로. 벽이 3.6 높이라 4.4 를 다 못 쓰므로 벽을 같이 올린다
      (아래 wallUp 참고). 증권사 로비의 대형 시황판을 생각하면 된다. */
   var LEDW = 30, LEDH = 6.0, LEDZ = -D / 2 + 0.32;     // ★방이 커진 만큼 전광판도 크게
+  // ★fog:false — 전광판석은 멀리서 본다. 안개를 타면 판이 배경색으로 날아간다(실측 89% 소실)
   var ledPanel = new THREE.Mesh(new THREE.PlaneGeometry(LEDW, LEDH),
-    new THREE.MeshBasicMaterial({ map: ledTex, transparent: true }));
+    new THREE.MeshBasicMaterial({ map: ledTex, transparent: true, fog: false }));
   ledPanel.position.set(0, 3.7, LEDZ); scene.add(ledPanel);
   // 전광판 뒤판 — 흰 벽에 검은 화면이 떠 보이지 않게 테두리를 준다
   box(LEDW + .5, LEDH + .5, .12, M(0x2B313C, .6, .25), 0, 3.7, LEDZ - .09);
@@ -2869,12 +2870,15 @@ body.office-on{overflow:hidden}
      ★camTarget 을 전광판 쪽으로 옮기고 시선 높이를 판 한가운데로 올린다.
        안 그러면 바닥을 보느라 판이 화면 위로 밀려난다. */
   var boardView = false;
+  var FOV_N = 36, FOV_B = 72;          // 평소 화각 / 전광판 화각
   function boardFit() {
-    var vf = 36 * Math.PI / 180, a = camera.aspect || 1;
+    // ★화각을 넓히지 않으면 폰 세로(수평 17°)에서 111 까지 물러나야 한다 — 사무실이 점이 된다.
+    //   72° 로 넓히면 54 면 충분하고, 방 바로 밖에서 판이 화면을 꽉 채운다.
+    var vf = FOV_B * Math.PI / 180, a = camera.aspect || 1;
     var hf = 2 * Math.atan(Math.tan(vf / 2) * a);
     var needW = (LEDW / 2 + 1.2) / Math.tan(hf / 2);
-    var needH = (LEDH / 2 + 1.0) / Math.tan(vf / 2);
-    return Math.min(140, Math.max(needW, needH) + 4);
+    var needH = (LEDH / 2 + 1.2) / Math.tan(vf / 2);
+    return Math.min(90, Math.max(needW, needH) + 2);
   }
   function goBoardSeat() {
     boardView = true;
@@ -3036,7 +3040,8 @@ body.office-on{overflow:hidden}
   function layout() {
     var w = office.clientWidth || window.innerWidth, h = office.clientHeight || window.innerHeight;
     renderer.setSize(w, h, false);
-    camera.aspect = w / h; camDist = w < 520 ? 38 : 32;   // ★더 멀리서(2026-09-19 요청)
+    camera.aspect = w / h;
+    if (!boardView) camDist = w < 520 ? 38 : 32;          // ★더 멀리서(2026-09-19 요청)
     camera.updateProjectionMatrix();
   }
   window.layout = layout;
@@ -3194,6 +3199,7 @@ body.office-on{overflow:hidden}
     camTarget.lerp(new THREE.Vector3(player.position.x * .55, 0, player.position.z * .55 + 1.5), .05);
     if (boardView) {
       // ★전광판 전용 시점 — 판 정면에서 화면에 꽉 차는 거리로 붙는다
+      if (Math.abs(camera.fov - FOV_B) > .5) { camera.fov += (FOV_B - camera.fov) * .12; camera.updateProjectionMatrix(); }
       var bd = boardFit();
       camYaw += (0 - camYaw) * .08;
       camPitch += (0.13 - camPitch) * .08;
@@ -3202,6 +3208,7 @@ body.office-on{overflow:hidden}
       camera.position.set(0, 3.7 + bd * 0.13, LEDZ + bd);
       camera.lookAt(0, 3.7, LEDZ);
     } else {
+      if (Math.abs(camera.fov - FOV_N) > .5) { camera.fov += (FOV_N - camera.fov) * .14; camera.updateProjectionMatrix(); }
       // ★구면좌표 — camPitch 로 상하까지 돈다. 0.66 rad 이면 예전 식과 완전히 같은 위치가 나온다
       var _r = camDist / CAM_K, _hr = Math.cos(camPitch) * _r, _hy = Math.sin(camPitch) * _r;
       camera.position.set(camTarget.x + Math.sin(camYaw) * _hr, Math.max(1.3, _hy), camTarget.z + Math.cos(camYaw) * _hr);
