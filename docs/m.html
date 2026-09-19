@@ -1746,6 +1746,26 @@ body.office-on{overflow:hidden}
         });
         hr += '</div></div>';
       }
+      var tq = (stq.disc || {}).today || {};
+      if (tq.n) {
+        hr += '<div class="of-brief"><div class="of-bk">오늘 픽 공시 — ' + esc(tq.date || '') +
+          (tq.bad ? ' · <span class="dn">악재 ' + tq.bad + '종목</span>' : ' · 악재 없음') +
+          '</div><div class="of-min">' +
+          (tq.rows || []).map(function (x) {
+            var bad = (x.pre_bad || x.d0_bad);
+            return '<div class="of-mrow"><span class="of-mw">' + (bad ? '⚠ ' : '') + esc(x.name || x.code) +
+              '</span><span class="of-mx">' +
+              (x.pre + x.d0 === 0 ? '공시 없음'
+                : ('사전 ' + x.pre + '건' + (x.pre_bad ? '(악재 ' + x.pre_bad + ')' : '') +
+                   ' · 당일 ' + x.d0 + '건' + (x.d0_bad ? '(악재 ' + x.d0_bad + ')' : ''))) +
+              ((x.tags || []).length ? ' · <b class="' + (bad ? 'dn' : 'up') + '">' +
+                esc(x.tags.join(', ')) + '</b>' : '') +
+              (x.d0_bad ? '<br><span style="color:#B26A00">매수일 당일 접수 — 15:25 전인지 후인지 알 수 없습니다</span>' : '') +
+              '</span></div>';
+          }).join('') + '</div>' +
+          '<div class="of-fnote">막으려는 게 아니라 <b>아침 대응을 준비</b>하려는 것입니다. ' +
+          '유상증자·전환사채·감자·최대주주변경·거래정지·불성실공시를 악재로, 수주·자사주취득·무상증자를 호재로 봅니다.</div></div>';
+      }
       // ★7문항 — 글로 답할 것은 Claude 에게 넘긴다(지어내지 않는다)
       var Q = [
         ['사업 이해', '{n}이 어떤 사업으로 돈을 버는지 설명해줘. 사업별 매출 비중과 핵심 수익원을 초보자도 이해할 수 있게 정리해줘.'],
@@ -1779,8 +1799,58 @@ body.office-on{overflow:hidden}
         ['기간', (stl.meta && stl.meta.from) ? (stl.meta.from + '~' + stl.meta.to) : '—'],
         ['가른 항목', (stl.feat || []).length + '개'],
         ['재무 붙음', ((stl.meta && stl.meta.fund) || 0) + '종목']]);
+      var dl = stl.disc || {};
+      if (dl.n) {
+        hl += '<div class="of-brief"><div class="of-bk">공시 — DART (' + dl.n + '/' + dl.of + '종목)</div>' +
+          '<div class="of-min">' +
+          [['매수 전 악재공시', dl.pre_bad], ['매수 전 호재공시', dl.pre_good],
+           ['청산일 악재공시', dl.post_bad]].map(function (p) {
+            var s = p[1] || {}, a = s['with'] || {}, b = s['without'] || {};
+            if (!a.n && !b.n) return '';
+            return '<div class="of-mrow"><span class="of-mw">' + p[0] + '</span><span class="of-mx">' +
+              '있음 ' + (a.n || 0) + '건 <b class="' + ((a.avg || 0) >= 0 ? 'up' : 'dn') + '">' +
+              (a.n ? pct(a.avg) : '—') + '</b>' +
+              ' · 없음 ' + (b.n || 0) + '건 <b class="' + ((b.avg || 0) >= 0 ? 'up' : 'dn') + '">' +
+              (b.n ? pct(b.avg) : '—') + '</b>' +
+              (s.gap != null ? ' · 차이 ' + (s.gap >= 0 ? '+' : '') + s.gap + '%p' : '') +
+              (s.enough ? '' : '<br><span style="color:#B26A00">표본부족 — 결론 보류</span>') +
+              (s.note ? '<br><span style="color:#8B95A1">' + esc(s.note) + '</span>' : '') +
+              '</span></div>';
+          }).join('') + '</div>';
+        if ((dl.cases || []).length) {
+          hl += '<div class="of-bk" style="margin-top:9px">악재공시가 걸렸던 실제 건</div><div class="of-min">' +
+            dl.cases.map(function (c) {
+              return '<div class="of-mrow"><span class="of-mw">' + esc(c.name || c.code) + '</span>' +
+                '<span class="of-mx">' + c.date + ' · <b class="' + (c.net >= 0 ? 'up' : 'dn') + '">' +
+                pct(c.net) + '</b> ' + esc(c.how || '') + ' · ' + esc((c.tags || []).join(', ')) +
+                '</span></div>';
+            }).join('') + '</div>';
+        }
+        hl += '<div class="of-fnote">진입 필터로 쓸 수 있는 건 <b>매수일 전날까지</b> 뜬 공시뿐입니다. ' +
+          'DART 접수일에는 시각이 없어 매수일 당일 공시는 15:25 전인지 후인지 알 수 없고, ' +
+          '청산일 공시는 살 때 몰랐던 정보라 필터가 되면 백테가 거짓이 됩니다.</div></div>';
+      } else if (dl.why) {
+        hl += '<div class="of-brief"><div class="of-bk">공시</div><div class="of-bv">' + esc(dl.why) + '</div></div>';
+      }
+      var fl = stl.featwf || {};
+      if (fl.ok) {
+        hl += '<div class="of-brief"><div class="of-bk">특징 필터 워크포워드 — ' +
+          fl.survived + '/' + fl.tried + ' 생존</div><div class="of-min">' +
+          (fl.items || []).map(function (x) {
+            if (x.test_avg == null) return '';
+            return '<div class="of-mrow"><span class="of-mw">' + esc(x.label) + '</span><span class="of-mx">' +
+              '앞에서 고른 ' + x.pick.lo + '~' + (x.pick.hi == null ? '∞' : x.pick.hi) + (x.unit || '') +
+              ' → 뒤 ' + x.test_n + '건 <b class="' + (x.test_avg >= 0 ? 'up' : 'dn') + '">' + pct(x.test_avg) +
+              '</b> · 초과 <b class="' + (x.edge >= 0 ? 'up' : 'dn') + '">' +
+              (x.edge >= 0 ? '+' : '') + x.edge + '%p</b>' +
+              (x.test_n < 5 ? '<br><span style="color:#B26A00">뒤 표본 ' + x.test_n + '건 — 단정 불가</span>' : '') +
+              '</span></div>';
+          }).join('') + '</div>' +
+          '<div class="of-fnote">아래 "어떤 요소가 승률을 가르나" 표는 <b>같은 데이터로 고르고 같은 데이터로 채점한 값</b>입니다. ' +
+          '위 표가 그중 뒤 기간에서도 살아남은 것을 가려 줍니다.</div></div>';
+      }
       if ((stl.feat || []).length) {
-        hl += '<div class="of-brief"><div class="of-bk">어떤 요소가 승률을 가르나</div><div class="of-min">';
+        hl += '<div class="of-brief"><div class="of-bk">어떤 요소가 승률을 가르나 (in-sample)</div><div class="of-min">';
         stl.feat.forEach(function (x) {
           hl += '<div class="of-mrow"><span class="of-mw">' + esc(x.label) + '</span><span class="of-mx">' +
             '<b class="' + (x.spread > 0 ? 'up' : '') + '">' + x.spread + '%p</b> — 좋음 ' +
@@ -2741,6 +2811,12 @@ body.office-on{overflow:hidden}
     }
     if (i === A_RSCH) {
       var stf = ((window.lastData || {}).study || {});
+      var tdy = ((stf.disc || {}).today || {});
+      if (tdy.bad) {
+        var w1 = (tdy.rows || []).filter(function (x) { return x.pre_bad || x.d0_bad; })[0];
+        return '오늘 픽 중 ' + w1.name + ' 에 ' + (w1.tags || []).join('·') +
+               ' 공시가 걸려 있습니다 — 아침에 눈여겨보십시오';
+      }
       var ff = (stf.feat || []).filter(function (x) {
         return /PER|PBR|ROE|부채|영업이익률|성장률|외인/.test(x.label);
       });
@@ -3253,6 +3329,30 @@ body.office-on{overflow:hidden}
       }
     }
 
+    /* ── ⑤-b 백테팀: 특징 필터도 워크포워드로 검증한다 ──
+       익손절만 검증하고 특징 필터를 안 하면 반쪽이다. 학습팀이 'A구간이 제일 좋다'고 해도
+       그게 표본의 우연일 수 있다. 앞 기간에서 구간을 고르고 뒤 기간에 그대로 걸어 본다. */
+    var fw = st.featwf || {};
+    if (!fw.ok) {
+      if (fw.why) f(A_BT, 'flat', '특징 필터는 아직 검증 못 했습니다', fw.why);
+    } else {
+      f(A_BT, (fw.survived >= Math.ceil(fw.tried / 2)) ? 'good' : 'bad',
+        '학습팀이 꼽은 특징 ' + fw.tried + '개를 앞 기간에서 골라 뒤 기간에 걸었더니 ' +
+        fw.survived + '개가 이겼습니다',
+        '뒤 기간 전체 평균보다 나은 것만 셌습니다. 앞뒤 경계는 ' + fw.cut + ' 입니다');
+      (fw.items || []).slice(0, 3).forEach(function (x) {
+        if (x.test_avg == null) return;
+        f(A_BT, (x.edge > 0) ? 'good' : 'bad',
+          x.label + ' ' + x.pick.lo + '~' + (x.pick.hi == null ? '∞' : x.pick.hi) + (x.unit || '') +
+          ' → 뒤 기간 ' + x.test_n + '건 ' + pct(x.test_avg) +
+          ' (뒤 기간 전체 ' + pct(x.base_avg) + ' 대비 ' + (x.edge >= 0 ? '+' : '') + x.edge + '%p)',
+          (x.test_n < 5)
+            ? '★뒤 기간 표본이 ' + x.test_n + '건뿐입니다 — 이겼다고 단정할 수 없습니다. ' +
+              'in-sample 폭은 ' + x.insample_spread + '%p 였습니다'
+            : 'in-sample 폭 ' + x.insample_spread + '%p 가 뒤 기간에서도 남았습니다');
+      });
+    }
+
     /* ── ⑤ 학습팀: 어떤 특징의 종목이 다음날 좋았나 ── */
     if (!st.feat || !st.feat.length) {
       f(A_LEARN, 'flat', '특징별 성적을 낼 표본이 아직 부족합니다', '구간마다 3건은 모여야 셉니다');
@@ -3265,6 +3365,39 @@ body.office-on{overflow:hidden}
           '가장 나쁜 구간 ' + ww.lo + '~' + (ww.hi == null ? '∞' : ww.hi) + (x.unit || '') +
           ' 은 ' + pct(ww.avg) + ' — 차이 ' + x.spread + '%p');
       });
+      /* ★공시 — 이제야 보게 된 것.
+         진입 필터로 쓸 수 있는 건 **매수일 전날까지 뜬 공시**뿐이다.
+         DART 접수일에는 시각이 없어 매수일 당일 공시는 15:25 전인지 후인지 모른다 → 쓰지 않는다. */
+      var dq = st.disc || {};
+      if (!dq.n) {
+        f(A_LEARN, 'flat', '공시는 아직 안 보고 있습니다', dq.why || 'DART 수집을 먼저 돌려야 합니다');
+      } else {
+        var pb = dq.pre_bad || {}, pw = pb['with'] || {}, po = pb['without'] || {};
+        if (!pw.n) {
+          f(A_LEARN, 'good', '사전 악재공시가 있던 종목은 ' + dq.n + '건 중 하나도 없었습니다',
+            '유상증자·메자닌·감자·최대주주변경을 매수일 전날까지로 훑었습니다');
+        } else {
+          f(A_LEARN, pb.enough ? (pb.gap < 0 ? 'bad' : 'good') : 'flat',
+            '매수 전 악재공시가 있던 ' + pw.n + '건은 ' + pct(pw.avg) + ' (승률 ' + pw.win + '%)' +
+            ', 없던 ' + po.n + '건은 ' + pct(po.avg) + ' (승률 ' + po.win + '%)',
+            (pb.enough
+              ? '차이 ' + pb.gap + '%p — 표본이 받쳐 줍니다. 진입 필터 후보입니다'
+              : '★' + (dq.why || '표본이 얇습니다') + '. 방향만 기억하고 결론은 미룹니다'));
+          (dq.cases || []).slice(0, 3).forEach(function (c) {
+            f(A_LEARN, 'flat', '  ' + c.date + ' ' + c.name + ' ' + pct(c.net) + ' (' + c.how + ')',
+              '공시: ' + (c.tags || []).join(', '));
+          });
+        }
+        var sb = dq.post_bad || {}, sw = sb['with'] || {};
+        if (!sw.n) {
+          f(A_LEARN, 'flat', '청산일에 악재공시가 터진 건은 ' + dq.n + '건 중 0건입니다',
+            '★손절이 설정선 아래에서 체결되는 이유를 공시로 설명하려 했는데 **아니었습니다.** ' +
+            '이 표본에서는 다음날 공시가 원인이 아닙니다 — 다른 데서 찾아야 합니다');
+        } else {
+          f(A_LEARN, 'bad', '청산일에 악재공시가 터진 건이 ' + sw.n + '건 있습니다 (' + pct(sw.avg) + ')',
+            sb.note || '이건 진입 필터로 쓸 수 없습니다 — 살 때는 몰랐던 정보입니다');
+        }
+      }
       if (st.theme && st.theme.length) {
         var tb = st.theme[0];
         f(A_LEARN, 'good', '테마별로는 ' + tb.name + ' 가 ' + pct(tb.avg) + ' (' + tb.n + '건) 로 앞섭니다', '');
@@ -3340,6 +3473,29 @@ body.office-on{overflow:hidden}
       }
     }
 
+    /* ── ⑤-c-0 분석팀: 오늘 픽에 걸린 공시가 먼저다 ──
+       과거 통계보다 이게 먼저 나와야 한다. 내일 아침 대응이 걸린 일이니까.
+       ★진입을 막자는 게 아니다(우리는 이미 샀다) — 손절선을 뛰어넘을 종목을 미리 알자는 것. */
+    var tdd = (st.disc || {}).today || {};
+    if (tdd.n) {
+      if (!tdd.bad) {
+        f(A_RSCH, 'good', '오늘 픽 ' + tdd.n + '종목 공시를 훑었습니다 — 악재 공시는 없습니다',
+          '유상증자·전환사채·감자·최대주주변경·거래정지를 매수일 기준으로 봤습니다');
+      } else {
+        (tdd.rows || []).filter(function (x) { return x.pre_bad || x.d0_bad; }).forEach(function (x) {
+          f(A_RSCH, 'bad', x.name + ' — ' + (x.tags || []).join(', ') + ' 공시가 있습니다',
+            (x.d0_bad
+              ? '★매수일 당일 접수입니다. DART 는 접수 시각을 안 주니 15:25 종가매수 전인지 후인지 모릅니다 — ' +
+                '장 마감 뒤 공시일 가능성이 큽니다'
+              : '매수일 전에 이미 공개돼 있던 공시입니다') +
+            '. 갭하락으로 손절선을 뛰어넘을 수 있으니 아침에 먼저 보십시오');
+        });
+        f(A_RSCH, 'flat', '오늘 픽 ' + tdd.n + '종목 중 ' + tdd.bad + '종목에 악재 공시가 걸렸습니다',
+          '지금은 알려 드리는 것까지입니다 — 표본이 ' +
+          (((st.disc || {}).pre_bad || {})['with'] || {}).n + '건뿐이라 매수를 막을 근거는 아직 없습니다');
+      }
+    }
+
     /* ── ⑤-c 분석팀: 회사 자체의 특성이 성적을 가르나 ── */
     var FIN = /PER|PBR|ROE|부채|영업이익률|순이익률|매출성장률|영업이익성장률|외인소진율|52주 위치/;
     var finf = (st.feat || []).filter(function (x) { return FIN.test(x.label); });
@@ -3361,6 +3517,13 @@ body.office-on{overflow:hidden}
             ' 은 ' + pct(x.worst.avg) + ' (' + x.worst.n + '건) — 차이 ' + x.spread + '%p' +
             (x.weak ? '. ★구간 표본이 7건 미만이라 우연일 수 있습니다' : ''));
         });
+        var dt2 = (st.disc || {}).tags || [];
+        if (dt2.length) {
+          f(A_RSCH, 'flat', '매수 전에 걸려 있던 공시 종류: ' +
+            dt2.slice(0, 5).map(function (x) { return x.tag + ' ' + x.n + '건'; }).join(' · '),
+            '유상증자·전환사채·감자·최대주주변경을 악재로, 수주·자사주취득·무상증자를 호재로 봤습니다. ' +
+            '무상증자는 물량이 안 늘어나니 악재로 세지 않았습니다');
+        }
         var og = (st.feat || []).filter(function (x) { return x.label === '영업이익성장률'; })[0];
         if (og && og.best.lo < 0) {
           f(A_RSCH, 'flat', '영업이익이 줄어든 회사 쪽이 오히려 나았습니다',
@@ -3605,6 +3768,11 @@ body.office-on{overflow:hidden}
     of(A_BT).forEach(function (x) { add(A_BT, x.t); if (x.why) add(A_BT, '  근거 — ' + x.why); });
     add(A_LEARN, '학습팀입니다. 어떤 종목이 다음날 좋았는지 특징으로 갈라 봤습니다');
     of(A_LEARN).forEach(function (x) { add(A_LEARN, x.t); if (x.why) add(A_LEARN, '  근거 — ' + x.why); });
+    var tw = ((A.study || {}).disc || {}).today || {};
+    if (tw.bad) {
+      add(A_CHIEF, '분석팀, 오늘 픽에 공시 걸린 게 있습니까');
+      add(A_RSCH, tw.bad + '종목 있습니다. 먼저 보고드립니다');
+    }
     add(A_CHIEF, '분석팀, 회사 자체 특성은 어떻습니까');
     add(A_RSCH, '재무·밸류로 갈라 봤습니다');
     of(A_RSCH).forEach(function (x) { add(A_RSCH, x.t); if (x.why) add(A_RSCH, '  근거 — ' + x.why); });
@@ -4593,10 +4761,12 @@ body.office-on{overflow:hidden}
     } else if (!reduced) {
       player.userData.body.position.y = .55 + Math.sin(now * .0022) * .012;
     }
-    // ★도착했으면 그 자리에서 화면을 연다(9초 안에 못 가면 포기)
+    // ★도착하면 그 자리에서 화면을 연다.
+    //   ★예전엔 9초가 지나면 goOpen 을 그냥 버렸다 — 그러면 눌렀는데 **아무 일도 안 일어난다.**
+    //     티커에 '걸어갑니다…' 만 남고 화면이 안 열린다(헤드리스에서 실제로 재현했다.
+    //     느린 폰이나 먼 대각선 이동에서도 같은 일이 난다). 버리지 말고 그 자리에서 연다.
     if (goOpen) {
-      if (now > goUntil) goOpen = null;
-      else if (dist <= .14) { var _g = goOpen; goOpen = null; openZone(_g); }
+      if (dist <= .14 || now > goUntil) { var _g = goOpen; goOpen = null; openZone(_g); }
     }
 
     var z = zoneAt(player.position.x, player.position.z);
