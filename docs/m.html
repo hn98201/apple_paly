@@ -423,6 +423,7 @@
 #office .of-chip[aria-pressed="true"]{color:#fff;background:var(--t-blue);box-shadow:0 6px 16px -8px rgba(49,130,246,.9)}
 #office .of-chip-rep{color:var(--t-grn)}
 #office .of-chip-seat{color:var(--t-gold)}
+#office .of-chip-rv{color:#6D28D9}
 #office .of-staff{background:var(--t-card);border:0;border-radius:13px;box-shadow:var(--t-sh);
   color:var(--t-sub);font-weight:600;padding:8px 10px}
 #office .of-staff b{color:var(--t-ink);font-size:11.5px;font-weight:800}
@@ -518,6 +519,7 @@ body.office-on{overflow:hidden}
 .of-chip[aria-pressed="true"]{color:#FF8590;border-color:rgba(255,77,94,.5);background:rgba(31,14,18,.9)}
 .of-chip-rep{color:#2fcf9e;border-color:rgba(47,207,158,.55)}
 .of-chip-seat{color:#FFCE5A;border-color:rgba(255,206,90,.55)}
+.of-chip-rv{color:#8B7BF0;border-color:rgba(139,123,240,.55)}
 
 /* ★하단 카드가 2줄이 되며 높아졌다(티커+안내+버튼 3개). 겹쳐서 아래쪽 팀이 안 눌렸다.
    여유를 주고, 화면이 짧으면 스스로 줄인다. */
@@ -813,11 +815,11 @@ body.office-on{overflow:hidden}
   </div>
 
   <button id="ofToggle" type="button">📋 목록</button>
-  <div id="ofBoot"><b>다담 AI 운용본부</b><span id="ofBootMsg">사무실 불 켜는 중…</span></div>
+  <div id="ofBoot"><b>종가배팅 운용본부</b><span id="ofBootMsg">사무실 불 켜는 중…</span></div>
   <button id="ofSeatExit" type="button" hidden>✕ 사무실로</button>
   <div id="ofSeatPanel" hidden>
     <div class="sp-head">
-      <span class="sp-dot"></span><b>다담 전광판</b><time id="spTime">—</time>
+      <span class="sp-dot"></span><b>종가배팅 전광판</b><time id="spTime">—</time>
     </div>
     <canvas id="spChart" width="820" height="300"></canvas>
     <div id="spBody"></div>
@@ -892,6 +894,7 @@ body.office-on{overflow:hidden}
   function render(d){
     // ★status 에 study 가 없으면(관리자 구버전) 따로 받아 둔 것을 붙인다
     try { if (!(d && d.study && d.study.meta) && window.lastStudy) d.study = window.lastStudy; } catch(e){}
+    try { if (d && !d.reviews && window.lastReviews) d.reviews = window.lastReviews; } catch(e){}
     lastData=d;
     try{ renderExtra(d); }catch(e){}   // ★접속현황·IR (신규 필드 없어도 대시보드는 안 깨짐)
     // 상단
@@ -1096,6 +1099,8 @@ body.office-on{overflow:hidden}
   /* ★학습·백테 결과 — 관리자 재기동과 무관하게 평일 20:40 feat_study.py 가 올린다.
      status.json 에 study 가 실려 오면 그쪽이 우선이다(더 최신일 수 있으므로). */
   var STUDY_RAW = "https://raw.githubusercontent.com/hn98201/apple_paly/main/docs/study.json";
+  /* ★청산 회의록 — 관리자가 청산 직후 분석해 올린다(auto_review.py). 관리자 재기동과 무관. */
+  var REVIEW_RAW = "https://raw.githubusercontent.com/hn98201/apple_paly/main/docs/reviews.json";
   var studyAt = 0;
   function pullStudy() {
     if (!pw) return;
@@ -1110,6 +1115,14 @@ body.office-on{overflow:hidden}
         if (window.lastData && !(lastData.study && lastData.study.meta)) lastData.study = s;
       })
       .catch(function () { /* 없으면 없는 대로 — 사무실이 '자료 없음'으로 말한다 */ });
+    fetch(REVIEW_RAW + "?t=" + Date.now(), { cache: "no-store" })
+      .then(function (r) { if (!r.ok) throw 0; return r.json(); })
+      .then(function (env) { return decrypt(env, pw); })
+      .then(function (v) {
+        window.lastReviews = v;
+        if (window.lastData) lastData.reviews = v;
+      })
+      .catch(function () {});
   }
   var researchLoaded = false;
   var SAMPLE_R = {date:"2026-09-03", generated:"2026-09-04 01:56", top:"파인엠텍",
@@ -1675,6 +1688,25 @@ body.office-on{overflow:hidden}
         ['주문가능', acc.orderable ? nf(acc.orderable) + '원' : '—'],
         ['조회 시각', acc.asof || '—', acc.stale ? 'dn' : '']]);
     }
+    if (id === 'reviews') {
+      var rvv = ((window.lastData && lastData.reviews) || window.lastReviews || {}).reviews || [];
+      if (!rvv.length) return '<div class="of-brief"><div class="of-bk">청산 회의록</div>' +
+        '<div class="of-bv">아직 기록이 없습니다. 청산이 나가면 관리자가 바로 분석해 올립니다.</div></div>';
+      var hh = '<div class="of-brief"><div class="of-bk">청산 회의록 · 최근 ' + rvv.length + '건</div>' +
+        '<div class="of-bv">청산이 날 때마다 관리자가 그 자리에서 분석한 기록입니다. 파일에 영구 누적됩니다.</div></div>';
+      rvv.slice().reverse().forEach(function (r) {
+        hh += '<div class="of-brief"><div class="of-bk">' + esc(r.date || '') + ' ' + esc(r.time || '') +
+          ' · ' + esc(r.name || '') + ' <b class="' + (r.ret >= 0 ? 'up' : 'dn') + '">' + pct(r.ret) +
+          '</b> · ' + esc(r.kind || '') + '</div><div class="of-min">';
+        (r.lines || []).forEach(function (x) {
+          hh += '<div class="of-mrow"><span class="of-mw">' + esc(x.team) + '</span>' +
+            '<span class="of-mx">' + esc(x.t) +
+            (x.why ? '<br><span style="color:#69748A">' + esc(x.why) + '</span>' : '') + '</span></div>';
+        });
+        hh += '</div></div>';
+      });
+      return hh;
+    }
     if (id === 'report') {
       var A = LASTA || ANALYZE();
       var TN = ['전략팀', '테마팀', '트레이딩팀', '백테팀', '학습팀', '총괄팀'];
@@ -1760,7 +1792,8 @@ body.office-on{overflow:hidden}
   // ★전광판은 구역이 아니다 — 가상 항목으로 시트만 연다(zoneAt 인덱스를 깨지 않게)
   var VZONE = {
     board:  { id: 'board',  name: '전광판 · 수익률', desc: '', action: '', secs: [] },
-    report: { id: 'report', name: '분석 보고서',     desc: '', action: '', secs: [] }
+    report:  { id: 'report',  name: '분석 보고서',   desc: '', action: '', secs: [] },
+    reviews: { id: 'reviews', name: '청산 회의록',   desc: '', action: '', secs: [] }
   };
   function drawBoard() {
     var cvEl = document.getElementById('ofBoardCv');
@@ -2284,6 +2317,10 @@ body.office-on{overflow:hidden}
     b.className = 'of-chip of-chip-rep'; b.type = 'button'; b.textContent = '📄 분석 보고서';
     b.addEventListener('click', function () { openZone('report'); });
     chips.appendChild(b);
+    var rb = document.createElement('button');
+    rb.className = 'of-chip of-chip-rv'; rb.type = 'button'; rb.textContent = '🧾 청산 회의록';
+    rb.addEventListener('click', function () { openZone('reviews'); });
+    chips.appendChild(rb);
     // ★전광판 전용석 — 걸어가서 앉으면 전광판이 화면에 꽉 차게 잡힌다
     var s = document.createElement('button');
     s.className = 'of-chip of-chip-seat'; s.type = 'button'; s.textContent = '🖥 전광판석';
@@ -2997,6 +3034,42 @@ body.office-on{overflow:hidden}
   }
   var LASTA = null;         // 마지막 분석 결과 — 보고서가 읽는다
 
+
+  /* ═════════ 청산 회의 (2026-09-19) ═════════
+     ★대본이 아니다. 관리자가 청산 **직후** 분석해 둔 것(auto_review.py)을 팀들이 읽는다.
+       설정 대비 체결위치 · 그날 특징 · 학습 구간 대조 · 누적 갱신이 전부 실제 값이다. */
+  var TEAMIDX = { '전략팀': 0, '테마팀': 1, '트레이딩팀': 2, '백테팀': 3, '학습팀': 4, '총괄팀': 5 };
+  function RPLAN(rv) {
+    var L = [];
+    function add(i, s) { if (s) L.push([i, s]); }
+    add(A_CHIEF, '방금 청산이 나갔습니다. 바로 봅시다 — ' + rv.name + ' ' + pct(rv.ret) + ' ' + rv.kind);
+    (rv.lines || []).forEach(function (x) {
+      var i = TEAMIDX[x.team]; if (i == null) i = A_CHIEF;
+      add(i, x.t);
+      if (x.why) add(i, '  근거 — ' + x.why);
+    });
+    add(A_CHIEF, '회의록에 남겼습니다. 같은 조건이 또 나오면 이 기록을 꺼내겠습니다');
+    return { agenda: rv.name + ' ' + pct(rv.ret) + ' ' + rv.kind + ' — 청산 직후 분석',
+             ph: 'review', phLab: '청산 분석', lines: L, review: true };
+  }
+
+  /* 새 청산이 들어오면 스스로 회의를 연다(하루에 같은 건은 한 번만) */
+  var RV_KEY = 'ofreviewed';
+  function autoReviewMeet() {
+    if (MT.on || !office.classList.contains('on')) return;
+    var rv = (window.lastData && lastData.reviews) || window.lastReviews;
+    var list = rv && rv.reviews;
+    if (!list || !list.length) return;
+    var last = list[list.length - 1];
+    var key = (last.date || '') + '|' + (last.code || '') + '|' + (last.time || '');
+    var had = '';
+    try { had = localStorage.getItem(RV_KEY) || ''; } catch (e) {}
+    if (had === key) return;
+    try { localStorage.setItem(RV_KEY, key); } catch (e) {}
+    startMeeting('review', last);
+  }
+  setInterval(autoReviewMeet, 25000);
+
   /* ── 회의: 한 명이 말하면 다른 한 명이 받는다 ── */
   var TALK = [
     [A_STRAT, A_THEME, ''],
@@ -3197,9 +3270,12 @@ body.office-on{overflow:hidden}
     var tot = (MT.plan && MT.plan.lines.length) || 1;
     meetBar.style.width = Math.max(0, Math.min(100, (MT.i + 1) / tot * 100)) + '%';
   }
-  function startMeeting(kind) {
+  function startMeeting(kind, arg) {
     if (MT.on) { endMeeting(false); return; }
-    var p = (kind === 'analysis') ? APLAN() : (kind === 'idea' ? IPLAN() : MPLAN());
+    var p = (kind === 'analysis') ? APLAN()
+          : (kind === 'idea') ? IPLAN()
+          : (kind === 'review') ? RPLAN(arg)
+          : MPLAN();
     if (!p.lines.length) { tickText.textContent = '지금은 회의할 안건이 없습니다'; return; }
     MT.on = true; MT.plan = p; MT.i = -1; MT.agenda = p.agenda; MT.ph = p.ph;
     MT.next = performance.now() + 900;
@@ -3211,9 +3287,9 @@ body.office-on{overflow:hidden}
     document.getElementById('ofMeetAgenda').textContent = p.agenda;
     document.getElementById('ofMeetPh').textContent = p.phLab || '';
     var kb = p.analysis ? analBtn : (p.idea ? ideaBtn : meetBtn);
-    kb.textContent = p.analysis ? '분석 종료' : (p.idea ? '회의 종료' : '회의 종료');
+    kb.textContent = p.analysis ? '분석 종료' : '회의 종료';
     kb.classList.add('on');
-    MT.kind = p.analysis ? 'analysis' : (p.idea ? 'idea' : 'routine');
+    MT.kind = p.analysis ? 'analysis' : (p.idea ? 'idea' : (p.review ? 'review' : 'routine'));
     minute('사회', '회의 시작 — ' + p.agenda, 'ev');
     setMeetProg();
   }
