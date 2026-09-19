@@ -521,8 +521,8 @@ body.office-on{overflow:hidden}
 
 /* ★하단 카드가 2줄이 되며 높아졌다(티커+안내+버튼 3개). 겹쳐서 아래쪽 팀이 안 눌렸다.
    여유를 주고, 화면이 짧으면 스스로 줄인다. */
-#ofStaff{position:absolute;left:12px;bottom:calc(214px + env(safe-area-inset-bottom,0px));
- display:flex;flex-direction:column;gap:5px;max-width:168px;z-index:3;
+#ofStaff{position:absolute;left:12px;bottom:calc(272px + env(safe-area-inset-bottom,0px));
+ display:flex;flex-direction:column;gap:4px;max-width:104px;z-index:3;
  max-height:min(46vh,340px);overflow-y:auto;scrollbar-width:none}
 #ofStaff::-webkit-scrollbar{display:none}
 .of-staff{display:flex;align-items:center;gap:8px;background:rgba(20,23,30,.84);
@@ -575,6 +575,8 @@ body.office-on{overflow:hidden}
 #office .ofc-act{background:var(--t-grn);color:#fff;border-radius:11px;font-weight:700}
 #office #ofBack,#office #ofToggle{background:var(--t-card);color:var(--t-lab);border:0;
   border-radius:99px;font-weight:700;box-shadow:var(--t-sh)}
+/* ★하단 카드와 겹쳤다(스샷) — 화면 오른쪽 위로 올린다 */
+#office #ofToggle{top:calc(14px + env(safe-area-inset-top,0px));bottom:auto;right:12px}
 #ofPrompt .who{display:flex;flex-direction:column;gap:4px;flex:1 1 auto;min-width:0}
 #ofPrompt .who b{font-size:14px;font-weight:700;color:#ECEEF2}
 #ofPrompt .who span{font-size:11px;color:#98A0AE;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -596,7 +598,33 @@ body.office-on{overflow:hidden}
  box-shadow:0 8px 22px -10px rgba(25,31,40,.6)}
 #ofSeatExit[hidden]{display:none}
 
-#ofPad{position:absolute;right:12px;bottom:calc(214px + env(safe-area-inset-bottom,0px));
+/* ── 세로 화면용 전광판 ──
+   증권사 로비 판을 정면에서 보는 느낌. 3D 판과 같은 ledPages() 를 쓴다. */
+#ofSeatPanel{position:absolute;inset:0;z-index:44;overflow-y:auto;-webkit-overflow-scrolling:touch;
+ background:linear-gradient(180deg,#0B1220 0%,#0E1626 60%,#0B1220 100%);
+ padding:calc(64px + env(safe-area-inset-top,0px)) 14px calc(24px + env(safe-area-inset-bottom,0px));
+ font-family:var(--sans)}
+#ofSeatPanel[hidden]{display:none!important}
+#ofSeatPanel .sp-head{display:flex;align-items:center;gap:9px;margin-bottom:12px}
+#ofSeatPanel .sp-head b{color:#FFCE5A;font-size:14px;font-weight:800;letter-spacing:.02em}
+#ofSeatPanel .sp-head time{margin-left:auto;color:#7E8CA3;font-size:12px;font-weight:700;
+ font-variant-numeric:tabular-nums}
+#ofSeatPanel .sp-dot{width:8px;height:8px;border-radius:50%;background:#2FCF9E;
+ animation:ofPulse 1.8s ease-in-out infinite}
+#spChart{width:100%;height:auto;display:block;border-radius:16px;background:#111B2B;margin-bottom:14px}
+.sp-sec{background:#111B2B;border-radius:16px;padding:14px 15px;margin-bottom:11px}
+.sp-sec h3{margin:0 0 11px;font-size:13px;font-weight:800;color:#FFCE5A;letter-spacing:.02em}
+.sp-row{display:flex;align-items:baseline;gap:10px;padding:9px 0;border-bottom:1px solid #1B2740}
+.sp-row:last-child{border-bottom:0}
+.sp-row .a{flex:1 1 auto;min-width:0;color:#E8EDF5;font-size:14px;font-weight:700;
+ overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sp-row .b{flex:0 0 auto;color:#7E8CA3;font-size:11.5px;font-weight:600}
+.sp-row .c{flex:0 0 auto;font-size:15px;font-weight:800;font-variant-numeric:tabular-nums;
+ letter-spacing:-.01em}
+.sp-row .c.up{color:#FF6B78}.sp-row .c.dn{color:#6AA3F8}.sp-row .c.fl{color:#98A6BD}
+@media (prefers-reduced-motion:reduce){#ofSeatPanel .sp-dot{animation:none}}
+
+#ofPad{position:absolute;right:12px;bottom:calc(272px + env(safe-area-inset-bottom,0px));
  display:grid;grid-template-columns:repeat(3,38px);grid-template-rows:repeat(3,38px);
  gap:5px;z-index:3}
 #ofPad button{border:1px solid #2A303C;border-radius:10px;background:rgba(20,23,30,.88);
@@ -615,6 +643,9 @@ body.office-on{overflow:hidden}
 @media (max-height:560px){#ofPad{display:none}}
 
 /* 회의 배너 — 지금 무슨 회의를 몇 번째 발언까지 했는지 */
+/* ★[hidden] 은 브라우저 기본 스타일이라 id 선택자의 display 에 진다.
+   그래서 회의가 없는데도 빈 배너가 계속 떠 있었다(스샷으로 확인). */
+#ofMeet[hidden]{display:none!important}
 #ofMeet{position:absolute;right:12px;top:calc(120px + env(safe-area-inset-top,0px));width:min(224px,50vw);
  background:rgba(20,23,30,.95);border:1px solid #2fcf9e;border-radius:14px;padding:10px 11px;
  display:flex;flex-direction:column;gap:7px;z-index:4;
@@ -696,7 +727,7 @@ body.office-on{overflow:hidden}
 .of-mx{color:#98A0AE;flex:1 1 auto;min-width:0;line-height:1.45}
 @keyframes ofPulse{0%,100%{opacity:1}50%{opacity:.3}}
 @media (prefers-reduced-motion:reduce){#ofTicker .of-dot{animation:none}#ofSheet{transition:none}}
-@media (max-width:430px){#ofStaff{max-width:150px}.of-val{font-size:16px}}
+@media (max-width:430px){#ofStaff{max-width:98px}.of-val{font-size:16px}}
 @media (max-height:700px){#ofStaff{max-height:min(34vh,250px)}}
 @media (max-height:560px){#ofStaff{display:none}}
 </style>
@@ -784,6 +815,13 @@ body.office-on{overflow:hidden}
   <button id="ofToggle" type="button">📋 목록</button>
   <div id="ofBoot"><b>다담 AI 운용본부</b><span id="ofBootMsg">사무실 불 켜는 중…</span></div>
   <button id="ofSeatExit" type="button" hidden>✕ 사무실로</button>
+  <div id="ofSeatPanel" hidden>
+    <div class="sp-head">
+      <span class="sp-dot"></span><b>다담 전광판</b><time id="spTime">—</time>
+    </div>
+    <canvas id="spChart" width="820" height="300"></canvas>
+    <div id="spBody"></div>
+  </div>
 </div>
 <div id="ofStash" hidden></div>
 
@@ -1834,10 +1872,11 @@ body.office-on{overflow:hidden}
   // ★흰 사무실 (2026-09-19) — 어두우면 글자와 종목이 안 보인다는 지적
   scene.background = new THREE.Color(0xEDF1F6);
   scene.fog = new THREE.Fog(0xEDF1F6, 62, 150);
-  camera = new THREE.PerspectiveCamera(36, 1, 0.1, 200);
-  var camYaw = Math.PI * 0.25, camDist = 34, camTarget = new THREE.Vector3(0, 0, 3);
+  camera = new THREE.PerspectiveCamera(46, 1, 0.1, 260);
+  // ★39° 돌려 두니 전광판이 화면 구석에서 잘렸다(스샷). 전광판이 주인공이니 거의 정면으로 본다
+  var camYaw = 0.20, camDist = 30, camTarget = new THREE.Vector3(0, 0, 0);
   // ★상하 시점(2026-09-18). 0.66 rad 이 예전 고정 높이(=camDist x 0.78)와 같다 — 기본 화면이 바뀌지 않게
-  var camPitch = 0.66, CAM_K = Math.cos(0.66);
+  var camPitch = 0.82, CAM_K = Math.cos(0.66);      // 더 위에서 — 방이 세로로 펼쳐져 더 보인다
 
   scene.add(new THREE.HemisphereLight(0xffffff, 0xb9c2cf, 0.72));
   var key = new THREE.DirectionalLight(0xffffff, 1.15);        // 세게 — 면과 면의 차이를 만든다
@@ -2226,7 +2265,7 @@ body.office-on{overflow:hidden}
     g.userData.body = b; return g;
   }
   var player = person(0xff4d5e, 0x3a3226);
-  player.position.set(0, 0, 11.5); scene.add(player);
+  player.position.set(0, 0, 7.0); scene.add(player);
   var objs = AGENTS.map(function (a) {
     var g = person(a.color, a.hair);
     g.position.set(a.home[0] * ZX, 0, a.home[1] * ZZ);
@@ -2238,7 +2277,7 @@ body.office-on{overflow:hidden}
   var labels = document.getElementById('ofLabels');
   var chips = document.getElementById('ofChips');
   var staff = document.getElementById('ofStaff');
-  var target = new THREE.Vector3(0, 0, 11.5);
+  var target = new THREE.Vector3(0, 0, 7.0);
 
   (function () {                       // ★분석 보고서는 회의를 끝까지 안 봐도 열린다
     var b = document.createElement('button');
@@ -2265,7 +2304,9 @@ body.office-on{overflow:hidden}
   AGENTS.forEach(function (a, i) {
     var row = document.createElement('button');
     row.className = 'of-staff'; row.type = 'button';
-    row.innerHTML = '<i class="of-dot"></i><span><b>' + a.name + '</b> · ' + a.role + '</span>';
+    // ★역할 설명까지 넣으니 목록이 화면 1/3 을 먹었다(스샷). 이름만 두고 설명은 title 로
+    row.innerHTML = '<i class="of-dot"></i><span><b>' + a.name + '</b></span>';
+    row.title = a.name + ' · ' + a.role;
     row.addEventListener('click', function () {
       // ★부르면 **그 팀이 나에게 온다**. 예전엔 내가 걸어갔다.
       callTeam(i, 15000);
@@ -3040,7 +3081,9 @@ body.office-on{overflow:hidden}
      ★camTarget 을 전광판 쪽으로 옮기고 시선 높이를 판 한가운데로 올린다.
        안 그러면 바닥을 보느라 판이 화면 위로 밀려난다. */
   var boardView = false;
-  var FOV_N = 36, FOV_B = 72;          // 평소 화각 / 전광판 화각
+  /* ★스샷으로 보니 방 구석만 잡혔다. 폰 세로는 수평 화각이 좁아 36° 로는 방이 안 들어온다.
+     46° 로 넓히고(살짝 광각), 시선을 방 안쪽으로 당기고, 조금 더 위에서 본다. */
+  var FOV_N = 46, FOV_B = 72;          // 평소 화각 / 전광판 화각
   function boardFit() {
     // ★화각을 넓히지 않으면 폰 세로(수평 17°)에서 111 까지 물러나야 한다 — 사무실이 점이 된다.
     //   72° 로 넓히면 54 면 충분하고, 방 바로 밖에서 판이 화면을 꽉 채운다.
@@ -3051,6 +3094,67 @@ body.office-on{overflow:hidden}
     return Math.min(90, Math.max(needW, needH) + 2);
   }
   var seatExit = document.getElementById('ofSeatExit');
+  var seatPanel = document.getElementById('ofSeatPanel');
+  var seatTimer = null;
+
+  /* 세로 전광판 — 3D 판과 **같은** ledPages() 를 쓴다(내용이 두 벌로 갈라지지 않게) */
+  function drawSeatPanel() {
+    if (!seatPanel || seatPanel.hidden) return;
+    var d = window.lastData || {};
+    document.getElementById('spTime').textContent = (d.hm || '') + (d.is_mock ? ' · 모의' : ' · 실전');
+    var h = '';
+    ledPages().forEach(function (p) {
+      h += '<div class="sp-sec"><h3>' + esc(p.t) + '</h3>';
+      p.rows.forEach(function (r) {
+        var cls = r[3] > 0 ? 'up' : (r[3] < 0 ? 'dn' : 'fl');
+        h += '<div class="sp-row"><span class="a">' + esc(String(r[0])) + '</span>' +
+             (r[1] ? '<span class="b">' + esc(String(r[1])) + '</span>' : '') +
+             '<span class="c ' + cls + '">' + esc(String(r[2])) + '</span></div>';
+      });
+      h += '</div>';
+    });
+    document.getElementById('spBody').innerHTML = h;
+    try { drawSeatChart(); } catch (e) {}
+  }
+  function drawSeatChart() {
+    var cv = document.getElementById('spChart'); if (!cv) return;
+    var d = window.lastData || {}, S = statsNow(d), curve = S.curve || [];
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    var w = cv.clientWidth || 360, hh = 190;
+    cv.width = Math.round(w * dpr); cv.height = Math.round(hh * dpr);
+    var g = cv.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    var col = ((S.total == null ? 0 : S.total) >= 0) ? '#FF6B78' : '#6AA3F8';
+    g.fillStyle = '#111B2B'; g.fillRect(0, 0, w, hh);
+    g.textAlign = 'left'; g.textBaseline = 'alphabetic';
+    g.fillStyle = '#7E8CA3'; g.font = '700 12px ' + (getComputedStyle(cv).fontFamily || 'sans-serif');
+    g.fillText('누적 수익률', 16, 26);
+    g.fillStyle = col; g.font = '800 34px ' + (getComputedStyle(cv).fontFamily || 'sans-serif');
+    g.fillText(pct(S.total), 16, 62);
+    g.fillStyle = '#98A6BD'; g.font = '600 12px ' + (getComputedStyle(cv).fontFamily || 'sans-serif');
+    g.fillText('MDD ' + mddTxt(S.mdd) + '   승률 ' + (S.win != null ? S.win.toFixed(0) + '%' : '—') +
+               '   ' + (S.n || 0) + '건', 16, 84);
+    var gx = 16, gy = 100, gw = w - 32, gh = hh - gy - 16;
+    if (curve.length > 1) {
+      var lo = Math.min.apply(null, curve), hi = Math.max.apply(null, curve);
+      if (hi - lo < 1) { var m0 = (hi + lo) / 2; lo = m0 - 0.5; hi = m0 + 0.5; }
+      // ★위아래 여백 — 없으면 거의 평평한 곡선이 바닥에 딱 붙어 빈 칸처럼 보인다(스샷)
+      var pad = (hi - lo) * 0.18; lo -= pad; hi += pad;
+      var zy = gy + gh - (0 - lo) / (hi - lo) * gh;
+      g.setLineDash([5, 5]); g.strokeStyle = '#243450';
+      g.beginPath(); g.moveTo(gx, zy); g.lineTo(gx + gw, zy); g.stroke(); g.setLineDash([]);
+      g.beginPath();
+      for (var i = 0; i < curve.length; i++) {
+        var x = gx + i / (curve.length - 1) * gw, y = gy + gh - (curve[i] - lo) / (hi - lo) * gh;
+        if (i) g.lineTo(x, y); else g.moveTo(x, y);
+      }
+      g.strokeStyle = col; g.lineWidth = 3; g.lineJoin = 'round'; g.stroke();
+      g.lineTo(gx + gw, zy); g.lineTo(gx, zy); g.closePath();
+      g.globalAlpha = .16; g.fillStyle = col; g.fill(); g.globalAlpha = 1;
+    } else {
+      g.fillStyle = '#46566F'; g.font = '600 12px sans-serif';
+      g.fillText('청산이 쌓이면 곡선이 그려집니다', gx, gy + gh / 2);
+    }
+  }
   function goBoardSeat() {
     boardView = true;
     walkTo(0, BSEAT_Z + 0.2, null, true);
@@ -3059,11 +3163,20 @@ body.office-on{overflow:hidden}
     office.classList.add('seat');                     // ★전광판만 남긴다
     seatExit.hidden = false;
     try { closeSheet(); } catch (e) {}
+    // ★3D 판은 30x6(5:1) 이라 세로 화면에서는 폭을 채우면 높이가 8% 다.
+    //   걸어가 앉는 연출이 끝나면 세로로 짜인 전광판 화면을 띄운다.
+    clearTimeout(seatTimer);
+    seatTimer = setTimeout(function () {
+      if (!boardView) return;
+      seatPanel.hidden = false; seatPanel.scrollTop = 0; drawSeatPanel();
+    }, 2600);
   }
   function leaveBoardSeat() {
     boardView = false;
     office.classList.remove('seat');
     seatExit.hidden = true;
+    clearTimeout(seatTimer);
+    seatPanel.hidden = true;
   }
   seatExit.addEventListener('click', leaveBoardSeat);
   function seatOf(i) {                       // 원탁 의자 안쪽에 앉힌다
@@ -3187,7 +3300,7 @@ body.office-on{overflow:hidden}
       else if (k === 'down') camPitch = Math.max(0.16, camPitch - 0.055);
       else if (k === 'in') camDist = Math.max(12, camDist - 1.6);
       else if (k === 'out') camDist = Math.min(56, camDist + 1.6);
-      else if (k === 'home') { leaveBoardSeat(); camGoto(Math.PI * 0.25, 0.66, window.innerWidth < 520 ? 38 : 32); }
+      else if (k === 'home') { leaveBoardSeat(); camGoto(0.20, 0.82, window.innerWidth < 520 ? 30 : 26); }
       if (k !== 'home' && boardView) leaveBoardSeat();
     }
     pad.addEventListener('pointerdown', function (e) {
@@ -3493,6 +3606,7 @@ body.office-on{overflow:hidden}
     if (scScreen) scScreen.material.color.setHex((d.picks || []).length ? 0xff4d5e : 0x2a3040);
     AGENTS.forEach(function (a, i) { a.dotEl.style.opacity = d.conn ? '1' : '.3'; });
     if (d.stage) { tickText.textContent = d.stage; tickTime.textContent = d.hm || ''; }
+    try { drawSeatPanel(); } catch (e) {}
     try { react(d); } catch (e) {}
     if (openId) {
       try {
@@ -3533,7 +3647,7 @@ body.office-on{overflow:hidden}
     var w = office.clientWidth || window.innerWidth, h = office.clientHeight || window.innerHeight;
     renderer.setSize(w, h, false);
     camera.aspect = w / h;
-    if (!boardView) camDist = w < 520 ? 38 : 32;          // ★더 멀리서(2026-09-19 요청)
+    if (!boardView) camDist = w < 520 ? 30 : 26;
     camera.updateProjectionMatrix();
   }
   window.layout = layout;
@@ -3697,7 +3811,8 @@ body.office-on{overflow:hidden}
       }
     });
 
-    camTarget.lerp(new THREE.Vector3(player.position.x * .55, 0, player.position.z * .55 + 1.5), .05);
+    // ★시선을 방 안쪽으로 당긴다. 예전엔 내가 남쪽 끝에 서면 카메라가 방 밖을 봤다(스샷)
+    camTarget.lerp(new THREE.Vector3(player.position.x * .34, 0, player.position.z * .34 - 1.2), .05);
     if (boardView) {
       // ★전광판 전용 시점 — 판 정면에서 화면에 꽉 차는 거리로 붙는다
       if (Math.abs(camera.fov - FOV_B) > .5) { camera.fov += (FOV_B - camera.fov) * .12; camera.updateProjectionMatrix(); }
