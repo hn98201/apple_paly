@@ -378,7 +378,44 @@
 
 <style id="ofCss">
 /* ═══════════ 3D 사무실 (2026-09-18) ═══════════ */
-#office{position:fixed;inset:0;z-index:40;background:#0B0D11;overflow:hidden;display:none}
+/* ★흰 사무실(2026-09-19) — 3D 장면이 밝아졌으므로 위에 얹힌 판들도 같이 밝게 한다.
+   어두운 판을 그대로 두면 밝은 바닥 위에서 글자가 더 안 보인다. */
+#office{position:fixed;inset:0;z-index:40;background:#EDF1F6;overflow:hidden;display:none}
+#office .of-bar,#office #ofTicker,#office #ofPrompt,#office .of-chip,#office .of-staff,
+#office #ofSheet,#office #ofMeet,#office #ofBoot{color:#1B2430}
+#office .of-bar{background:rgba(255,255,255,.92);border-color:#D6DEE8}
+#office #ofTicker{background:rgba(255,255,255,.92);border-color:#D6DEE8;color:#5A6676}
+#office #ofPrompt{background:rgba(255,255,255,.96);border-color:#CFD8E3}
+#office #ofPrompt .who b{color:#111922}
+#office #ofPrompt .who span{color:#5A6676}
+#office .of-chip{background:rgba(255,255,255,.92);border-color:#D6DEE8;color:#5A6676}
+#office .of-chip[aria-pressed="true"]{color:#C5283D;border-color:rgba(197,40,61,.45);background:#FFF1F3}
+#office .of-chip-rep{color:#12795A;border-color:rgba(18,121,90,.45)}
+#office .of-chip-seat{color:#9A6B00;border-color:rgba(154,107,0,.45)}
+#office .of-staff{background:rgba(255,255,255,.92);border-color:#D6DEE8;color:#334}
+#office #ofHint{color:#6C7787}
+#office .of-zone{background:rgba(255,255,255,.9);color:#334;border-color:#CFD8E3}
+#office .of-name{text-shadow:0 1px 2px rgba(255,255,255,.9)}
+#office .of-bubble{background:#fff;border-color:#CFD8E3;color:#1B2430;
+  box-shadow:0 8px 22px -12px rgba(20,30,50,.45)}
+#office #ofSheet{background:#FFFFFF;border-top-color:#D6DEE8;color:#1B2430}
+#office .of-sheet-head h2{color:#111922}
+#office .of-brief{background:#F6F8FB;border-color:#DFE5EC}
+#office .of-bi{background:#fff}
+#office .of-bk,#office .of-bv,#office .of-mt{color:#6C7787}
+#office .of-mx{color:#3B4656}
+#office .of-mw{color:#111922}
+#office .of-mrow{border-bottom-color:#E7ECF2}
+#office .of-act2{background:#F2F5F9;color:#1B2430;border-color:#CFD8E3}
+#office .of-act2.on{background:#12795A;color:#fff;border-color:#12795A}
+#office #ofMeet{background:rgba(255,255,255,.97);border-color:#12795A}
+#office #ofMeetAgenda{color:#1B2430}
+#office #ofMeet .of-mh button{background:#F2F5F9;color:#5A6676;border-color:#CFD8E3}
+#office #ofMeetLog{background:#F2F5F9;color:#1B2430}
+#office #ofBoot{background:#EDF1F6;color:#1B2430}
+#office #ofBack,#office #ofToggle{background:rgba(255,255,255,.94);color:#1B2430;border-color:#CFD8E3}
+#office .up{color:#C5283D}
+#office .dn{color:#1A5FB4}
 #office.on{display:block}
 body.office-on{overflow:hidden}
 #ofScene{position:absolute;inset:0;display:block;width:100%;height:100%;touch-action:none}
@@ -420,6 +457,7 @@ body.office-on{overflow:hidden}
  white-space:nowrap;font-family:inherit}
 .of-chip[aria-pressed="true"]{color:#FF8590;border-color:rgba(255,77,94,.5);background:rgba(31,14,18,.9)}
 .of-chip-rep{color:#2fcf9e;border-color:rgba(47,207,158,.55)}
+.of-chip-seat{color:#FFCE5A;border-color:rgba(255,206,90,.55)}
 
 #ofStaff{position:absolute;left:12px;bottom:calc(150px + env(safe-area-inset-bottom,0px));
  display:flex;flex-direction:column;gap:6px;max-width:162px}
@@ -583,7 +621,7 @@ body.office-on{overflow:hidden}
           <button class="of-act of-act2" id="ofRepBtn" type="button">📄 보고서</button>
         </div>
       </div>
-      <div id="ofHint">바닥을 누르면 걸어갑니다 · 부서를 누르면 걸어가서 엽니다 · 드래그 좌우·상하 회전 · 휠 줌</div>
+      <div id="ofHint">바닥=걷기 · 부서=걸어가서 열기 · <b>🖥 전광판석</b>=전광판 한눈에 · 드래그 회전 · 휠 줌</div>
     </div>
   </div>
 
@@ -666,6 +704,8 @@ body.office-on{overflow:hidden}
   function esc(s){ return String(s==null?"":s).replace(/[&<>]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;"}[c];}); }
 
   function render(d){
+    // ★status 에 study 가 없으면(관리자 구버전) 따로 받아 둔 것을 붙인다
+    try { if (!(d && d.study && d.study.meta) && window.lastStudy) d.study = window.lastStudy; } catch(e){}
     lastData=d;
     try{ renderExtra(d); }catch(e){}   // ★접속현황·IR (신규 필드 없어도 대시보드는 안 깨짐)
     // 상단
@@ -842,7 +882,8 @@ body.office-on{overflow:hidden}
     setTimeout(function(){ try{document.getElementById("pwInput").focus();}catch(e){} },100); }
   function unlock(){ var v=document.getElementById("pwInput").value; if(!v) return; pw=v;
     try{ if(document.getElementById("remember").checked) localStorage.setItem("mpw",v); else localStorage.removeItem("mpw"); }catch(e){}
-    document.getElementById("gate").classList.remove("on"); document.getElementById("pwInput").value=""; pull(true); }
+    document.getElementById("gate").classList.remove("on"); document.getElementById("pwInput").value="";
+    pull(true); try{ pullStudy(); }catch(e){} }
   function logout(){ try{localStorage.removeItem("mpw");}catch(e){} pw=null; showGate("비밀번호를 다시 입력하세요"); }
 
   function pull(manual){
@@ -860,11 +901,30 @@ body.office-on{overflow:hidden}
         var er=document.getElementById("err"); er.style.display="block";
         er.innerHTML="⚠️ 실시간 데이터 미연결 — <b>샘플 미리보기</b>.<br>배포(GitHub) + 서버 push 후 실데이터가 뜹니다.";
       }
-    }).finally(function(){ if(manual) setTimeout(function(){btn.classList.remove("spin");},600); });
+    }).finally(function(){ if(manual) setTimeout(function(){btn.classList.remove("spin");},600);
+      try{ pullStudy(); }catch(e){} });
   }
 
   // ── 리서치 탭 (급등주 펀드매니저 분석) ──
   var RESEARCH_RAW = "https://raw.githubusercontent.com/hn98201/apple_paly/main/docs/research.json";
+  /* ★학습·백테 결과 — 관리자 재기동과 무관하게 평일 20:40 feat_study.py 가 올린다.
+     status.json 에 study 가 실려 오면 그쪽이 우선이다(더 최신일 수 있으므로). */
+  var STUDY_RAW = "https://raw.githubusercontent.com/hn98201/apple_paly/main/docs/study.json";
+  var studyAt = 0;
+  function pullStudy() {
+    if (!pw) return;
+    if (Date.now() - studyAt < 600000) return;      // 10분에 한 번이면 충분하다(하루 한 번 갱신)
+    studyAt = Date.now();
+    fetch(STUDY_RAW + "?t=" + Date.now(), { cache: "no-store" })
+      .then(function (r) { if (!r.ok) throw 0; return r.json(); })
+      .then(function (env) { return decrypt(env, pw); })
+      .then(function (s) {
+        window.lastStudy = s;
+        // 이미 그려진 화면에도 바로 붙인다 — 다음 status 를 기다리지 않게
+        if (window.lastData && !(lastData.study && lastData.study.meta)) lastData.study = s;
+      })
+      .catch(function () { /* 없으면 없는 대로 — 사무실이 '자료 없음'으로 말한다 */ });
+  }
   var researchLoaded = false;
   var SAMPLE_R = {date:"2026-09-03", generated:"2026-09-04 01:56", top:"파인엠텍",
     accuracy:{n:15,hit:9,rate:60.0,buy_n:7,buy_hit:5,buy_rate:71.4,criterion:"익절 6% / 손절 3.5%",rank_days:3,top1_win:2,top1_rate:66.7,by_rank:{"1":4.1,"2":2.3,"3":-0.8,"4":-1.5,"5":-2.9}},
@@ -1215,23 +1275,28 @@ body.office-on{overflow:hidden}
 
   /* ── 구역: 종가배팅의 실제 기능에 맞춘다 ── */
   var ZONES = [
-    { id:'strategy', name:'전략실',   cx:-8.75, cz:-4.5, tint:0xff4d5e,
+    { id:'strategy', name:'전략실',   cx:-12.6, cz:-8.0, tint:0xff4d5e,
       desc:'오늘 스캔 종목 · 강한 테마', action:'픽 보기', secs:['secPick','secSec'] },
-    { id:'meeting',  name:'리서치실', cx:0,     cz:-4.5, tint:0x3e8bf5,
+    { id:'meeting',  name:'리서치실', cx:0,     cz:-7.4, tint:0x3e8bf5,
       desc:'급등주 판정 · 누적 채점',   action:'리서치',  secs:['paneResearch'] },
-    { id:'chief',    name:'본부장실', cx:8.75,  cz:-4.5, tint:0x8b93a5,
+    { id:'chief',    name:'본부장실', cx:12.6,  cz:-8.0, tint:0x8b93a5,
       desc:'모드 · 익절손절 · 시스템',  action:'상태',    secs:['secSys'] },
-    { id:'trading',  name:'트레이딩', cx:-8.75, cz:4.5,  tint:0xff4d5e,
+    { id:'trading',  name:'트레이딩', cx:-12.6, cz:7.5,  tint:0xff4d5e,
       desc:'매매 기록 · 체결 내역',     action:'기록',    secs:['trSec'] },
-    { id:'desk',     name:'내 자리',  cx:0,     cz:4.5,  tint:0xffffff,
+    { id:'desk',     name:'내 자리',  cx:0,     cz:9.5,  tint:0x2fcf9e,
       desc:'전략자산 · 오늘 손익 · 보유', action:'열기',   secs:['secHero','secStage','secPos'] },
-    { id:'records',  name:'서버실',   cx:8.75,  cz:4.5,  tint:0x2fcf9e,
+    { id:'records',  name:'서버실',   cx:12.6,  cz:7.5,  tint:0x2fcf9e,
       desc:'클라이언트 접속 · IR 리서치', action:'현황',   secs:['paneClients','paneIr'] }
   ];
-  var W = 26, D = 18, COLX = [[-13,-4.5],[-4.5,4.5],[4.5,13]], ROWZ = [[-9,0],[0,9]];
+  /* ★증설 (2026-09-19) — 26x18 → 36x30. 부서를 좌우 바깥으로 밀어 가운데를 비웠다:
+     남쪽 전광판 전용석에서 북쪽 벽의 대형 전광판이 통째로 보여야 하기 때문이다.
+     ZS/ZX 는 옛 좌표(26x18 기준)를 새 방으로 옮기는 환산값이다. */
+  var W = 36, D = 30;
+  var ZX = W / 26, ZZ = D / 18;                     // 가구·자리 환산 비율
+  var COLX = [[-18,-7.2],[-7.2,7.2],[7.2,18]], ROWZ = [[-15,-1],[-1,15]];
   function zoneAt(x, z) {
     var col = x < COLX[0][1] ? 0 : (x < COLX[1][1] ? 1 : 2);
-    return ZONES[(z < 0 ? 0 : 1) * 3 + col];
+    return ZONES[(z < ROWZ[0][1] ? 0 : 1) * 3 + col];
   }
 
   /* ★팀 넷 (2026-09-19) — 사용자가 정한 구성.
@@ -1610,22 +1675,23 @@ body.office-on{overflow:hidden}
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
   scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x0b0d11);
-  scene.fog = new THREE.Fog(0x0b0d11, 44, 88);            // ★멀리서 봐도 안개에 먹히지 않게
+  // ★흰 사무실 (2026-09-19) — 어두우면 글자와 종목이 안 보인다는 지적
+  scene.background = new THREE.Color(0xEDF1F6);
+  scene.fog = new THREE.Fog(0xEDF1F6, 56, 118);
   camera = new THREE.PerspectiveCamera(36, 1, 0.1, 200);
   var camYaw = Math.PI * 0.25, camDist = 34, camTarget = new THREE.Vector3(0, 0, 3);
   // ★상하 시점(2026-09-18). 0.66 rad 이 예전 고정 높이(=camDist x 0.78)와 같다 — 기본 화면이 바뀌지 않게
   var camPitch = 0.66, CAM_K = Math.cos(0.66);
 
-  scene.add(new THREE.HemisphereLight(0x8aa0c0, 0x0b0d11, 0.5));
-  var key = new THREE.DirectionalLight(0xdfe6f5, 0.85);
+  scene.add(new THREE.HemisphereLight(0xffffff, 0xc6ccd6, 0.95));
+  var key = new THREE.DirectionalLight(0xffffff, 0.65);
   key.position.set(12, 22, 10); key.castShadow = true;
   key.shadow.mapSize.width = key.shadow.mapSize.height = 1024;
-  key.shadow.camera.left = -20; key.shadow.camera.right = 20;
-  key.shadow.camera.top = 20; key.shadow.camera.bottom = -20;
-  key.shadow.camera.far = 60; key.shadow.bias = -0.0012;
+  key.shadow.camera.left = -28; key.shadow.camera.right = 28;
+  key.shadow.camera.top = 28; key.shadow.camera.bottom = -28;
+  key.shadow.camera.far = 80; key.shadow.bias = -0.0012;
   scene.add(key);
-  var fillL = new THREE.DirectionalLight(0x4a5a7a, 0.35);
+  var fillL = new THREE.DirectionalLight(0xdbe3ef, 0.4);
   fillL.position.set(-14, 10, -12); scene.add(fillL);
 
   function M(c, r, m) { return new THREE.MeshStandardMaterial({ color: c, roughness: r === undefined ? .85 : r, metalness: m || .05 }); }
@@ -1637,33 +1703,34 @@ body.office-on{overflow:hidden}
 
   var fc = document.createElement('canvas'); fc.width = fc.height = 128;
   var fg = fc.getContext('2d');
-  fg.fillStyle = '#171B23'; fg.fillRect(0, 0, 128, 128);
-  fg.strokeStyle = '#1F2531'; fg.lineWidth = 3; fg.strokeRect(0, 0, 128, 128);
+  fg.fillStyle = '#F7F9FC'; fg.fillRect(0, 0, 128, 128);
+  fg.strokeStyle = '#DCE2EA'; fg.lineWidth = 3; fg.strokeRect(0, 0, 128, 128);
   var ftex = new THREE.CanvasTexture(fc);
   ftex.wrapS = ftex.wrapT = THREE.RepeatWrapping; ftex.repeat.set(W, D);
   var floor = new THREE.Mesh(new THREE.PlaneGeometry(W, D),
-    new THREE.MeshStandardMaterial({ map: ftex, roughness: .92, metalness: .02 }));
+    new THREE.MeshStandardMaterial({ map: ftex, roughness: .88, metalness: .02 }));
   floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true; scene.add(floor);
 
   var zoneMat = {};
   ZONES.forEach(function (z, i) {
     var col = i % 3, row = Math.floor(i / 3);
-    var m = new THREE.MeshBasicMaterial({ color: z.tint, transparent: true, opacity: .04 });
-    var p = new THREE.Mesh(new THREE.PlaneGeometry(COLX[col][1] - COLX[col][0] - .5, ROWZ[row][1] - ROWZ[row][0] - .5), m);
+    var m = new THREE.MeshBasicMaterial({ color: z.tint, transparent: true, opacity: .10 });
+    var p = new THREE.Mesh(new THREE.PlaneGeometry(COLX[col][1] - COLX[col][0] - 1.2, ROWZ[row][1] - ROWZ[row][0] - 1.2), m);
     p.rotation.x = -Math.PI / 2; p.position.set(z.cx, .012, z.cz);
     scene.add(p); zoneMat[z.id] = m;
   });
 
-  var wallM = M(0x1a1e27, .95, .02), trimM = M(0x2e3644, .6, .2);
-  // ★뒷벽만 5.6 으로 올렸다(2026-09-19) — 대형 전광판을 걸려면 자리가 필요하다
-  box(W + 1, 5.6, .5, wallM, 0, 2.8, -D / 2 - .25);
+  var wallM = M(0xF4F6FA, .95, .02), trimM = M(0xC9D2DD, .6, .2);
+  // ★뒷벽을 7.4 로 올렸다 — 30x6 대형 전광판을 걸어야 한다
+  box(W + 1, 7.4, .5, wallM, 0, 3.7, -D / 2 - .25);
   box(.5, 3.6, D + 1, wallM, -W / 2 - .25, 1.8, 0);
-  box(W + 1, .16, .56, trimM, 0, 5.62, -D / 2 - .25);
+  box(W + 1, .16, .56, trimM, 0, 7.42, -D / 2 - .25);
   box(.56, .16, D + 1, trimM, -W / 2 - .25, 3.62, 0);
 
-  var glassM = new THREE.MeshStandardMaterial({ color: 0x9dc4e6, transparent: true, opacity: .1, roughness: .1, metalness: .1 });
-  var frameM = M(0x39414f, .5, .35);
+  var glassM = new THREE.MeshStandardMaterial({ color: 0x7fb4dc, transparent: true, opacity: .13, roughness: .1, metalness: .1 });
+  var frameM = M(0xB4BECB, .5, .35);
   function part(x1, z1, x2, z2) {
+    x1 *= ZX; z1 *= ZZ; x2 *= ZX; z2 *= ZZ;
     var dx = x2 - x1, dz = z2 - z1, len = Math.sqrt(dx * dx + dz * dz);
     var g = new THREE.Group();
     g.position.set((x1 + x2) / 2, 0, (z1 + z2) / 2);
@@ -1676,8 +1743,11 @@ body.office-on{overflow:hidden}
   part(4.5, -9, 4.5, -1.6);   part(4.5, 1.6, 4.5, 9);
   part(-13, 0, -6.4, 0);      part(-2.6, 0, 2.6, 0);  part(6.4, 0, 13, 0);
 
-  var topM = M(0x2c3340, .7, .1), legM = M(0x1b1f28, .8, .2);
+  var topM = M(0xE6EAF0, .7, .1), legM = M(0x8A93A2, .8, .2);
+  /* ★아래 배치 함수들은 좌표를 ZX/ZZ 로 환산해 받는다.
+     가구 좌표가 코드 곳곳에 옛 방(26x18) 기준으로 박혀 있어, 한 곳에서 옮기는 게 안전하다. */
   function desk(x, z, w, d, rot) {
+    x *= ZX; z *= ZZ;
     var g = new THREE.Group(); g.position.set(x, 0, z); g.rotation.y = rot || 0;
     var t = new THREE.Mesh(new THREE.BoxGeometry(w, .1, d), topM);
     t.position.y = .74; t.castShadow = true; t.receiveShadow = true; g.add(t);
@@ -1689,24 +1759,27 @@ body.office-on{overflow:hidden}
     scene.add(g);
   }
   function chair(x, z) {
+    x *= ZX; z *= ZZ;
     var g = new THREE.Group(); g.position.set(x, 0, z);
-    var s = new THREE.Mesh(new THREE.BoxGeometry(.52, .09, .5), M(0x232936, .85));
+    var s = new THREE.Mesh(new THREE.BoxGeometry(.52, .09, .5), M(0x9aa3b2, .85));
     s.position.y = .45; s.castShadow = true; g.add(s);
-    var b = new THREE.Mesh(new THREE.BoxGeometry(.5, .55, .08), M(0x232936, .85));
+    var b = new THREE.Mesh(new THREE.BoxGeometry(.5, .55, .08), M(0x9aa3b2, .85));
     b.position.set(0, .74, -.22); b.castShadow = true; g.add(b);
     scene.add(g);
   }
   function mon(x, y, z, w, h, rot, c) {
+    x *= ZX; z *= ZZ;
     var g = new THREE.Group(); g.position.set(x, y, z); g.rotation.y = rot || 0;
-    var f = new THREE.Mesh(new THREE.BoxGeometry(w, h, .05), M(0x11141a, .5, .3)); f.castShadow = true; g.add(f);
+    var f = new THREE.Mesh(new THREE.BoxGeometry(w, h, .05), M(0x2B313C, .5, .3)); f.castShadow = true; g.add(f);
     var s = new THREE.Mesh(new THREE.PlaneGeometry(w - .08, h - .08),
       new THREE.MeshBasicMaterial({ color: c, transparent: true, opacity: .55 }));
     s.position.z = .031; g.add(s);
     scene.add(g); return s;
   }
   function plant(x, z) {
+    x *= ZX; z *= ZZ;
     var g = new THREE.Group(); g.position.set(x, 0, z);
-    var pot = new THREE.Mesh(new THREE.CylinderGeometry(.22, .17, .32, 10), M(0x2a303c, .9));
+    var pot = new THREE.Mesh(new THREE.CylinderGeometry(.22, .17, .32, 10), M(0xB9A38C, .9));
     pot.position.y = .16; pot.castShadow = true; g.add(pot);
     for (var i = 0; i < 4; i++) {
       var lf = new THREE.Mesh(new THREE.ConeGeometry(.18, .7, 5), M(0x2a6b55, .95));
@@ -1725,10 +1798,19 @@ body.office-on{overflow:hidden}
   plant(-12.2, -8.0);
 
   var tt = new THREE.Mesh(new THREE.CylinderGeometry(1.9, 1.9, .1, 40), topM);
-  tt.position.set(0, .74, -4.6); tt.castShadow = true; tt.receiveShadow = true; scene.add(tt);
+  var TBL = -7.4;                                   // ★원탁 중심(새 방 기준). seatOf 와 같이 쓴다
+  tt.position.set(0, .74, TBL); tt.castShadow = true; tt.receiveShadow = true; scene.add(tt);
   var tb = new THREE.Mesh(new THREE.CylinderGeometry(.28, .5, .7, 16), legM);
-  tb.position.set(0, .35, -4.6); scene.add(tb);
-  for (var a = 0; a < 6; a++) chair(Math.cos(a / 6 * Math.PI * 2) * 2.7, -4.6 + Math.sin(a / 6 * Math.PI * 2) * 2.7);
+  tb.position.set(0, .35, TBL); scene.add(tb);
+  for (var a = 0; a < 6; a++) {
+    var ca = a / 6 * Math.PI * 2, cg = new THREE.Group();
+    cg.position.set(Math.cos(ca) * 2.9, 0, TBL + Math.sin(ca) * 2.9);
+    var cs = new THREE.Mesh(new THREE.BoxGeometry(.52, .09, .5), M(0x9aa3b2, .8));
+    cs.position.y = .45; cs.castShadow = true; cg.add(cs);
+    var cbk = new THREE.Mesh(new THREE.BoxGeometry(.5, .55, .08), M(0x9aa3b2, .8));
+    cbk.position.set(0, .74, -.22); cbk.castShadow = true; cg.add(cbk);
+    scene.add(cg);
+  }
   /* ★회의실 뒷벽 모니터는 없앴다 — 바로 뒤의 전광판이 가려졌고, 전광판이 발표화면을 겸한다 */
 
   desk(9.4, -5.6, 2.8, 1.2, -.2); chair(9.2, -4.4);
@@ -1744,14 +1826,35 @@ body.office-on{overflow:hidden}
   var myScreen = mon(0, 1.14, 4.3, 1.1, .64, 0, 0x2fcf9e);
 
   for (var r = 0; r < 3; r++) {
-    box(.8, 2.0, .9, M(0x1b1f28, .8, .25), 8.4 + r * 1.1, 1.0, 5.6);
+    box(.8, 2.0, .9, M(0x6b7484, .8, .25), (8.4 + r * 1.1) * ZX, 1.0, 5.6 * ZZ);
     for (var L = 0; L < 5; L++) {
       var led = new THREE.Mesh(new THREE.PlaneGeometry(.34, .05),
         new THREE.MeshBasicMaterial({ color: L % 3 === 2 ? 0x3e8bf5 : 0x2fcf9e }));
-      led.position.set(8.4 + r * 1.1, 1.55 - L * .28, 6.06); scene.add(led);
+      led.position.set((8.4 + r * 1.1) * ZX, 1.55 - L * .28, 6.06 * ZZ); scene.add(led);
     }
   }
   plant(12.2, 8.0);
+
+  /* ── 전광판 전용석 (2026-09-19) ──
+     남쪽 끝 한가운데. 부서를 좌우로 밀어 두었으니 여기서 북쪽 벽이 통째로 보인다.
+     낮은 벤치라 시야를 가리지 않는다. */
+  var BSEAT_Z = D / 2 - 2.6;
+  (function () {
+    var plat = new THREE.Mesh(new THREE.CylinderGeometry(3.4, 3.7, .18, 32), M(0xDCE3EC, .9));
+    plat.position.set(0, .09, BSEAT_Z); plat.receiveShadow = true; scene.add(plat);
+    for (var i = -1; i <= 1; i++) {
+      var s = new THREE.Mesh(new THREE.BoxGeometry(1.5, .42, .95), M(0x2B313C, .75));
+      s.position.set(i * 1.8, .38, BSEAT_Z + .5); s.castShadow = true; scene.add(s);
+      var bk = new THREE.Mesh(new THREE.BoxGeometry(1.5, .62, .12), M(0x2B313C, .75));
+      bk.position.set(i * 1.8, .72, BSEAT_Z + 1.0); bk.castShadow = true; scene.add(bk);
+    }
+    // 안내판
+    var pole = new THREE.Mesh(new THREE.CylinderGeometry(.05, .05, 1.1, 8), M(0x8A93A2, .6, .3));
+    pole.position.set(3.0, .55, BSEAT_Z + .4); scene.add(pole);
+    var sign = new THREE.Mesh(new THREE.PlaneGeometry(1.5, .5),
+      new THREE.MeshBasicMaterial({ color: 0x12795A }));
+    sign.position.set(3.0, 1.2, BSEAT_Z + .4); scene.add(sign);
+  })();
 
   /* ── 전광판: 뒷벽 LED (2026-09-18) ──
      보유 종목과 수익률이 흐른다. 장중엔 status 가 30초마다 갱신되므로 사실상 실시간이다. */
@@ -1762,11 +1865,14 @@ body.office-on{overflow:hidden}
   ledTex.wrapS = THREE.RepeatWrapping; ledTex.minFilter = THREE.LinearFilter;
   /* ★뒷벽 전체를 전광판으로. 벽이 3.6 높이라 4.4 를 다 못 쓰므로 벽을 같이 올린다
      (아래 wallUp 참고). 증권사 로비의 대형 시황판을 생각하면 된다. */
-  var ledPanel = new THREE.Mesh(new THREE.PlaneGeometry(22, 4.4),
+  var LEDW = 30, LEDH = 6.0, LEDZ = -D / 2 + 0.32;     // ★방이 커진 만큼 전광판도 크게
+  var ledPanel = new THREE.Mesh(new THREE.PlaneGeometry(LEDW, LEDH),
     new THREE.MeshBasicMaterial({ map: ledTex, transparent: true }));
-  ledPanel.position.set(0, 2.85, -8.68); scene.add(ledPanel);
-  box(22.6, 0.14, 0.2, M(0x39414f, .5, .35), 0, 5.12, -8.66);
-  box(22.6, 0.14, 0.2, M(0x39414f, .5, .35), 0, 0.62, -8.66);
+  ledPanel.position.set(0, 3.7, LEDZ); scene.add(ledPanel);
+  // 전광판 뒤판 — 흰 벽에 검은 화면이 떠 보이지 않게 테두리를 준다
+  box(LEDW + .5, LEDH + .5, .12, M(0x2B313C, .6, .25), 0, 3.7, LEDZ - .09);
+  box(LEDW + .6, 0.16, 0.22, M(0x39414f, .5, .35), 0, 6.78, LEDZ + .02);
+  box(LEDW + .6, 0.16, 0.22, M(0x39414f, .5, .35), 0, 0.62, LEDZ + .02);
   var ledOff = 0, ledOff2 = 0, LED_GW = 700;      // LED_GW = 그래프 칸 폭(캔버스 픽셀)
   var ledPage = 0, ledPageAt = 0;                 // 오른쪽 면이 몇 초마다 바뀐다
   /* 1줄 — 보유 종목 수익률(없으면 지금 단계) */
@@ -1935,7 +2041,7 @@ body.office-on{overflow:hidden}
   }
   drawLed();
 
-  var skinM = M(0xe0b992, .9);
+  var skinM = M(0xe8c3a0, .9);
   function person(c, hair) {
     var g = new THREE.Group();
     var b = new THREE.Mesh(new THREE.CylinderGeometry(.26, .32, .86, 14), M(c, .75));
@@ -1954,10 +2060,10 @@ body.office-on{overflow:hidden}
     g.userData.body = b; return g;
   }
   var player = person(0xff4d5e, 0x3a3226);
-  player.position.set(0, 0, 6.6); scene.add(player);
+  player.position.set(0, 0, 11.5); scene.add(player);
   var objs = AGENTS.map(function (a) {
     var g = person(a.color, a.hair);
-    g.position.set(a.home[0], 0, a.home[1]);
+    g.position.set(a.home[0] * ZX, 0, a.home[1] * ZZ);
     g.userData.phase = Math.random() * 6.28;
     scene.add(g); return g;
   });
@@ -1966,13 +2072,18 @@ body.office-on{overflow:hidden}
   var labels = document.getElementById('ofLabels');
   var chips = document.getElementById('ofChips');
   var staff = document.getElementById('ofStaff');
-  var target = new THREE.Vector3(0, 0, 6.6);
+  var target = new THREE.Vector3(0, 0, 11.5);
 
   (function () {                       // ★분석 보고서는 회의를 끝까지 안 봐도 열린다
     var b = document.createElement('button');
     b.className = 'of-chip of-chip-rep'; b.type = 'button'; b.textContent = '📄 분석 보고서';
     b.addEventListener('click', function () { openZone('report'); });
     chips.appendChild(b);
+    // ★전광판 전용석 — 걸어가서 앉으면 전광판이 화면에 꽉 차게 잡힌다
+    var s = document.createElement('button');
+    s.className = 'of-chip of-chip-seat'; s.type = 'button'; s.textContent = '🖥 전광판석';
+    s.addEventListener('click', function () { goBoardSeat(); });
+    chips.appendChild(s);
   })();
   ZONES.forEach(function (z) {
     var b = document.createElement('button');
@@ -2736,7 +2847,8 @@ body.office-on{overflow:hidden}
   function clampX(x) { return Math.max(-W / 2 + 1, Math.min(W / 2 - 1, x)); }
   function clampZ(z) { return Math.max(-D / 2 + 1, Math.min(D / 2 - 1, z)); }
   var goOpen = null, goUntil = 0;
-  function walkTo(x, z, openAfter) {
+  function walkTo(x, z, openAfter, keepBoard) {
+    if (!keepBoard) boardView = false;      // 다른 데로 가면 전광판 뷰를 푼다
     target.set(clampX(x), 0, clampZ(z));
     goOpen = openAfter || null;
     goUntil = performance.now() + 9000;
@@ -2750,9 +2862,30 @@ body.office-on{overflow:hidden}
   var MT = { on: false, plan: null, i: -1, next: 0, agenda: '', ph: '' };
   var camSave = null, camWant = null;
   function camGoto(y, p, dd) { camWant = { y: y, p: p, d: dd }; }
-  function seatOf(i) {                       // 원탁(0,-4.6) 의자 반경 2.7 — 살짝 안쪽에 앉힌다
+
+  /* ── 전광판 전용석 (2026-09-19) ──
+     ★'한눈에 보이게' 는 화면 비율에 달렸다. 세로로 긴 폰에서는 가로 화각이 좁아
+       같은 거리라도 전광판이 잘린다. 그래서 거리를 **계산**한다.
+     ★camTarget 을 전광판 쪽으로 옮기고 시선 높이를 판 한가운데로 올린다.
+       안 그러면 바닥을 보느라 판이 화면 위로 밀려난다. */
+  var boardView = false;
+  function boardFit() {
+    var vf = 36 * Math.PI / 180, a = camera.aspect || 1;
+    var hf = 2 * Math.atan(Math.tan(vf / 2) * a);
+    var needW = (LEDW / 2 + 1.2) / Math.tan(hf / 2);
+    var needH = (LEDH / 2 + 1.0) / Math.tan(vf / 2);
+    return Math.min(140, Math.max(needW, needH) + 4);
+  }
+  function goBoardSeat() {
+    boardView = true;
+    walkTo(0, BSEAT_Z + 0.2, null, true);
+    camWant = null;                                   // 직접 몰아넣는다(자동 보간은 아래 frame 에서)
+    tickText.textContent = '전광판석으로 걸어갑니다 — 도착하면 전광판을 크게 잡습니다';
+  }
+  function leaveBoardSeat() { boardView = false; }
+  function seatOf(i) {                       // 원탁 의자 안쪽에 앉힌다
     var a = i / AGENTS.length * Math.PI * 2;
-    return [Math.cos(a) * 2.45, -4.6 + Math.sin(a) * 2.45];
+    return [Math.cos(a) * 2.6, -7.4 + Math.sin(a) * 2.6];
   }
   function seated() {
     for (var i = 0; i < objs.length; i++) {
@@ -2775,7 +2908,7 @@ body.office-on{overflow:hidden}
     MT.on = true; MT.plan = p; MT.i = -1; MT.agenda = p.agenda; MT.ph = p.ph;
     MT.next = performance.now() + 900;
     objs.forEach(function (g, i) { g.userData.mt = seatOf(i); g.userData.face = [0, -4.6]; });
-    walkTo(0, -1.7, null);                                  // 나는 원탁 앞에 서서 본다
+    walkTo(0, -3.6, null);                                  // 나는 원탁 앞에 서서 본다
     camSave = { y: camYaw, p: camPitch, d: camDist };
     camGoto(0, 0.40, 19);                                   // 정면(전광판이 뒤에 보이게) · 눈높이 쪽으로
     meetEl.hidden = false;
@@ -2790,7 +2923,7 @@ body.office-on{overflow:hidden}
   function endMeeting(quiet) {
     if (!MT.on) return;
     MT.on = false;
-    objs.forEach(function (g, i) { g.userData.mt = AGENTS[i].home.slice(); g.userData.face = null; });
+    objs.forEach(function (g, i) { g.userData.mt = [AGENTS[i].home[0] * ZX, AGENTS[i].home[1] * ZZ]; g.userData.face = null; });
     if (camSave) { camGoto(camSave.y, camSave.p, camSave.d); camSave = null; }
     meetEl.hidden = true;
     meetBtn.textContent = '회의'; meetBtn.classList.remove('on');
@@ -2919,7 +3052,7 @@ body.office-on{overflow:hidden}
     lastX = e.clientX; lastY = e.clientY;
     moved += Math.abs(dx) + Math.abs(dy);
     if (moved > 6) {
-      camWant = null;                                   // 손으로 돌리면 자동 시점이동은 접는다
+      camWant = null; boardView = false;                // 손으로 돌리면 자동 시점·전광판 뷰를 접는다
       // ★2026-09-19 부호를 뒤집었다 — '전부 반대로 움직인다'는 신고.
       //   손가락을 끄는 쪽으로 시점이 도는 게 아니라, 손가락 방향으로 **장면이** 도는 감각이 맞다.
       camYaw += dx * 0.006;
@@ -2938,7 +3071,7 @@ body.office-on{overflow:hidden}
     if (!all.length) return;
     var pt = all[0].point;
     // ★바닥이면 거기로 걷는다. 가구·전광판이면 **그 앞까지 걸어가 멈춘 뒤** 화면이 열린다
-    if (all[0].object === ledPanel) { walkTo(0, -1.9, 'board'); return; }
+    if (all[0].object === ledPanel) { goBoardSeat(); return; }
     if (all[0].object === floor) { walkTo(pt.x, pt.z, null); return; }
     var zz = zoneAt(clampX(pt.x), clampZ(pt.z));
     if (zz) walkTo(zz.cx, zz.cz + 1.5, zz.id);
@@ -3023,14 +3156,14 @@ body.office-on{overflow:hidden}
       ZONES.forEach(function (q) {
         q.chip.setAttribute('aria-pressed', String(q === z));
         q.tag.classList.toggle('here', q === z);
-        zoneMat[q.id].opacity = q === z ? .13 : .04;
+        zoneMat[q.id].opacity = q === z ? .26 : .10;
       });
       document.getElementById('ofPromptTitle').textContent = z.name;
       document.getElementById('ofPromptDesc').textContent = z.desc;
       document.getElementById('ofPromptBtn').textContent = z.action;
       if (openId && openId !== z.id) closeSheet();
     }
-    if (!reduced) zoneMat[z.id].opacity = .10 + Math.sin(now * .0035) * .045;
+    if (!reduced) zoneMat[z.id].opacity = .22 + Math.sin(now * .0035) * .06;
 
     objs.forEach(function (g, i) {
       var mt = g.userData.mt;                          // ★회의 소집·복귀 — 직원도 걸어서 이동한다
@@ -3059,10 +3192,21 @@ body.office-on{overflow:hidden}
     });
 
     camTarget.lerp(new THREE.Vector3(player.position.x * .55, 0, player.position.z * .55 + 1.5), .05);
-    // ★구면좌표 — camPitch 로 상하까지 돈다. 0.66 rad 이면 예전 식과 완전히 같은 위치가 나온다
-    var _r = camDist / CAM_K, _hr = Math.cos(camPitch) * _r, _hy = Math.sin(camPitch) * _r;
-    camera.position.set(camTarget.x + Math.sin(camYaw) * _hr, Math.max(1.3, _hy), camTarget.z + Math.cos(camYaw) * _hr);
-    camera.lookAt(camTarget.x, 1.2, camTarget.z);
+    if (boardView) {
+      // ★전광판 전용 시점 — 판 정면에서 화면에 꽉 차는 거리로 붙는다
+      var bd = boardFit();
+      camYaw += (0 - camYaw) * .08;
+      camPitch += (0.13 - camPitch) * .08;
+      camDist += (bd - camDist) * .08;
+      camTarget.lerp(new THREE.Vector3(0, 0, LEDZ + bd * 0.62), .08);
+      camera.position.set(0, 3.7 + bd * 0.13, LEDZ + bd);
+      camera.lookAt(0, 3.7, LEDZ);
+    } else {
+      // ★구면좌표 — camPitch 로 상하까지 돈다. 0.66 rad 이면 예전 식과 완전히 같은 위치가 나온다
+      var _r = camDist / CAM_K, _hr = Math.cos(camPitch) * _r, _hy = Math.sin(camPitch) * _r;
+      camera.position.set(camTarget.x + Math.sin(camYaw) * _hr, Math.max(1.3, _hy), camTarget.z + Math.cos(camYaw) * _hr);
+      camera.lookAt(camTarget.x, 1.2, camTarget.z);
+    }
 
     ZONES.forEach(function (q) { tmp.set(q.cx, 2.4, q.cz); place(q.tag, tmp, 'translate(-50%,-50%)'); });
     objs.forEach(function (g, i) {
