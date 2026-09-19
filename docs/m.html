@@ -1522,13 +1522,17 @@ body.office-on{overflow:hidden}
   var AGENTS = [
     /* ★home 은 이제 **월드 좌표**다(ZX/ZZ 를 곱하지 않는다). 옛 방 기준으로 두니 헷갈렸다.
        각 팀은 자기 이름이 붙은 방에 앉는다. */
-    { id:'strat', name:'전략팀',   role:'익절·손절·기대값',  color:0xff4d5e, hair:0x5b2730, lab:'#F04452', home:[-12.1,-1.4] },
+    { id:'strat', name:'전략팀',   role:'익절·손절·기대값',  color:0xff4d5e, hair:0x5b2730, lab:'#F04452', home:[-12.1,-1.4],
+      skill:'기대값·손익비·청산사유 분포' },
     { id:'theme', name:'테마팀',   role:'테마·수급 분석',    color:0x3e8bf5, hair:0x1f3a5c, lab:'#1B64DA', home:[-3.2,-1.0] },
     { id:'trade', name:'트레이딩팀', role:'체결·보유 관리',   color:0xb03744, hair:0x2a2e38, lab:'#C2255C', home:[-12.1,7.4] },
-    { id:'bt',    name:'백테팀',   role:'실제 경로 재시뮬',  color:0xffb020, hair:0x6a5a2a, lab:'#B26A00', home:[12.1,-1.4] },
-    { id:'learn', name:'학습팀',   role:'종목 특징 누적학습', color:0x2fcf9e, hair:0x2a4a3c, lab:'#00875A', home:[12.1,7.4] },
+    { id:'bt',    name:'백테팀',   role:'실제 경로 재시뮬',  color:0xffb020, hair:0x6a5a2a, lab:'#B26A00', home:[12.1,-1.4],
+      skill:'워크포워드 검증(앞에서 고르고 뒤에서 시험)' },
+    { id:'learn', name:'학습팀',   role:'종목 특징 누적학습', color:0x2fcf9e, hair:0x2a4a3c, lab:'#00875A', home:[12.1,7.4],
+      skill:'특징 구간별 성적(거래대금·시총·회전율·체결강도)' },
     { id:'chief', name:'총괄팀',   role:'조율·의결·보고',    color:0x7c6cf0, hair:0x4a3f8f, lab:'#6D28D9', home:[12.1,-10.0] },
-    { id:'paper', name:'모의투자팀', role:'가상운용·실제 대조', color:0x0EA5A5, hair:0x0a4a4a, lab:'#0E7490', home:[-12.1,-10.0] }
+    { id:'paper', name:'모의투자팀', role:'가상운용·실제 대조', color:0x0EA5A5, hair:0x0a4a4a, lab:'#0E7490', home:[-12.1,-10.0],
+      skill:'조건부 가상 포트폴리오 · 모의↔실전 대조' }
   ];
 
   /* ── 화면 전환 (사무실 ↔ 기존 목록) ── */
@@ -1707,6 +1711,75 @@ body.office-on{overflow:hidden}
         ['계좌 실자산', acc.assets ? nf(acc.assets) + '원' : '—'],
         ['주문가능', acc.orderable ? nf(acc.orderable) + '원' : '—'],
         ['조회 시각', acc.asof || '—', acc.stale ? 'dn' : '']]);
+    }
+    if (id === 'paperroom') {
+      var stp = d.study || {}, lvq = stp.live || {}, vq = stp.virtual || [];
+      var hp = B('모의투자실 · 실제 이력', [
+        ['모의 건수', (lvq.mock && lvq.mock.n) ? lvq.mock.n + '건' : '0건'],
+        ['모의 누적', (lvq.mock && lvq.mock.n) ? pct(lvq.mock.sum) : '—', (lvq.mock && lvq.mock.sum >= 0) ? 'up' : 'dn'],
+        ['모의 1회 / 승률', (lvq.mock && lvq.mock.n) ? (pct(lvq.mock.avg) + ' · ' + lvq.mock.win + '%') : '—'],
+        ['모의 MDD', (lvq.mock && lvq.mock.n) ? mddTxt(lvq.mock.mdd) : '—', 'dn'],
+        ['실전 건수', (lvq.acct && lvq.acct.n) ? lvq.acct.n + '건' : '0건'],
+        ['실전 누적', (lvq.acct && lvq.acct.n) ? pct(lvq.acct.sum) : '—', (lvq.acct && lvq.acct.sum >= 0) ? 'up' : 'dn']]);
+      if (vq.length) {
+        hp += '<div class="of-brief"><div class="of-bk">조건을 걸었다면 (같은 종목·같은 경로)</div><div class="of-min">';
+        vq.forEach(function (v) {
+          var gp = v.sum - v.base_sum;
+          hp += '<div class="of-mrow"><span class="of-mw">' + esc(v.rule) + '</span><span class="of-mx">' +
+            v.n + '건 <b class="' + (v.sum >= 0 ? 'up' : 'dn') + '">' + pct(v.sum) + '</b>' +
+            ' · 승률 ' + v.win + '% · MDD ' + mddTxt(v.mdd) +
+            '<br><span style="color:#69748A">전부 매수(' + v.base_n + '건 ' + pct(v.base_sum) + ')보다 ' +
+            (gp >= 0 ? '+' : '') + gp.toFixed(2) + '%p · ' + v.skipped + '건은 안 삼</span></span></div>';
+        });
+        hp += '</div></div>';
+      }
+      return hp;
+    }
+    if (id === 'btroom') {
+      var stb = d.study || {};
+      if (!stb.meta) return B('백테팀', [['자료', '평일 20:40 갱신']]);
+      var hb2 = B('백테팀 · 실제 경로 재시뮬', [
+        ['표본', stb.meta.rows + '종목 · ' + stb.meta.batches + '일'],
+        ['기간', stb.meta.from + '~' + stb.meta.to],
+        ['지금 설정', stb.cur ? ('+' + stb.cur.tp + '/' + stb.cur.sl) : '—'],
+        ['지금 누적', stb.cur ? pct(stb.cur.sum) : '—', (stb.cur && stb.cur.sum >= 0) ? 'up' : 'dn'],
+        ['표본 최적', stb.best ? ('+' + stb.best.tp + '/' + stb.best.sl) : '—'],
+        ['최적 누적', stb.best ? pct(stb.best.sum) : '—', 'up']]);
+      var wfb = stb.walkfwd || {};
+      if (wfb.ok) {
+        hb2 += '<div class="of-brief"><div class="of-bk">워크포워드 — 앞에서 고르고 뒤에서 시험</div><div class="of-bg">' +
+          [['학습 구간', wfb.train.from + '~' + wfb.train.to + ' · ' + wfb.train.n + '종목'],
+           ['거기서 고른 값', '+' + wfb.train.pick.tp + '/' + wfb.train.pick.sl],
+           ['시험 구간', wfb.test.from + '~' + wfb.test.to + ' · ' + wfb.test.n + '종목'],
+           ['시험 성적', wfb.test.sum != null ? pct(wfb.test.sum) : '—', (wfb.test.sum >= 0) ? 'up' : 'dn'],
+           ['지금 설정은', wfb.cur_test ? pct(wfb.cur_test.sum) : '—', (wfb.cur_test && wfb.cur_test.sum >= 0) ? 'up' : 'dn'],
+           ['1회 평균 변화', wfb.decay != null ? ((wfb.decay >= 0 ? '+' : '') + wfb.decay.toFixed(2) + '%p') : '—',
+            (wfb.decay != null && wfb.decay < 0) ? 'dn' : 'up']]
+          .map(function (r) { return '<div class="of-bi"><span>' + r[0] + '</span><b class="' + (r[2] || '') + '">' + r[1] + '</b></div>'; }).join('') +
+          '</div><div class="of-fnote">격자 상위표는 <b>같은 데이터로 고르고 같은 데이터로 채점한 값</b>입니다. ' +
+          '믿을 수 있는 건 위의 시험 구간 성적뿐입니다.</div></div>';
+      } else if (wfb.why) {
+        hb2 += '<div class="of-brief"><div class="of-bk">워크포워드</div><div class="of-bv">' + esc(wfb.why) + '</div></div>';
+      }
+      if (stb.grid && stb.grid.length) {
+        hb2 += '<div class="of-brief"><div class="of-bk">격자 상위 8 (in-sample · 참고용)</div><div class="of-min">';
+        stb.grid.slice(0, 8).forEach(function (g) {
+          hb2 += '<div class="of-mrow"><span class="of-mw">+' + g.tp + '/' + g.sl + '</span>' +
+            '<span class="of-mx"><b class="' + (g.sum >= 0 ? 'up' : 'dn') + '">' + pct(g.sum) +
+            '</b> · 승률 ' + g.win + '% · MDD ' + mddTxt(g.mdd) +
+            ' · 익절 ' + g.tpn + '/손절 ' + g.sln + '/마감 ' + g.etc + '</span></div>';
+        });
+        hb2 += '</div></div>';
+      }
+      return hb2;
+    }
+    if (id === 'lounge') {
+      return B('휴게 · 전광판석', [
+        ['전광판', '바로 앞'],
+        ['커피', '테이블 2 · 스툴 6'],
+        ['보는 법', '[🖥 전광판석] 또는 판을 누르기']]) +
+        '<div class="of-brief"><div class="of-bv">직원들이 쉬러 오는 자리입니다. ' +
+        '회의가 없을 때 여기서 이야기하는 걸 볼 수 있습니다.</div></div>';
     }
     if (id === 'reviews') {
       var rvv = ((window.lastData && lastData.reviews) || window.lastReviews || {}).reviews || [];
@@ -2086,7 +2159,7 @@ body.office-on{overflow:hidden}
   function wmon(x, y, z, w, h, rot, c) { return mon(_ix(x), y, _iz(z), w, h, rot, c); }
   function wplant(x, z) { plant(_ix(x), _iz(z)); }
 
-  var SEATS = [], REST = [];
+  var SEATS = [], REST = [], BLOCKERS = [];      // BLOCKERS: 전광판 볼 때 감출 큰 가구
   /* 아일랜드 — 긴 책상 + n 석 + 듀얼 모니터 */
   function pod(cx, cz, nSeat, col, faceNorth) {
     var w = nSeat * 1.7 + 0.6, f = faceNorth ? -1 : 1;
@@ -2122,7 +2195,7 @@ body.office-on{overflow:hidden}
   /* ───── 전광판 앞줄 ───── */
   /* 모의투자실 (북서) — 3석 */
   pod(-12.1, -11.0, 3, 0x0EA5A5, false);
-  wmon(-12.1, 2.0, -13.6, 2.0, 1.15, 0, 0x0EA5A5);          // 가상운용 현황판
+  BLOCKERS.push(wmon(-12.1, 2.0, -13.6, 2.0, 1.15, 0, 0x0EA5A5).parent);   // 가상운용 현황판
   wplant(-17.0, -13.4);
 
   /* 휴게 + 전광판석 (북중앙) — 전광판 정면, 시야를 막지 않게 낮은 것만 */
@@ -2188,12 +2261,12 @@ body.office-on{overflow:hidden}
     scene.add(cg);
     SEATS.push([Math.cos(ca) * 2.9, TBL + Math.sin(ca) * 2.9]);
   }
-  box(3.2, 1.8, .12, M(0xFFFFFF, .5, .04), -5.3, 1.45, -2.6);    // 화이트보드
-  box(3.4, .12, .16, M(0xC9D2DD, .5, .2), -5.3, 2.42, -2.56);
+  BLOCKERS.push(box(3.2, 1.8, .12, M(0xFFFFFF, .5, .04), -5.3, 1.45, -2.6));    // 화이트보드
+  BLOCKERS.push(box(3.4, .12, .16, M(0xC9D2DD, .5, .2), -5.3, 2.42, -2.56));
 
   /* 백테팀 (동) — 3석 */
   pod(12.1, -3.4, 3, 0xFFB020, false);
-  wmon(12.1, 2.0, -5.9, 2.0, 1.15, 0, 0xFFB020);                 // 격자 현황판
+  BLOCKERS.push(wmon(12.1, 2.0, -5.9, 2.0, 1.15, 0, 0xFFB020).parent);   // 격자 현황판
   wplant(17.0, -3.0);
 
   /* ───── 남쪽 줄 ───── */
@@ -2201,6 +2274,7 @@ body.office-on{overflow:hidden}
   pod(-12.1, 6.2, 3, 0xb03744, false);
   pod(-12.1, 11.0, 3, 0xb03744, true);
   var trScreen = wmon(-12.1, 2.0, 3.6, 2.1, 1.2, 0, 0xff4d5e);
+  BLOCKERS.push(trScreen.parent);
   wplant(-17.0, 13.6);
 
   /* 내 자리 (남중앙) — ★작게. 예전엔 이 칸이 방의 1/3 이었다 */
@@ -2520,7 +2594,7 @@ body.office-on{overflow:hidden}
     row.className = 'of-staff'; row.type = 'button';
     // ★역할 설명까지 넣으니 목록이 화면 1/3 을 먹었다(스샷). 이름만 두고 설명은 title 로
     row.innerHTML = '<i class="of-dot"></i><span><b>' + a.name + '</b></span>';
-    row.title = a.name + ' · ' + a.role;
+    row.title = a.name + ' · ' + a.role + (a.skill ? ' · 스킬: ' + a.skill : '');
     row.addEventListener('click', function () {
       // ★부르면 **그 팀이 나에게 온다**. 예전엔 내가 걸어갔다.
       callTeam(i, 15000);
@@ -2582,13 +2656,16 @@ body.office-on{overflow:hidden}
       return '아직 배울 표본이 부족합니다';
     }
     if (i === A_PAPER) {
-      var stv = ((window.lastData || {}).study || {}).virtual || [];
-      if (stv.length) {
-        var v0 = stv[0];
-        return '가상으로 「' + v0.rule + '」 걸면 ' + pct(v0.sum) + ' — 실제 ' + pct(v0.base_sum) +
-               ' 보다 ' + (v0.sum - v0.base_sum >= 0 ? '' : '') + (v0.sum - v0.base_sum).toFixed(2) + '%p 입니다';
+      var st0 = (window.lastData || {}).study || {}, lv0 = st0.live || {};
+      // ★먼저 **실제 원장**을 말한다. 가상 시뮬만 말하니 '과거 기록이 없다'는 지적을 받았다.
+      if (lv0.mock && lv0.mock.n) {
+        return '모의 ' + lv0.mock.n + '건 ' + pct(lv0.mock.sum) + ' (1회 ' + pct(lv0.mock.avg) +
+               ', 승률 ' + lv0.mock.win + '%) · 실전 ' + ((lv0.acct && lv0.acct.n) || 0) + '건 ' +
+               ((lv0.acct && lv0.acct.n) ? pct(lv0.acct.sum) : '—');
       }
-      return '가상 운용을 돌릴 표본이 아직 부족합니다';
+      var stv = (st0.virtual || []);
+      if (stv.length) return '가상으로 「' + stv[0].rule + '」 걸면 ' + pct(stv[0].sum) + ' 입니다';
+      return '아직 쌓인 거래가 없습니다';
     }
     if (i === A_CHIEF) return (d.enabled ? '자동매매 가동 중' : '자동매매 정지') + (d.is_mock ? ' (모의)' : ' (실전)') +
            ' · 전략자산 ' + nf(d.equity) + '원 · 오늘 ' + ((P.total >= 0 ? '+' : '') + nf(P.total)) + '원';
@@ -3022,6 +3099,45 @@ body.office-on{overflow:hidden}
         f(A_BT, 'flat', '표본 ' + m.rows + '종목은 아직 적습니다 — 결론을 고정하지 않겠습니다',
           '거래일이 쌓일수록 이 재시뮬이 세집니다');
       }
+      /* ★워크포워드 — 백테팀의 새 스킬.
+         지금까지의 격자 성적은 전부 in-sample 이었다(같은 데이터로 고르고 같은 데이터로 채점).
+         앞에서 고르고 뒤에서 시험해야 믿을 수 있다. */
+      var wf = st.walkfwd || {};
+      if (!wf.ok) {
+        f(A_BT, 'flat', '워크포워드 검증은 아직 못 합니다', wf.why || '표본이 더 필요합니다');
+      } else {
+        var tr = wf.train, te = wf.test;
+        f(A_BT, 'flat',
+          '앞 기간(' + tr.from + '~' + tr.to + ', ' + tr.n + '종목)에서 고른 최적은 +' +
+          tr.pick.tp + '/' + tr.pick.sl + ' 였습니다',
+          '이 값은 **뒤 기간을 보지 않고** 골랐습니다');
+        if (te.sum == null) {
+          f(A_BT, 'flat', '뒤 기간에 적용할 수 없었습니다', '');
+        } else {
+          f(A_BT, (wf.decay != null && wf.decay < -0.8) ? 'bad' : 'good',
+            '뒤 기간(' + te.from + '~' + te.to + ', ' + te.n + '종목)에 그대로 적용 → ' +
+            pct(te.sum) + ' · 1회 ' + pct(te.avg) + ' · 승률 ' + te.win + '% · MDD ' + mddTxt(te.mdd),
+            (wf.decay != null)
+              ? ('1회 평균이 ' + (wf.decay >= 0 ? '+' : '') + wf.decay.toFixed(2) +
+                 '%p 변했습니다' + (wf.decay < -0.8 ? ' — 앞 기간에 맞춘 값이었다는 뜻입니다' : ''))
+              : '');
+          if (wf.cur_test) {
+            var better = wf.cur_test.sum - te.sum;
+            f(A_BT, better > 0 ? 'good' : 'bad',
+              '같은 뒤 기간에서 **지금 설정**(+' + wf.cur_test.tp + '/' + wf.cur_test.sl + ')은 ' +
+              pct(wf.cur_test.sum) + ' 였습니다',
+              better > 0
+                ? '앞에서 고른 최적보다 ' + better.toFixed(2) + '%p 낫습니다. 격자 최적으로 바꾸면 손해였습니다'
+                : '앞에서 고른 최적이 ' + Math.abs(better).toFixed(2) + '%p 나았습니다');
+          }
+          if (wf.hindsight) {
+            f(A_BT, 'flat',
+              '뒤 기간을 보고 고르면 +' + wf.hindsight.tp + '/' + wf.hindsight.sl + ' 로 ' +
+              pct(wf.hindsight.sum) + ' 입니다',
+              '★이건 쓸 수 없는 숫자입니다 — 결과를 보고 고른 값이니까요. 비교용으로만 적습니다');
+          }
+        }
+      }
     }
 
     /* ── ⑤ 학습팀: 어떤 특징의 종목이 다음날 좋았나 ── */
@@ -3062,7 +3178,35 @@ body.office-on{overflow:hidden}
       }
     }
 
-    /* ── ⑤-b 모의투자팀: 조건을 걸었다면 얼마였나 ── */
+    /* ── ⑤-b 모의투자팀: 실제 이력 먼저, 그다음 가상 ── */
+    var lvp = st.live || {};
+    if (lvp.mock && lvp.mock.n) {
+      f(A_PAPER, lvp.mock.sum >= 0 ? 'good' : 'bad',
+        '모의 원장 ' + lvp.mock.n + '건 — 누적 ' + pct(lvp.mock.sum) + ' · 1회 ' + pct(lvp.mock.avg) +
+        ' · 승률 ' + lvp.mock.win + '% · MDD ' + mddTxt(lvp.mock.mdd),
+        '지금까지 모의로 실제 낸 성적입니다. 가상 시뮬이 아니라 원장 기록입니다');
+    } else {
+      f(A_PAPER, 'flat', '모의 원장에 쌓인 거래가 없습니다', '');
+    }
+    if (lvp.acct && lvp.acct.n) {
+      f(A_PAPER, lvp.acct.sum >= 0 ? 'good' : 'bad',
+        '실전 원장 ' + lvp.acct.n + '건 — 누적 ' + pct(lvp.acct.sum) + ' · 1회 ' + pct(lvp.acct.avg) +
+        ' · 승률 ' + lvp.acct.win + '% · MDD ' + mddTxt(lvp.acct.mdd),
+        '현재 진행 중인 실전 기록입니다');
+      if (lvp.mock && lvp.mock.n) {
+        var dgp = lvp.acct.avg - lvp.mock.avg;
+        f(A_PAPER, Math.abs(dgp) < 1 ? 'good' : 'bad',
+          '모의 1회 ' + pct(lvp.mock.avg) + ' vs 실전 1회 ' + pct(lvp.acct.avg) +
+          ' — 차이 ' + (dgp >= 0 ? '+' : '') + dgp.toFixed(2) + '%p',
+          lvp.acct.n < 10 ? '실전 ' + lvp.acct.n + '건은 아직 적어 차이를 단정하면 안 됩니다'
+                          : (Math.abs(dgp) < 1 ? '두 쪽이 비슷합니다 — 전략이 실전에서도 같게 돕니다'
+                                               : '슬리피지·미체결 때문일 수 있습니다. 체결가를 봐야 합니다'));
+      }
+    } else {
+      f(A_PAPER, 'flat', '실전 원장은 아직 ' + ((lvp.acct && lvp.acct.n) || 0) + '건입니다',
+        '모의와 견주려면 더 쌓여야 합니다');
+    }
+
     var vir = (st.virtual || []);
     if (!vir.length) {
       f(A_PAPER, 'flat', '가상 운용을 돌릴 표본이 아직 부족합니다',
@@ -3399,6 +3543,7 @@ body.office-on{overflow:hidden}
   var RV_KEY = 'ofreviewed';
   function autoReviewMeet() {
     if (MT.on || !office.classList.contains('on')) return;
+    if (boardView) return;          // ★전광판 보는 중엔 끼어들지 않는다(몰입이 풀린다)
     var rv = (window.lastData && lastData.reviews) || window.lastReviews;
     var list = rv && rv.reviews;
     if (!list || !list.length) return;
@@ -3678,6 +3823,7 @@ body.office-on{overflow:hidden}
   var AUTO_KEY = 'ofautomeet';
   function autoMeet() {
     if (MT.on || !office.classList.contains('on')) return;
+    if (boardView) return;          // ★전광판 보는 중엔 끼어들지 않는다
     var ph = phaseNow();
     if (ph !== 'scan' && ph !== 'morning') return;
     if (ph === 'scan' && !(RT() || {}).scanned && !(window.lastData && (lastData.picks || []).length)) return;  // 스캔 전이면 기다린다
@@ -4005,6 +4151,29 @@ body.office-on{overflow:hidden}
       add(A_THEME, '제안 — 테마가점 최대치를 올리든지, 아니면 접든지 정합시다. 지금은 순위를 못 바꿉니다');
       add(A_BT, '올리면 테마 쏠릴 때 같은 종목만 삽니다. 검증부터 하시죠');
     }
+    /* ★강세 vs 약세 토론 (TradingAgents 구조를 빌렸다).
+       한쪽이 밀어붙이고 다른 쪽이 반박한 뒤 총괄팀이 판정한다. 근거는 전부 실제 수치다. */
+    var wfi = st.walkfwd || {};
+    add(A_CHIEF, '자, 이제 찬반으로 갈라서 봅시다. 전략팀이 밀고 백테팀이 막으세요');
+    if (st.best && st.cur) {
+      add(A_STRAT, '[강세] 표본에서 +' + st.best.tp + '/' + st.best.sl + ' 가 ' +
+        pct(st.best.sum) + ' 로 지금(' + pct(st.cur.sum) + ')보다 낫습니다. 바꿀 근거는 있습니다');
+    }
+    if (wfi.ok && wfi.cur_test && wfi.test && wfi.test.sum != null) {
+      var d2 = wfi.cur_test.sum - wfi.test.sum;
+      add(A_BT, '[약세] 그건 같은 데이터로 고르고 같은 데이터로 채점한 값입니다. ' +
+        '앞에서 골라 뒤에서 시험해 봤더니 ' + pct(wfi.test.sum) + ' 였고, ' +
+        '같은 구간에서 지금 설정은 ' + pct(wfi.cur_test.sum) + ' 였습니다');
+      add(A_BT, d2 > 0 ? ('[약세] 즉 격자 최적으로 바꿨으면 ' + d2.toFixed(2) + '%p 손해였습니다')
+                       : ('[약세] 다만 이번엔 최적 쪽이 ' + Math.abs(d2).toFixed(2) + '%p 나았습니다'));
+      add(A_STRAT, d2 > 0 ? '[강세] …인정합니다. 표본이 얇아서 최적이 흔들린 겁니다'
+                          : '[강세] 그럼 한 번 더 쌓고 다시 봅시다');
+      add(A_CHIEF, d2 > 0 ? '판정 — 백테팀 손을 들어 줍니다. 지금 설정 유지합니다'
+                          : '판정 — 둘 다 근거가 있습니다. 표본 더 쌓고 재논의');
+    } else {
+      add(A_BT, '[약세] 워크포워드를 못 돌렸습니다. 검증 없이 바꾸는 건 반대입니다');
+      add(A_CHIEF, '판정 — 검증 전에는 안 바꿉니다');
+    }
     add(A_CHIEF, '사장님 의견 있으시면 대화창에 넣어 주십시오 — 바로 숫자로 확인해 드리겠습니다');
     add(A_CHIEF, '오늘 나온 것 중 근거가 선 것만 보고서에 올리겠습니다');
     return { agenda: '아이디어 회의 — 데이터에서 나온 제안과 반론', ph: 'idea', phLab: '아이디어', lines: L, idea: true };
@@ -4089,6 +4258,7 @@ body.office-on{overflow:hidden}
 
   function officeLife(now) {
     if (MT.on || !office.classList.contains('on')) return;
+    if (boardView) return;          // ★전광판 보는 중엔 직원들도 조용히 있는다
     if (now - lifeAt < 16000) return;
     lifeAt = now;
     var i = Math.floor(Math.random() * AGENTS.length);
@@ -4327,6 +4497,10 @@ body.office-on{overflow:hidden}
     // ★시선을 방 안쪽으로 당긴다. 예전엔 내가 남쪽 끝에 서면 카메라가 방 밖을 봤다(스샷)
     camTarget.lerp(new THREE.Vector3(player.position.x * .20, 0, player.position.z * .20 + 1.8), .05);
     if (ceil.visible !== boardView) ceil.visible = boardView;   // 낮은 시점에서만 천장
+    // ★전광판 모드에서는 시선에 걸리는 큰 가구를 감춘다(화이트보드·현황판·서버랙·파티션)
+    if (BLOCKERS.length && BLOCKERS[0].visible === boardView) {
+      for (var bi = 0; bi < BLOCKERS.length; bi++) BLOCKERS[bi].visible = !boardView;
+    }
     if (boardView) {
       // ★전광판 전용 시점 — 판 정면에서 화면에 꽉 차는 거리로 붙는다
       if (Math.abs(camera.fov - FOV_B) > .5) { camera.fov += (FOV_B - camera.fov) * .12; camera.updateProjectionMatrix(); }
@@ -4335,11 +4509,11 @@ body.office-on{overflow:hidden}
       camPitch += (0.13 - camPitch) * .08;
       camDist += (bd - camDist) * .08;
       camTarget.lerp(new THREE.Vector3(0, 0, LEDZ + bd * 0.62), .08);
-      /* ★30x6 판은 세로 화면(1:2.14)을 채울 수 없다 — 폭을 맞추면 높이가 10% 다.
-         남는 세로를 빈 하늘로 두는 대신 **앉아서 올려다보는 시점**으로 잡아
-         아래쪽을 사무실(벤치·책상·사람)로 채운다. 전광판석에 앉은 그림이 된다. */
-      camera.position.set(0, 2.1, LEDZ + bd);
-      camera.lookAt(0, 4.4, LEDZ);
+      /* ★카메라가 y=2.1 이었다 — 딱 책상·모니터·화이트보드(2.42) 높이라
+         리서치실과 내 자리 가구가 판을 가렸다(신고).
+         판보다 조금 위(5.4)에서 내려다보면 사무실 가구 위를 그대로 넘어간다. */
+      camera.position.set(0, 3.2, LEDZ + bd);
+      camera.lookAt(0, 4.3, LEDZ);       // ★살짝 올려다본다 — 위가 천장으로 채워진다
     } else {
       if (Math.abs(camera.fov - FOV_N) > .5) { camera.fov += (FOV_N - camera.fov) * .14; camera.updateProjectionMatrix(); }
       // ★구면좌표 — camPitch 로 상하까지 돈다. 0.66 rad 이면 예전 식과 완전히 같은 위치가 나온다
