@@ -897,9 +897,19 @@ body.office-on{overflow:hidden}
   function cls(n){ return n>0?"up":(n<0?"dn":"flat"); }
   function esc(s){ return String(s==null?"":s).replace(/[&<>]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;"}[c];}); }
 
+  /* ★study 는 두 길로 온다 — status.json 에 실려 오는 관리자 스냅샷과, docs/study.json 직통.
+     예전엔 status 쪽이 늘 이겼다. 그런데 status 의 study 는 관리자가 push 한 **그 순간의 사본**이고,
+     docs/study.json 은 학습분석(20:35~20:40)이 매일 새로 쓴다.
+     → 관리자가 낮에 push 해 두면 밤에 새로 계산한 결과가 화면에 안 붙었다(공시가 안 보였다).
+     둘 중 **meta.ts 가 새것**을 쓴다. */
+  function pickStudy(a, b) {
+    if (!(a && a.meta)) return (b && b.meta) ? b : a;
+    if (!(b && b.meta)) return a;
+    return (String(b.meta.ts || '') > String(a.meta.ts || '')) ? b : a;
+  }
+
   function render(d){
-    // ★status 에 study 가 없으면(관리자 구버전) 따로 받아 둔 것을 붙인다
-    try { if (!(d && d.study && d.study.meta) && window.lastStudy) d.study = window.lastStudy; } catch(e){}
+    try { if (d) d.study = pickStudy(d.study, window.lastStudy); } catch(e){}
     try { if (d && !d.reviews && window.lastReviews) d.reviews = window.lastReviews; } catch(e){}
     lastData=d;
     try{ renderExtra(d); }catch(e){}   // ★접속현황·IR (신규 필드 없어도 대시보드는 안 깨짐)
@@ -1117,8 +1127,9 @@ body.office-on{overflow:hidden}
       .then(function (env) { return decrypt(env, pw); })
       .then(function (s) {
         window.lastStudy = s;
-        // 이미 그려진 화면에도 바로 붙인다 — 다음 status 를 기다리지 않게
-        if (window.lastData && !(lastData.study && lastData.study.meta)) lastData.study = s;
+        // 이미 그려진 화면에도 바로 붙인다 — 다음 status 를 기다리지 않게.
+        // ★status 쪽이 더 새것일 수도 있으니 무조건 덮지 않는다(pickStudy 가 ts 로 고른다)
+        if (window.lastData) lastData.study = pickStudy(lastData.study, s);
       })
       .catch(function () { /* 없으면 없는 대로 — 사무실이 '자료 없음'으로 말한다 */ });
     fetch(REVIEW_RAW + "?t=" + Date.now(), { cache: "no-store" })
