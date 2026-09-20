@@ -1769,10 +1769,15 @@ body.office-on{overflow:hidden}
           }
           var dil = (x.rights_dil || 0) + (x.cb_dil || 0);
           hr += '<div class="of-mrow"><span class="of-mw">' +
-            (x.ratio >= 5 ? '⚠ ' : '') + esc(x.name || x.code) + '</span><span class="of-mx">' +
-            '현재 ' + wonFull(x.cur) + ' / 주당가치 <b>' + wonFull(x.vps) + '</b> = <b class="dn">' +
-            x.ratio.toFixed(2) + '배</b><br>' +
-            '바닥값 ' + x.fv_eok + '억 · 수익력 ' + x.epv_eok + '억 (기준 ' + esc(x.core_from || '') + ')' +
+            ((x.vs_core || 0) >= 3 ? '⚠ ' : '') + esc(x.name || x.code) + '</span><span class="of-mx">' +
+            '현재 ' + wonFull(x.cur) + '<br>' +
+            '<b>장부(PBR) ' + (x.pbr ? x.pbr.toFixed(2) : '—') + '배</b> · ' +
+            '<b>자산·수익력 ' + (x.vs_core ? x.vs_core.toFixed(2) : '—') + '배</b> · ' +
+            '문서적용 ' + x.ratio.toFixed(2) + '배<br>' +
+            '<span style="color:#8B95A1">BPS ' + wonFull(x.bps) + ' → 청산 ' + wonFull(x.fv_ps) +
+            ' → 기준 ' + wonFull(x.core_ps) + ' → G·K·' + (x.T || 5) + '년할인 ' + wonFull(x.vps) +
+            '</span><br>' +
+            '기준 ' + esc(x.core_from || '') +
             ' · r ' + (x.r * 100).toFixed(1) + '% · 안전마진 ' + (x.mos * 100) + '%' +
             (x.roic != null ? '<br>ROIC ' + (x.roic * 100).toFixed(1) + '% ' +
               (x.gate ? '게이트 통과' : '<b class="dn">게이트 탈락 — 성장이 가치를 파괴</b>') : '') +
@@ -1783,7 +1788,8 @@ body.office-on{overflow:hidden}
             '<br>매수가(안전마진 적용) ' + wonFull(x.buy_below) + ' → <b>' + esc(x.verdict || '') + '</b>' +
             '</span></div>';
         });
-        hr += '</div><div class="of-fnote">' + esc(vq.note || '') +
+        hr += '</div><div class="of-fnote">' +
+          (vq.read ? '<b>' + esc(vq.read) + '</b><br><br>' : '') + esc(vq.note || '') +
           '<br>클라먼 체계 6단계 — 바닥값(자산을 다 팔면) → 수익력가치(성장 0 가정) → ' +
           '성장가치(해자를 한 문장으로 못 쓰면 0) → 주주환원·지배구조로 곱하기 → ' +
           '촉매 없으면 5년 대기 할인 → 안전마진.<br>' +
@@ -2867,6 +2873,10 @@ body.office-on{overflow:hidden}
         if (v1.cb_dil >= 20) {
           return v1.name + ' 은 전환사채로 주식이 ' + v1.cb_dil + '% 더 나올 수 있습니다';
         }
+        if (v1.pbr && v1.vs_core) {
+          return v1.name + ' 은 장부 순자산의 ' + v1.pbr.toFixed(2) + '배, ' +
+                 '자산·수익력 기준으로는 ' + v1.vs_core.toFixed(2) + '배입니다';
+        }
         return v1.name + ' 은 현재가가 내재가치의 ' + v1.ratio.toFixed(2) + '배입니다 — 밀리면 받쳐 줄 게 없습니다';
       }
       var ff = (stf.feat || []).filter(function (x) {
@@ -3559,20 +3569,37 @@ body.office-on{overflow:hidden}
       if (vl.why) f(A_RSCH, 'flat', '내재가치는 아직 못 냈습니다', vl.why);
     } else {
       var hi = vrows[0], lo = vrows[vrows.length - 1];
+      /* ★배수를 하나만 말하면 오해한다. 문서 완전적용 배수에는 G·K·5년 대기 할인이 섞여 있어
+         '주가가 비싸다' 가 아니라 '문서가 많이 깎았다' 를 반영한다. 셋을 같이 말한다. */
+      var pbrs = vrows.filter(function (x) { return x.pbr; }).map(function (x) { return x.pbr; });
       f(A_RSCH, 'flat',
-        '오늘 픽 ' + vrows.length + '종목 내재가치를 냈습니다 — 현재가가 가치의 ' +
-        lo.ratio.toFixed(2) + '~' + hi.ratio.toFixed(2) + '배입니다',
-        '전부 문서 기준으로는 **제외** 구간입니다. 급등주니 당연합니다 — ' +
-        '이건 매수 판단이 아니라 **밀릴 때 받쳐 줄 게 있느냐**를 보는 숫자입니다');
+        '오늘 픽 ' + vrows.length + '종목 내재가치를 냈습니다' +
+        (pbrs.length ? ' — 장부 순자산 대비로는 ' + Math.min.apply(null, pbrs).toFixed(2) +
+          '~' + Math.max.apply(null, pbrs).toFixed(2) + '배입니다' : ''),
+        '자산·수익력 기준(G·K·시간할인 전)으로는 ' + lo.vs_core.toFixed(2) + '~' +
+        hi.vs_core.toFixed(2) + '배, 문서를 끝까지 적용하면 ' + lo.ratio.toFixed(2) + '~' +
+        hi.ratio.toFixed(2) + '배입니다. ★뒤의 숫자가 큰 건 주가가 그만큼 비싸서가 아니라 ' +
+        '문서가 지배구조·주주환원·**5년 대기 할인**으로 ' +
+        ((1 - (hi.discount || 0.54)) * 100).toFixed(0) + '% 넘게 깎기 때문입니다');
       f(A_RSCH, 'bad',
-        '가장 비싼 쪽은 ' + hi.name + ' ' + hi.ratio.toFixed(2) + '배 (현재 ' + wonFull(hi.cur) +
-        ' vs 주당가치 ' + wonFull(hi.vps) + ')',
-        '바닥값 ' + hi.fv_eok + '억 · 수익력가치 ' + hi.epv_eok + '억 중 ' + hi.core_from +
-        ' 기준 · 요구수익률 ' + (hi.r * 100).toFixed(1) + '% · 안전마진 ' + (hi.mos * 100) + '%' +
+        '가장 비싼 쪽은 ' + hi.name + ' — 장부 ' + (hi.pbr ? hi.pbr.toFixed(2) + '배, ' : '') +
+        '자산·수익력 기준 ' + hi.vs_core.toFixed(2) + '배 (현재 ' + wonFull(hi.cur) + ')',
+        'BPS ' + wonFull(hi.bps) + ' → 청산가치 ' + wonFull(hi.fv_ps) +
+        ' → 기준값 ' + wonFull(hi.core_ps) + '(' + hi.core_from + ')' +
+        ' → G·K·' + (hi.T || 5) + '년 할인 후 ' + wonFull(hi.vps) +
+        '. 요구수익률 ' + (hi.r * 100).toFixed(1) + '% · 안전마진 ' + (hi.mos * 100) + '%' +
         (hi.rev_note ? '. ' + hi.rev_note : ''));
       f(A_RSCH, 'good',
-        '가장 싼 쪽은 ' + lo.name + ' ' + lo.ratio.toFixed(2) + '배입니다',
+        '가장 싼 쪽은 ' + lo.name + ' — 장부 ' + (lo.pbr ? lo.pbr.toFixed(2) + '배, ' : '') +
+        '자산·수익력 기준 ' + lo.vs_core.toFixed(2) + '배입니다',
         '그래도 매수가 ' + wonFull(lo.buy_below) + ' 보다는 위입니다 — 문서 기준으로는 아직 아닙니다');
+      var nci = vrows.filter(function (x) { return x.nci_cut; });
+      if (nci.length) {
+        f(A_RSCH, 'flat',
+          nci.map(function (x) { return x.name; }).join(', ') + ' 은 비지배지분을 빼고 계산했습니다',
+          '연결 자산−부채는 **지배주주지분 + 비지배지분**입니다. 자회사를 100% 우리 것으로 치면 ' +
+          '과대평가가 됩니다 — 처음에 그 실수를 했고 바로잡았습니다');
+      }
       // ROIC 게이트 탈락 — 문서: "성장할수록 가치를 파괴하는 기업"
       var bad2 = vrows.filter(function (x) { return x.gate === false; });
       if (bad2.length) {
