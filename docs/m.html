@@ -925,10 +925,26 @@ body.office-on{overflow:hidden}
      docs/study.json 은 학습분석(20:35~20:40)이 매일 새로 쓴다.
      → 관리자가 낮에 push 해 두면 밤에 새로 계산한 결과가 화면에 안 붙었다(공시가 안 보였다).
      둘 중 **meta.ts 가 새것**을 쓴다. */
+  /* ★완전한 쪽을 고른다 — ts 만 보면 반쪽이 이긴다.
+     관리자의 _study_pack() 은 study.json 의 **일부만** 싣는다(공시 disc·내재가치 val·
+     워크포워드 featwf 가 빠진다). 그런데 ts 는 원본 그대로라 직통 fetch 와 **동점**이 되고,
+     동점이면 먼저 온 status 쪽이 남아 공시·내재가치 화면이 조용히 사라진다.
+     → ts 가 같으면 알맹이가 많은 쪽을 쓴다. */
+  function _stRich(s) {
+    var n = 0;
+    ['disc', 'val', 'featwf', 'virtual', 'walkfwd', 'grid', 'feat', 'theme'].forEach(function (k) {
+      var v = s && s[k];
+      if (v && (!(v instanceof Array) || v.length)) n++;
+    });
+    return n;
+  }
   function pickStudy(a, b) {
     if (!(a && a.meta)) return (b && b.meta) ? b : a;
     if (!(b && b.meta)) return a;
-    return (String(b.meta.ts || '') > String(a.meta.ts || '')) ? b : a;
+    var ta = String(a.meta.ts || ''), tb = String(b.meta.ts || '');
+    if (tb > ta) return b;
+    if (ta > tb) return a;
+    return (_stRich(b) > _stRich(a)) ? b : a;      // 동점이면 더 완전한 쪽
   }
 
   function render(d){
