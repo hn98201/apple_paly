@@ -737,6 +737,29 @@ body.office-on{overflow:hidden}
 @media (max-width:430px){#ofStaff{max-width:98px}.of-val{font-size:16px}}
 @media (max-height:700px){#ofStaff{max-height:min(34vh,250px)}}
 @media (max-height:560px){#ofStaff{display:none}}
+/* ── 한눈에 표 (내재가치) — 숫자 셋만 크게 ── */
+#office .ez-wrap{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+#office .ez-card{background:var(--card);border-radius:14px;padding:12px 13px;
+  box-shadow:0 1px 3px rgba(0,0,0,.07),0 6px 16px rgba(0,0,0,.05)}
+#office .ez-top{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:9px}
+#office .ez-nm{font-weight:800;font-size:15px;color:var(--ink);letter-spacing:-.02em}
+#office .ez-st{font-size:10.5px;font-weight:800;padding:3px 8px;border-radius:999px;
+  white-space:nowrap;flex:0 0 auto}
+#office .ez-st.hi{background:rgba(240,68,82,.13);color:#D63B49}
+#office .ez-st.mid{background:rgba(255,176,32,.18);color:#9A6200}
+#office .ez-st.lo{background:rgba(0,135,90,.14);color:#00724B}
+#office .ez-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+#office .ez-cell{background:rgba(0,0,0,.04);border-radius:10px;padding:8px 5px;text-align:center}
+#office .ez-k{font-size:10px;font-weight:700;color:var(--mut);margin-bottom:3px;white-space:nowrap}
+#office .ez-v{font-size:16px;font-weight:800;letter-spacing:-.03em;
+  font-variant-numeric:tabular-nums;color:var(--ink)}
+#office .ez-v small{font-size:10px;font-weight:700;margin-left:1px;color:var(--mut)}
+#office .ez-cell.buy .ez-v{color:#00875A}
+#office .ez-cell.fair .ez-v{color:#D63B49}
+#office .ez-gap{margin-top:8px;font-size:11px;color:var(--mut);line-height:1.6}
+#office .ez-gap b{color:var(--ink);font-variant-numeric:tabular-nums}
+#office .ez-memo{margin-top:6px;font-size:11px;font-weight:700;color:#D63B49;line-height:1.5}
+@media (max-width:370px){#office .ez-v{font-size:14px}#office .ez-k{font-size:9px}}
 </style>
 <!-- ═══════════ 3D 사무실 (2026-09-18) ═══════════ -->
 <div id="office">
@@ -1744,6 +1767,50 @@ body.office-on{overflow:hidden}
         ['가른 항목', fq.length + '개'],
         ['1위 항목', fq.length ? fq[0].label : '—'],
         ['차이', fq.length ? (fq[0].spread + '%p') : '—', (fq.length && fq[0].spread > 2) ? 'up' : '']]);
+      var vq = stq.val || {};
+      /* ── 한눈에 — 숫자 셋만. 쉽게 보고 싶으면 여기만 보면 된다 ── */
+      var ezr = (vq.rows || []).filter(function (x) { return !x.skip && x.e_fair; });
+      if (ezr.length) {
+        hr += '<div class="of-brief"><div class="of-bk">한눈에 — 매수가 · 적정가 (안전마진 ' +
+          Math.round((ezr[0].e_mos || 0.5) * 100) + '%)</div><div class="ez-wrap">';
+        ezr.forEach(function (x) {
+          var cl = (x.e_state || '').indexOf('싸다') === 0 ? 'lo'
+                 : ((x.e_state || '').indexOf('적정') === 0 ? 'mid' : 'hi');
+          var memo = [];
+          if (x.rights_dil) memo.push('유상증자로 주식 ' + Math.round(x.rights_dil) + '% 증가');
+          if (x.cb_dil) memo.push('전환사채로 ' + Math.round(x.cb_dil) + '% 더 나올 수 있음');
+          if (x.gate === false) memo.push('ROIC가 요구수익률 미달');
+          hr += '<div class="ez-card">' +
+            '<div class="ez-top"><span class="ez-nm">' + esc(x.name || x.code) + '</span>' +
+            '<span class="ez-st ' + cl + '">' + esc(x.e_state || '') +
+            (x.e_ratio ? ' · 적정가의 ' + x.e_ratio.toFixed(2) + '배' : '') + '</span></div>' +
+            '<div class="ez-grid">' +
+            '<div class="ez-cell"><div class="ez-k">현재가</div><div class="ez-v">' +
+              (x.cur == null ? '—' : Math.round(x.cur).toLocaleString()) + '<small>원</small></div></div>' +
+            '<div class="ez-cell buy"><div class="ez-k">이 아래면 매수</div><div class="ez-v">' +
+              Math.round(x.e_buy).toLocaleString() + '<small>원</small></div></div>' +
+            '<div class="ez-cell fair"><div class="ez-k">이 위는 비싸다</div><div class="ez-v">' +
+              Math.round(x.e_fair).toLocaleString() + '<small>원</small></div></div>' +
+            '</div>';
+          if (x.e_to_buy != null) {
+            hr += '<div class="ez-gap">매수가까지 <b>' + x.e_to_buy.toFixed(1) + '%</b>' +
+              ' · 적정가까지 <b>' + x.e_to_sell.toFixed(1) + '%</b>' +
+              (x.e_doc_fair ? '<br>문서를 끝까지 적용하면 적정가 ' +
+                Math.round(x.e_doc_fair).toLocaleString() + '원 · 매수가 ' +
+                Math.round(x.e_doc_buy).toLocaleString() + '원 (지배구조·주주환원·5년대기 할인 포함)' : '') +
+              '</div>';
+          }
+          if (memo.length) hr += '<div class="ez-memo">※ ' + esc(memo.join(' · ')) + '</div>';
+          hr += '</div>';
+        });                                    /* ez-card forEach */
+        hr += '</div><div class="of-fnote">' +
+          '<b>적정가</b> = 청산가치(다 팔면 남는 돈)와 수익력가치(지금 이익을 영원히 유지하면) 중 <b>큰 쪽</b>. ' +
+          '유상증자로 늘어난 주식수를 반영했습니다.<br>' +
+          '<b>매수가</b> = 적정가 × 50%. 틀릴 여지를 절반 남겨 두는 값입니다.<br>' +
+          '★종가배팅의 익절·손절과는 다른 자입니다. 이건 <b>회사 값어치</b> 기준이고, ' +
+          '우리 매매는 하루짜리 수급으로 합니다. 섞어 쓰지 마십시오 — ' +
+          '여기서 \'비싸다\'가 나와도 종가배팅은 평소대로 합니다.</div></div>';
+      }
       if (fq.length) {
         hr += '<div class="of-brief"><div class="of-bk">재무·밸류 구간별 성적</div><div class="of-min">';
         fq.forEach(function (x) {
@@ -1757,9 +1824,8 @@ body.office-on{overflow:hidden}
         });
         hr += '</div></div>';
       }
-      var vq = stq.val || {};
       if ((vq.rows || []).length) {
-        hr += '<div class="of-brief"><div class="of-bk">내재가치 — 현재가는 가치의 몇 배인가' +
+        hr += '<div class="of-brief"><div class="of-bk">자세히 — 어떻게 깎이나' +
           (vq.date ? ' · ' + esc(vq.date) : '') + '</div><div class="of-min">';
         vq.rows.forEach(function (x) {
           if (x.skip) {
@@ -2873,6 +2939,10 @@ body.office-on{overflow:hidden}
         if (v1.cb_dil >= 20) {
           return v1.name + ' 은 전환사채로 주식이 ' + v1.cb_dil + '% 더 나올 수 있습니다';
         }
+        if (v1.e_fair && v1.e_buy) {
+          return v1.name + ' 은 ' + Math.round(v1.e_buy).toLocaleString() + '원 아래면 싼데 지금 ' +
+                 Math.round(v1.cur).toLocaleString() + '원입니다';
+        }
         if (v1.pbr && v1.vs_core) {
           return v1.name + ' 은 장부 순자산의 ' + v1.pbr.toFixed(2) + '배, ' +
                  '자산·수익력 기준으로는 ' + v1.vs_core.toFixed(2) + '배입니다';
@@ -3571,6 +3641,16 @@ body.office-on{overflow:hidden}
       var hi = vrows[0], lo = vrows[vrows.length - 1];
       /* ★배수를 하나만 말하면 오해한다. 문서 완전적용 배수에는 G·K·5년 대기 할인이 섞여 있어
          '주가가 비싸다' 가 아니라 '문서가 많이 깎았다' 를 반영한다. 셋을 같이 말한다. */
+      // ★쉬운 한 줄부터. 자세한 배수 설명은 그 뒤에.
+      var ez1 = vrows.filter(function (x) { return x.e_fair && x.e_buy; });
+      if (ez1.length) {
+        f(A_RSCH, 'flat',
+          '오늘 픽 ' + ez1.length + '종목 — 적정가와 매수가(안전마진 50%)를 냈습니다',
+          ez1.map(function (x) {
+            return x.name + ' 매수 ' + wonFull(x.e_buy) + ' / 적정 ' + wonFull(x.e_fair) +
+                   ' / 지금 ' + wonFull(x.cur);
+          }).join(' · '));
+      }
       var pbrs = vrows.filter(function (x) { return x.pbr; }).map(function (x) { return x.pbr; });
       f(A_RSCH, 'flat',
         '오늘 픽 ' + vrows.length + '종목 내재가치를 냈습니다' +
