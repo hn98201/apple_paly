@@ -2639,6 +2639,22 @@ body.office-on{overflow:hidden}
   box(LEDW + .6, 0.16, 0.22, M(0x39414f, .5, .35), 0, 0.62, LEDZ + .02);
   var ledOff = 0, ledOff2 = 0, LED_GW = 700;      // LED_GW = 그래프 칸 폭(캔버스 픽셀)
   var ledPage = 0, ledPageAt = 0;                 // 오른쪽 면이 몇 초마다 바뀐다
+  /* ★손으로 넘기기 — 전광판 모드에서 탭/스와이프로 면을 바꾼다.
+     ledManual 이 켜지면 자동 회전을 멈춘다(보는 중에 넘어가면 방해다). */
+  var ledManual = false, ledTouchAt = 0, LED_N = 1;
+  function ledGo(step) {
+    ledManual = true; ledTouchAt = performance.now();
+    ledPage = ((ledPage + step) % LED_N + LED_N) % LED_N;
+    ledPageAt = ledTouchAt;
+    try { drawLed(); } catch (e) {}                 // 손을 뗀 즉시 바뀐 화면이 보이게
+  }
+  window.ledGo = ledGo;                             // 화살표 버튼이 부른다
+  /* ★점검용 훅 — 전광판은 3D 평면에 붙은 캔버스라 스샷으로는 글자가 안 읽힌다.
+     이 캔버스를 직접 뽑아 확인할 수 있게 내보낸다(읽기 전용, 동작에 영향 없음). */
+  window.ledPeek = function () {
+    try { drawLed(); } catch (e) {}
+    return { png: ledCv.toDataURL('image/png'), page: ledPage, n: LED_N, manual: ledManual };
+  };
   /* 1줄 — 보유 종목 수익률(없으면 지금 단계) */
   function ledLine1() {
     var d = window.lastData;
@@ -2701,6 +2717,73 @@ body.office-on{overflow:hidden}
     ledCtx.fillStyle = '#20262f'; ledCtx.fillRect(cx + cw, 16, 4, ch - 32);
   }
 
+  /* ★보유 종목 수익률 — 넘기는 면의 첫 장. 수익률을 크게 쓴다(이게 주인공이다).
+     처음엔 고정 칸으로 만들었는데 "고정이 아니라 넘기는 형식" 으로 바꿨다. */
+  function drawLedHold(cx, cw, ch) {
+    var d = window.lastData || {}, ps = (d.positions || []).slice();
+    if (!ps.length) {
+      ledCtx.textAlign = 'left'; ledCtx.textBaseline = 'alphabetic';
+      ledCtx.font = '700 48px "IBM Plex Mono", ui-monospace, monospace';
+      ledCtx.fillStyle = '#464d5b';
+      ledCtx.fillText('보유 없음', cx + 40, 170);
+      ledCtx.font = '600 30px "IBM Plex Mono", ui-monospace, monospace';
+      ledCtx.fillStyle = '#3a414e';
+      ledCtx.fillText(String(d.stage || '대기 중').slice(0, 30), cx + 40, 218);
+      return;
+    }
+
+    // ★손실이 큰 것부터. 봐야 하는 건 잘 가는 종목이 아니라 무너지는 종목이다.
+    ps.sort(function (a, b) { return (a.ret || 0) - (b.ret || 0); });
+    var MAX = 5, show = ps.slice(0, MAX), y = 112;
+    var lh = Math.min(62, (ch - 150) / Math.max(1, show.length));
+    ledCtx.textBaseline = 'alphabetic';
+    show.forEach(function (p) {
+      var up = (p.ret || 0) >= 0;
+      var col = up ? '#ff6b78' : '#6aa3f8';
+      ledCtx.textAlign = 'left';
+      ledCtx.font = '700 36px "IBM Plex Mono", ui-monospace, monospace';
+      ledCtx.fillStyle = '#ECEEF2';
+      ledCtx.fillText(String(p.name || p.code || '').slice(0, 11), cx + 40, y);
+      /* 가운데 칸 — 매수가→현재가, 그 아래 평가손익.
+         ★평가손익을 오른쪽 수익률 위에 두었더니 큰 글씨와 **겹쳤다**(실측).
+           숫자 두 개를 같은 세로선에 쌓지 말 것. */
+      ledCtx.font = '600 27px "IBM Plex Mono", ui-monospace, monospace';
+      ledCtx.fillStyle = '#5b6370';
+      ledCtx.fillText(nf(p.buy) + ' → ' + nf(p.cur), cx + cw * 0.44, y - 6);
+      if (p.pl != null) {
+        ledCtx.font = '600 25px "IBM Plex Mono", ui-monospace, monospace';
+        ledCtx.fillStyle = up ? '#8f4a52' : '#46648f';
+        ledCtx.fillText(((p.pl >= 0 ? '+' : '') + nf(p.pl)) + '원', cx + cw * 0.44, y + 21);
+      }
+      // ★수익률 — 가장 크게
+      ledCtx.textAlign = 'right';
+      ledCtx.font = '700 50px "IBM Plex Mono", ui-monospace, monospace';
+      ledCtx.fillStyle = col;
+      ledCtx.fillText(((p.ret || 0) >= 0 ? '+' : '') + (p.ret || 0).toFixed(2) + '%', cx + cw - 40, y + 6);
+      y += lh;
+    });
+    if (ps.length > MAX) {
+      ledCtx.textAlign = 'left';
+      ledCtx.font = '600 26px "IBM Plex Mono", ui-monospace, monospace';
+      ledCtx.fillStyle = '#5b6370';
+      ledCtx.fillText('외 ' + (ps.length - MAX) + '종목', cx + 40, y);
+    }
+    // 바닥줄 — 평가손익 합계
+    var P3 = d.pnl || {};
+    if (P3.unrealized != null) {
+      var uc = P3.unrealized >= 0 ? '#ff6b78' : '#6aa3f8';
+      ledCtx.textAlign = 'left';
+      ledCtx.font = '600 29px "IBM Plex Mono", ui-monospace, monospace';
+      ledCtx.fillStyle = '#5b6370';
+      ledCtx.fillText('평가손익 합계', cx + 40, ch - 18);
+      ledCtx.textAlign = 'right';
+      ledCtx.font = '700 40px "IBM Plex Mono", ui-monospace, monospace';
+      ledCtx.fillStyle = uc;
+      ledCtx.fillText(((P3.unrealized >= 0 ? '+' : '') + nf(P3.unrealized)) + '원', cx + cw - 40, ch - 14);
+    }
+    ledCtx.textAlign = 'left';
+  }
+
   /* 오른쪽 면 — 증권사 로비처럼 몇 초마다 넘어간다 */
   function ledPages() {
     var d = window.lastData || {}, P2 = d.pnl || {}, ps = d.positions || [],
@@ -2708,11 +2791,8 @@ body.office-on{overflow:hidden}
         st = d.study || {}, tm = d.thememap || {};
     var pg = [];
 
-    pg.push({ t: '보유 종목', rows: ps.length
-      ? ps.map(function (p) {
-          return [p.name, nf(p.cur) + '원', pct(p.ret), (p.ret >= 0 ? 1 : -1)];
-        })
-      : [['보유 없음', '', (d.stage || '대기'), 0]] });
+    // ★첫 면 — 보유 종목 수익률. 전용 렌더러(drawLedHold)로 크게 그린다.
+    pg.push({ t: '보유 종목 수익률' + (ps.length ? ' (' + ps.length + ')' : ''), draw: drawLedHold });
 
     pg.push({ t: '원금 · 자산', rows: [
       ['원금', '', nf(d.principal) + '원', 0],
@@ -2757,25 +2837,47 @@ body.office-on{overflow:hidden}
 
   function drawLedPage(cx, cw, ch, now) {
     var pgs = ledPages();
-    if (now - ledPageAt > 6500) { ledPageAt = now; ledPage = (ledPage + 1) % pgs.length; }
-    var p = pgs[ledPage % pgs.length];
+    LED_N = pgs.length;                                   // ★넘기기 핸들러가 면 수를 알아야 한다
+    // ★손을 대면 자동 회전을 멈춘다. 사람이 보는 중에 넘어가면 방해다.
+    //   25초 무동작이면 다시 자동으로 돌린다(전광판을 그냥 켜 둘 때를 위해).
+    if (ledManual && now - ledTouchAt > 25000) ledManual = false;
+    if (!ledManual && now - ledPageAt > 6500) { ledPageAt = now; ledPage = (ledPage + 1) % pgs.length; }
+    ledPage = ((ledPage % pgs.length) + pgs.length) % pgs.length;
+    var p = pgs[ledPage];
     ledCtx.textAlign = 'left'; ledCtx.textBaseline = 'alphabetic';
     ledCtx.font = '700 38px "IBM Plex Mono", ui-monospace, monospace';
-    ledCtx.fillStyle = '#FFCE5A'; ledCtx.fillText(p.t, cx + 24, 52);
-    // 면 표시 점
+    ledCtx.fillStyle = '#FFCE5A'; ledCtx.fillText(p.t, cx + 40, 52);
+    // 면 표시 점 + 번호
     for (var k = 0; k < pgs.length; k++) {
       ledCtx.beginPath(); ledCtx.arc(cw + cx - 30 - k * 26, 40, 7, 0, 6.3);
-      ledCtx.fillStyle = (k === ledPage % pgs.length) ? '#FFCE5A' : '#333a46'; ledCtx.fill();
+      ledCtx.fillStyle = (k === ledPage) ? '#FFCE5A' : '#333a46'; ledCtx.fill();
     }
+    ledCtx.textAlign = 'right';
+    ledCtx.font = '600 24px "IBM Plex Mono", ui-monospace, monospace';
+    ledCtx.fillStyle = ledManual ? '#FFCE5A' : '#4a515e';
+    ledCtx.fillText((ledPage + 1) + '/' + pgs.length + (ledManual ? '  손으로 넘김' : '  자동'),
+                    cw + cx - 30 - pgs.length * 26 - 14, 48);
+    ledCtx.textAlign = 'left';
+    // ★넘길 수 있다는 표시 — 좌우 살구름 화살표
+    ledCtx.font = '700 34px "IBM Plex Mono", ui-monospace, monospace';
+    ledCtx.fillStyle = '#272e38';
+    ledCtx.fillText('‹', cx + 5, ch / 2 + 12);
+    ledCtx.textAlign = 'right';
+    ledCtx.fillText('›', cx + cw - 5, ch / 2 + 12);
+    ledCtx.textAlign = 'left';
+
+    // ★전용 렌더러가 있는 면(보유 종목)은 그쪽에 맡긴다
+    if (p.draw) { p.draw(cx, cw, ch); return; }
+
     var y = 108, lh = Math.min(56, (ch - 120) / Math.max(1, p.rows.length));
     ledCtx.font = '600 34px "IBM Plex Mono", ui-monospace, monospace';
     p.rows.forEach(function (r) {
       ledCtx.fillStyle = '#ECEEF2'; ledCtx.textAlign = 'left';
-      ledCtx.fillText(String(r[0]).slice(0, 18), cx + 24, y);
+      ledCtx.fillText(String(r[0]).slice(0, 18), cx + 40, y);
       if (r[1]) { ledCtx.fillStyle = '#6b7280'; ledCtx.fillText(String(r[1]), cx + cw * 0.52, y); }
       ledCtx.textAlign = 'right';
       ledCtx.fillStyle = r[3] > 0 ? '#ff6b78' : (r[3] < 0 ? '#6aa3f8' : '#98A0AE');
-      ledCtx.fillText(String(r[2]), cx + cw - 24, y);
+      ledCtx.fillText(String(r[2]), cx + cw - 40, y);
       y += lh;
     });
     ledCtx.textAlign = 'left';
@@ -4889,17 +4991,31 @@ body.office-on{overflow:hidden}
   window.addEventListener('resize', layout);
 
   var drag = false, moved = 0, lastX = 0, lastY = 0;
+  var swX = 0, swY = 0, swDone = false;             // ★전광판 스와이프용 — 누른 지점과 처리 여부
   canvas.addEventListener('pointerdown', function (e) {
-    drag = true; moved = 0; lastX = e.clientX; lastY = e.clientY; canvas.setPointerCapture(e.pointerId);
+    drag = true; moved = 0; lastX = e.clientX; lastY = e.clientY;
+    swX = e.clientX; swY = e.clientY; swDone = false;
+    canvas.setPointerCapture(e.pointerId);
   });
   canvas.addEventListener('pointermove', function (e) {
     if (!drag) return;
     var dx = e.clientX - lastX, dy = e.clientY - lastY;
     lastX = e.clientX; lastY = e.clientY;
     moved += Math.abs(dx) + Math.abs(dy);
+    /* ★전광판 모드: 가로로 끌면 면을 넘긴다. 카메라는 그대로 둔다(판을 보는 중이다).
+       한 번 끌 때 한 번만 넘긴다(swDone) — 안 그러면 손가락 한 번에 여러 장이 지나간다. */
+    if (boardView) {
+      if (!swDone) {
+        var tx = e.clientX - swX, ty = e.clientY - swY;
+        if (Math.abs(tx) > 42 && Math.abs(tx) > Math.abs(ty) * 1.2) {
+          ledGo(tx < 0 ? 1 : -1);                   // 왼쪽으로 밀면 다음 면
+          swDone = true;
+        }
+      }
+      return;
+    }
     if (moved > 8) {
       camWant = null;
-      if (boardView) return;                          // ★몰입 중엔 손으로 돌려도 안 풀린다(나가기 버튼으로만)
       /* ★2026-09-19 (2차) 조작이 부자연스럽다는 지적 —
          · 감도를 절반으로 낮췄다(0.006→0.0032). 손가락 조금에 화면이 홱 돌던 문제.
          · **축을 분리**한다. 가로로 끄는 중이면 상하는 건드리지 않는다.
@@ -4916,6 +5032,11 @@ body.office-on{overflow:hidden}
   });
   canvas.addEventListener('pointerup', function (e) {
     drag = false;
+    // ★전광판 모드: 탭하면 다음 면. 스와이프로 이미 넘겼으면 다시 넘기지 않는다.
+    if (boardView) {
+      if (!swDone && moved <= 6) ledGo(1);
+      return;
+    }
     if (moved > 6) return;
     var rect = canvas.getBoundingClientRect();
     var ray = new THREE.Raycaster();
