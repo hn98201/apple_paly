@@ -313,9 +313,14 @@
     <div class="card" id="posCard"><div class="empty">보유 종목 없음</div></div>
   </div>
 
-  <!-- ★미체결 — 보유 바로 아래 별도 칸(2026-09-22 사용자 요청).
-       위 '보유 종목'은 프로그램이 관리하는 장부이고, 여기는 계좌를 조회한 사실이다.
-       "팔린 줄 알았는데 안 팔렸다" 를 이 칸에서 잡는다. -->
+  <!-- ★실계좌 보유 / 미체결 — 보유 바로 아래 별도 칸(2026-09-22 사용자 요청).
+       위 '보유 종목'은 프로그램이 관리하는 **장부**이고, 아래 둘은 계좌를 **조회한 사실**이다.
+       두 칸이 어긋나면 그게 곧 "팔린 줄 알았는데 안 팔렸다" 다. -->
+  <div class="sec" id="secRealHold">
+    <div class="sh">🏦 실계좌 보유 (조회값) <span class="cnt" id="realHoldCnt"></span></div>
+    <div class="card" id="realHoldCard"><div class="empty">—</div></div>
+  </div>
+
   <div class="sec" id="secPend">
     <div class="sh">⏳ 미체결 주문 <span class="cnt" id="pendCnt"></span></div>
     <div class="card" id="pendCard"><div class="empty">—</div></div>
@@ -1007,6 +1012,29 @@ body.office-on{overflow:hidden}
     // ★'pend' 키가 **없으면 조회 실패**다. 빈 목록([])과 뜻이 전혀 다르므로 절대 섞지 말 것.
     //   pend_stale 이면 직전 성공값이다 — 언제 것인지 같이 적는다(거짓 안심 방지).
     var _ac = d.acct || {}, ndc = document.getElementById("pendCard"), ndn = document.getElementById("pendCnt");
+    // ── 실계좌 보유 (조회값) — 위 '보유 종목'(장부)과 나란히 둬야 거짓을 잡는다 ──
+    var rhc = document.getElementById("realHoldCard"), rhn = document.getElementById("realHoldCnt");
+    if (rhc) {
+      if (!Array.isArray(_ac.stocks)) {
+        rhn.textContent = "";
+        rhc.innerHTML = '<div class="empty" style="color:#e8b455">잔고 조회 실패</div>';
+      } else if (!_ac.stocks.length) {
+        rhn.textContent = (_ac.stocks_asof || "");
+        rhc.innerHTML = '<div class="empty">실계좌 보유 없음</div>';
+      } else {
+        rhn.textContent = _ac.stocks.length + "종목"
+          + (_ac.stocks_asof ? " · " + _ac.stocks_asof + (_ac.stocks_stale ? " (갱신실패·옛값)" : "") : "");
+        rhc.innerHTML = _ac.stocks.map(function (s) {
+          var c = cls(s.ret);
+          return '<div class="it"><div class="r1"><span class="nm">' + esc(s.name || "") + '</span>'
+            + '<span class="cd">' + esc(s.code || "") + '</span><span class="sp"></span>'
+            + '<span class="big ' + c + '">' + sign((s.ret || 0).toFixed(2)) + '%</span></div>'
+            + '<div class="r2"><span class="px">' + (s.buy || 0).toLocaleString()
+            + ' <span class="arr">→</span> ' + (s.cur || 0).toLocaleString() + '</span>'
+            + '<span class="mut"> · ' + (s.qty || 0) + '주</span></div></div>';
+        }).join("");
+      }
+    }
     if (ndc) {
       if (!('pend' in _ac)) {
         ndn.textContent = "";
