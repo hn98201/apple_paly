@@ -313,6 +313,14 @@
     <div class="card" id="posCard"><div class="empty">보유 종목 없음</div></div>
   </div>
 
+  <!-- ★미체결 — 보유 바로 아래 별도 칸(2026-09-22 사용자 요청).
+       위 '보유 종목'은 프로그램이 관리하는 장부이고, 여기는 계좌를 조회한 사실이다.
+       "팔린 줄 알았는데 안 팔렸다" 를 이 칸에서 잡는다. -->
+  <div class="sec" id="secPend">
+    <div class="sh">⏳ 미체결 주문 <span class="cnt" id="pendCnt"></span></div>
+    <div class="card" id="pendCard"><div class="empty">—</div></div>
+  </div>
+
   <div class="sec" id="secPick">
     <div class="sh">🎯 오늘 스캔 종목 <span class="cnt" id="pickCnt"></span></div>
     <div class="card" id="pickCard"><div class="empty">스캔 전 (15:20 자동스캔)</div></div>
@@ -994,6 +1002,31 @@ body.office-on{overflow:hidden}
           +'<span class="mut"> · '+ (o.qty||0) +'주</span><span class="sp"></span>'
           +'<span class="'+c+'" style="font-weight:700">'+(o.pl>=0?"+":"")+wonFull(o.pl).replace("원","")+'원</span></div></div>';
       }).join("");
+    }
+    // ── 미체결 주문 (실계좌 조회값) ──
+    // ★'pend' 키가 **없으면 조회 실패**다. 빈 목록([])과 뜻이 전혀 다르므로 절대 섞지 말 것.
+    //   pend_stale 이면 직전 성공값이다 — 언제 것인지 같이 적는다(거짓 안심 방지).
+    var _ac = d.acct || {}, ndc = document.getElementById("pendCard"), ndn = document.getElementById("pendCnt");
+    if (ndc) {
+      if (!('pend' in _ac)) {
+        ndn.textContent = "";
+        ndc.innerHTML = '<div class="empty" style="color:#e8b455">미체결 조회 실패 — 키움에서 직접 확인하세요</div>';
+      } else if (!_ac.pend.length) {
+        ndn.textContent = (_ac.pend_asof ? _ac.pend_asof + " 기준" : "");
+        ndc.innerHTML = '<div class="empty">미체결 없음 — 모두 체결됐습니다</div>';
+      } else {
+        ndn.textContent = _ac.pend.length + "건"
+          + (_ac.pend_asof ? " · " + _ac.pend_asof + (_ac.pend_stale ? " (갱신실패·옛값)" : "") : "");
+        ndc.innerHTML = _ac.pend.map(function (p) {
+          var sell = /매도/.test(p.gubun || "");
+          return '<div class="it"><div class="r1"><span class="nm">' + esc(p.name || "") + '</span>'
+            + '<span class="cd">' + esc(p.code || "") + '</span>'
+            + '<span class="sp"></span><span class="dtag ' + (sell ? 'tag-up' : 'tag-buy') + '">'
+            + esc((p.gubun || "").replace(/^[-+]/, "")) + '</span></div>'
+            + '<div class="r2"><span class="px">' + (p.unfilled || 0).toLocaleString() + '주 미체결</span>'
+            + '<span class="mut"> · ' + esc(p.status || "") + '</span></div></div>';
+        }).join("");
+      }
     }
     // 오늘 스캔 종목(전체) — disposition 라벨(매수/선정/투자금부족/상한가/필터제외)
     var kc=document.getElementById("pickCard"), pk=d.picks||[];
@@ -1731,6 +1764,25 @@ body.office-on{overflow:hidden}
       rows.forEach(function (r) { h += '<div class="of-bi"><span>' + r[0] + '</span><b class="' + (r[2] || '') + '">' + r[1] + '</b></div>'; });
       return h + '</div>' + (extra || '') + '</div>';
     }
+    /* ── 실계좌가 말하는 사실 — 보유·미체결 (2026-09-22) ──
+       위쪽 '보유'는 프로그램이 관리하는 장부다. 여기는 계좌를 조회한 값 그대로다.
+       둘이 어긋나면 그게 곧 "팔린 줄 알았는데 안 팔렸다" 다.
+       ★pend 키가 **없으면 조회 실패**다. 빈 목록([])과 뜻이 다르므로 절대 섞지 말 것. */
+    function acctFacts(acc) {
+      var rows = [];
+      if (acc.stocks == null) rows.push(['실계좌 보유', '조회 실패', 'dn']);
+      else if (!acc.stocks.length) rows.push(['실계좌 보유', '없음']);
+      else acc.stocks.forEach(function (s) {
+        rows.push(['· ' + s.name, nf(s.qty) + '주' + (s.ret != null ? ' (' + pct(s.ret) + ')' : ''),
+                   (s.ret > 0 ? 'up' : (s.ret < 0 ? 'dn' : ''))]);
+      });
+      if (!('pend' in acc)) rows.push(['미체결', '조회 실패 — 키움에서 확인', 'dn']);
+      else if (!acc.pend.length) rows.push(['미체결', '없음']);
+      else acc.pend.forEach(function (p) {
+        rows.push(['⏳ ' + p.name + ' ' + (p.gubun || ''), nf(p.unfilled) + '주 남음', 'dn']);
+      });
+      return B('실계좌가 말하는 사실 · 조회값' + (acc.asof ? ' (' + acc.asof + ')' : ''), rows);
+    }
     if (id === 'strategy') {
       var top = pk.length ? (pk[0].name + ' ' + (pk[0].score || 0) + '점') : '—';
       var st = sec.length ? (sec[0].name + ' ' + (sec[0].chg >= 0 ? '+' : '') + sec[0].chg + '%') : '수집 전';
@@ -1773,7 +1825,8 @@ body.office-on{overflow:hidden}
         ['오늘 손익', (P2.total >= 0 ? '+' : '') + nf(P2.total) + '원', P2.total >= 0 ? 'up' : 'dn'],
         ['계좌 실자산', acc.assets ? nf(acc.assets) + '원' : '—'],
         ['주문가능', acc.orderable ? nf(acc.orderable) + '원' : '—'],
-        ['조회 시각', acc.asof || '—', acc.stale ? 'dn' : '']]);
+        ['조회 시각', acc.asof || '—', acc.stale ? 'dn' : '']])
+        + acctFacts(acc);
     }
     if (id === 'research') {
       var stq = d.study || {}, pkq = d.picks || [], fq = (stq.feat || []).filter(function (x) {
