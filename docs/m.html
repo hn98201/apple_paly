@@ -1059,7 +1059,7 @@ body.office-on{overflow:hidden}
     // 오늘 스캔 종목(전체) — disposition 라벨(매수/선정/투자금부족/상한가/필터제외)
     var kc=document.getElementById("pickCard"), pk=d.picks||[];
     var DMAP={"매수":["매수","tag-buy"],"선정":["선정","tag-sel"],"상한가선정":["상한가→시가매수","tag-up"],
-              "투자금부족":["투자금부족","tag-none"],"상한가":["상한가제외","tag-up"],"필터제외":["필터제외","tag-flt"]};
+              "투자금부족":["투자금부족","tag-none"],"상한가":["상한가제외","tag-up"],"필터제외":["필터제외","tag-flt"],"단기과열":["단기과열제외","tag-up"]};
     var nbuy=pk.filter(function(s){return s.disp==="매수"||s.disp==="선정"||s.disp==="상한가선정";}).length;
     var pstat = d.scan_state==="prev"?" · 직전 스캔(유지중)":"";
     document.getElementById("pickCnt").textContent = pk.length?(esc(d.picks_date||"")+" "+esc(d.picks_time||"")+" · "+pk.length+"종목 · 선정 "+nbuy+pstat):"";
