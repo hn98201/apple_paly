@@ -1043,8 +1043,12 @@ body.office-on{overflow:hidden}
         ndn.textContent = (_ac.pend_asof ? _ac.pend_asof + " 기준" : "");
         ndc.innerHTML = '<div class="empty">미체결 없음 — 모두 체결됐습니다</div>';
       } else {
+        // ★2026-10-01 — pend_stale 은 '조회 실패' 가 아니다. 90초 잔고 갱신이 미체결을 **다시 조회하지 않고**
+        //   직전 목록을 물려받은 값이다(관리자 '수정 5건' 캐리포워드). 예전 '(갱신실패·옛값)' 은 없는 실패를 알렸다.
+        //   관리자 GUI 카드(`_pend_html`)와 같은 뜻으로 쓴다 — 'HH:MM 기준·낡음' (시각이 없으면 '낡음').
         ndn.textContent = _ac.pend.length + "건"
-          + (_ac.pend_asof ? " · " + _ac.pend_asof + (_ac.pend_stale ? " (갱신실패·옛값)" : "") : "");
+          + (_ac.pend_stale ? " · " + (_ac.pend_asof ? _ac.pend_asof + " 기준·낡음" : "낡음")
+                            : (_ac.pend_asof ? " · " + _ac.pend_asof : ""));
         ndc.innerHTML = _ac.pend.map(function (p) {
           var sell = /매도/.test(p.gubun || "");
           return '<div class="it"><div class="r1"><span class="nm">' + esc(p.name || "") + '</span>'
