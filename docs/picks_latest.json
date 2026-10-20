@@ -1,36 +1,58 @@
 {
- "date": "2026-10-16",
- "generated": "16:16:58",
+ "date": "2026-10-20",
+ "generated": "15:20:24",
  "strategy": "전체+하이브",
  "stocks": [
   {
-   "code": "014950",
-   "name": "삼익제약",
-   "score": 99.0,
-   "entry": null,
-   "chg": 21.83,
+   "code": "065450",
+   "name": "빅텍",
+   "score": 98.99,
+   "entry": 3245.0,
+   "chg": 11.32,
    "feat": {
-    "mcap": 805,
-    "bars": 238,
-    "short_hist": true,
-    "disp200": -17.4,
-    "disp400": null,
-    "lrl_slope": null
+    "trade_value": 69482111985,
+    "mcap": 957,
+    "turnover": 0.9772,
+    "vol": 21412053,
+    "float": 21912203,
+    "disp200": -15.92,
+    "disp400": -17.04,
+    "lrl_slope": -0.297,
+    "chegang": 85.3,
+    "buy_vol": 9856709,
+    "sell_vol": 11555344,
+    "buy_ratio": 46.0,
+    "prevclose_gap": 2.52,
+    "bars": 600,
+    "short_hist": false,
+    "theme": "항공·방산·우주",
+    "news_cnt": 5,
+    "news_head": "빅텍, 81억 규모 포수조준경 열상유닛 공급계약",
+    "news_dt": "202610191418"
    },
    "unbuyable": false,
+   "theme_bonus": 0,
+   "theme_chg": -3.38,
+   "theme_rank": 14,
+   "score_base": 77,
    "kind": "탈락",
-   "score_rule": "manual",
-   "score_old": 44,
+   "is_new": true,
    "oh": {
     "today": false,
     "prior": false,
-    "c": 106,
-    "v": 164,
-    "x": 181
+    "c": 113,
+    "v": 3225,
+    "x": 357
    },
-   "manual": "2026-10-16 16시 사용자 지시 — 조건검색 유일 종목 · 일봉 238개(2025-10-27 상장)라 15:20 스캔에서 빠졌던 것을 수동 추가"
+   "score_rule": "vwap_mcap",
+   "score_old": 77,
+   "vwap_gap": -0.022,
+   "rank_vwap": 1,
+   "rank_mcap": 1,
+   "upper_limit": 3785,
+   "chg_ul": 11.453
   }
  ],
  "excluded_overheat": [],
- "manual": "2026-10-16 16시 사용자 지시 — 조건검색 유일 종목 · 일봉 238개(2025-10-27 상장)라 15:20 스캔에서 빠졌던 것을 수동 추가"
+ "excluded_chg": []
 }
